@@ -1,0 +1,16 @@
+{
+  "name": "Push Bridge POC",
+  "short_name": "Push Bridge",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#050816",
+  "theme_color": "#0f172a",
+  "description": "A proof of concept for sending a push notification from desktop to phone and replying back.",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
