@@ -170,6 +170,8 @@ HTML = r"""<!doctype html>
     .node.topic.scripture circle.core { fill: #7a2e59; stroke: #f9a8d4; }
     .node.food circle.core { fill: #23421f; stroke: #4ade80; }
     .node.topic.food circle.core { fill: #2f5b2a; stroke: #86efac; }
+    .node.finance circle.core { fill: #3f2f12; stroke: #f59e0b; }
+    .node.topic.finance circle.core { fill: #63471d; stroke: #fbbf24; }
     .node.evaluation circle.core { fill: #46316d; stroke: #c084fc; }
     .node.topic.evaluation circle.core { fill: #5b3d8c; stroke: #ddd6fe; }
     .node.entertainment circle.core { fill: #1f3d62; stroke: #60a5fa; }
@@ -179,12 +181,14 @@ HTML = r"""<!doctype html>
     .cluster-bg.memory { fill: rgba(11, 32, 52, .84); stroke: rgba(103,232,249,.32); }
     .cluster-bg.scripture { fill: rgba(56, 18, 47, .80); stroke: rgba(244,114,182,.44); stroke-dasharray: 7 6; }
     .cluster-bg.food { fill: rgba(20, 42, 22, .80); stroke: rgba(134,239,172,.40); stroke-dasharray: 8 7; }
+    .cluster-bg.finance { fill: rgba(58, 37, 13, .80); stroke: rgba(251,191,36,.42); stroke-dasharray: 6 7; }
     .cluster-bg.evaluation { fill: rgba(41, 27, 64, .80); stroke: rgba(196,181,253,.42); stroke-dasharray: 5 8; }
     .cluster-bg.entertainment { fill: rgba(17, 34, 58, .80); stroke: rgba(147,197,253,.42); stroke-dasharray: 6 8; }
     .cluster-bg.other { fill: rgba(52, 34, 11, .66); stroke: rgba(251,191,36,.30); }
     .cluster-title { fill: #eff6ff; font-size: 12px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
     .cluster-title.scripture { fill: #f9a8d4; }
     .cluster-title.food { fill: #86efac; }
+    .cluster-title.finance { fill: #fcd34d; }
     .cluster-title.evaluation { fill: #c4b5fd; }
     .cluster-title.entertainment { fill: #93c5fd; }
     .cluster-title.memory { fill: #67e8f9; }
@@ -349,6 +353,11 @@ function domainForNode(node) {
     return "food";
   }
   if (
+    ["finance", "invest", "investing", "investment", "investments", "portfolio", "stock", "stocks", "bond", "bonds", "saving", "savings", "budget", "budgeting", "debt", "loan", "loans", "interest", "retirement", "401k", "ira", "crypto", "mining", "coin", "coins", "market", "markets", "profit", "profitability"].some(item => text.includes(item) || topics.includes(item))
+  ) {
+    return "finance";
+  }
+  if (
     ["evaluation", "meta", "domain-separation", "classification", "policy", "under evaluation", "under-evaluation", "general area", "outside the core", "not related to ai memory"].some(item => text.includes(item) || topics.includes(item))
   ) {
     return "evaluation";
@@ -391,9 +400,17 @@ function domainLayoutFor(domain, nodes) {
           subtitle: "",
         };
   }
+  if (domain === "finance") {
+    return {
+        center: {x: 968, y: 548},
+        radius: 46,
+        label: "Finance",
+        subtitle: "",
+    };
+  }
   if (domain === "evaluation") {
     return {
-        center: {x: 742, y: 56},
+          center: {x: 742, y: 56},
         radius: 32,
         label: "Under evaluation",
         subtitle: "",

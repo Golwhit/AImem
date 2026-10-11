@@ -648,7 +648,7 @@
         "star-trek",
         "captain-picard"
       ],
-      "importance": 1.1657341758564152e-16,
+      "importance": 0.0,
       "consolidated": false
     },
     {
@@ -672,7 +672,7 @@
         "tv-show",
         "count"
       ],
-      "importance": 0.1500000000000001,
+      "importance": 0.0,
       "consolidated": false
     },
     {
@@ -684,7 +684,7 @@
         "tv-show",
         "count"
       ],
-      "importance": 0.049999999999999996,
+      "importance": 0.0,
       "consolidated": false
     },
     {
@@ -696,7 +696,7 @@
         "evolution",
         "domains"
       ],
-      "importance": 0.3000000000000001,
+      "importance": 0.0,
       "consolidated": false
     },
     {
@@ -708,7 +708,7 @@
         "evolution",
         "domains"
       ],
-      "importance": 0.19999999999999998,
+      "importance": 0.0,
       "consolidated": false
     },
     {
@@ -720,7 +720,7 @@
         "agents",
         "querying"
       ],
-      "importance": 0.45000000000000007,
+      "importance": 0.0,
       "consolidated": false
     },
     {
@@ -732,7 +732,7 @@
         "agents",
         "querying"
       ],
-      "importance": 0.35,
+      "importance": 0.0,
       "consolidated": false
     },
     {
@@ -744,7 +744,7 @@
         "policy",
         "agents"
       ],
-      "importance": 0.6000000000000001,
+      "importance": 0.0,
       "consolidated": false
     },
     {
@@ -756,7 +756,7 @@
         "policy",
         "agents"
       ],
-      "importance": 0.5,
+      "importance": 0.0,
       "consolidated": false
     },
     {
@@ -768,7 +768,7 @@
         "bible",
         "armor-of-god"
       ],
-      "importance": 0.75,
+      "importance": 0.0,
       "consolidated": false
     },
     {
@@ -780,7 +780,7 @@
         "bible",
         "armor-of-god"
       ],
-      "importance": 0.65,
+      "importance": 0.0,
       "consolidated": false,
       "created_cycle": 30
     },
@@ -789,7 +789,7 @@
       "role": "You",
       "text": "go for it",
       "topics": [],
-      "importance": 0.9,
+      "importance": 0.0,
       "consolidated": false
     },
     {
@@ -797,1914 +797,4032 @@
       "role": "Assistant",
       "text": "Added backend graph-state timestamps, automatic polling refresh, and a server endpoint for appending exchanges.",
       "topics": [],
-      "importance": 0.8,
+      "importance": 0.0,
       "consolidated": false,
       "created_cycle": 31
+    },
+    {
+      "id": "You 35",
+      "role": "You",
+      "text": "memories are not updating again noting about finance is showing",
+      "topics": [
+        "finance",
+        "memory-updates"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "AI 34",
+      "role": "Assistant",
+      "text": "I\u2019m treating this as a finance thread: investing, compound growth, and double-returns ideas belong together, but returns are never guaranteed. If you want, I can turn it into a finance cluster around investing, diversification, and the Rule of 72.",
+      "topics": [
+        "finance",
+        "investing",
+        "compound-growth"
+      ],
+      "importance": 0.0,
+      "consolidated": false,
+      "created_cycle": 32
+    },
+    {
+      "id": "You 36",
+      "role": "You",
+      "text": "crypto mining",
+      "topics": [
+        "crypto",
+        "mining"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "AI 35",
+      "role": "Assistant",
+      "text": "Crypto mining is best treated as a finance-plus-technology topic: it sits near investing, but it has its own hardware, energy, and profitability concerns. If you want, I can treat it as a crypto subcluster or keep it linked under the broader finance thread.",
+      "topics": [
+        "crypto",
+        "mining",
+        "finance"
+      ],
+      "importance": 0.0,
+      "consolidated": false,
+      "created_cycle": 33
+    },
+    {
+      "id": "You 37",
+      "role": "You",
+      "text": "best ways to crypto mine",
+      "topics": [
+        "crypto",
+        "mining",
+        "profitability"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "AI 36",
+      "role": "Assistant",
+      "text": "At a high level, the most practical ways to mine crypto are usually: choose hardware matched to the coin (often ASICs for major proof-of-work networks, GPUs only where they still make sense), keep electricity costs low, join a reputable mining pool for steadier payouts, and watch profitability against power, cooling, and hardware wear. Always check the network difficulty and local regulations before starting.",
+      "topics": [
+        "crypto",
+        "mining",
+        "electricity",
+        "hardware"
+      ],
+      "importance": 0.0,
+      "consolidated": false,
+      "created_cycle": 34
+    },
+    {
+      "id": "You 38",
+      "role": "You",
+      "text": "food",
+      "topics": [
+        "food"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "AI 37",
+      "role": "Assistant",
+      "text": "Food is usually a separate practical cluster: recipes, meals, favorites, planning, and anything directly about eating or cooking. If you want, I can help sort it into subtopics like recipes, dining, groceries, or favorite foods.",
+      "topics": [
+        "food",
+        "recipes",
+        "meals"
+      ],
+      "importance": 0.0,
+      "consolidated": false,
+      "created_cycle": 35
+    },
+    {
+      "id": "You 39",
+      "role": "You",
+      "text": "scripture",
+      "topics": [
+        "scripture"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "AI 38",
+      "role": "Assistant",
+      "text": "Scripture is its own clear cluster in the graph, especially for Bible passages, verses, and related theological discussion. If you want, I can narrow it to a specific passage or keep it grouped as a broader scripture thread.",
+      "topics": [
+        "scripture",
+        "bible",
+        "verses"
+      ],
+      "importance": 0.0,
+      "consolidated": false,
+      "created_cycle": 36
+    },
+    {
+      "id": "You 40",
+      "role": "You",
+      "text": "finance options",
+      "topics": [
+        "finance",
+        "options"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "AI 39",
+      "role": "Assistant",
+      "text": "Finance options usually include budgeting, saving, investing, debt payoff, retirement accounts, and cash-flow planning. If you want, I can break them into a clearer set of finance subtopics for the graph.",
+      "topics": [
+        "finance",
+        "budgeting",
+        "investing",
+        "debt"
+      ],
+      "importance": 0.0,
+      "consolidated": false,
+      "created_cycle": 37
+    },
+    {
+      "id": "You 41",
+      "role": "You",
+      "text": "finance has very little to do with ai memory and yet it's pulsing again when finance was discussed",
+      "topics": [
+        "finance",
+        "domain-separation"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "AI 40",
+      "role": "Assistant",
+      "text": "The finance memories are in the finance thread, not the AI-memory thread. It was pulsing because finance was still being classified as part of the memory domain; I\u2019ve now split finance into its own cluster so those turns stop lighting up AI memory.",
+      "topics": [
+        "finance",
+        "domain-separation",
+        "cluster"
+      ],
+      "importance": 0.0,
+      "consolidated": false,
+      "created_cycle": 38
+    },
+    {
+      "id": "You 42",
+      "role": "You",
+      "text": "what are the best crypto mining techniques",
+      "topics": [
+        "crypto",
+        "mining",
+        "techniques"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "AI 41",
+      "role": "Assistant",
+      "text": "At a high level, the best crypto-mining techniques are: use the right hardware for the coin (usually ASICs for major proof-of-work networks), keep power costs low, mine through a reputable pool, optimize cooling and uptime, and continually compare profitability against difficulty, fees, and hardware wear. For most people, the best technique is disciplined profitability management rather than chasing raw hash rate.",
+      "topics": [
+        "crypto",
+        "mining",
+        "hardware",
+        "electricity",
+        "profitability"
+      ],
+      "importance": 0.0,
+      "consolidated": false,
+      "created_cycle": 39
+    },
+    {
+      "id": "You 43",
+      "role": "You",
+      "text": "based on my entertainment preferences what are other tv shows I might enjoy?",
+      "topics": [
+        "entertainment",
+        "tv-show",
+        "recommendations"
+      ],
+      "importance": 1.1657341758564152e-16,
+      "consolidated": false
+    },
+    {
+      "id": "AI 42",
+      "role": "Assistant",
+      "text": "Based on Elementary, Star Trek: The Next Generation, and McGyver, you may enjoy shows with smart case-of-the-week storytelling, strong ensemble chemistry, and a mix of mystery or adventure. Good fits include Psych, Monk, The Mentalist, Castle, Leverage, Burn Notice, Fringe, Stargate SG-1, The Orville, and Quantum Leap. If you want, I can narrow that to more detective shows, more sci-fi, or more light adventure.",
+      "topics": [
+        "entertainment",
+        "tv-show",
+        "recommendations",
+        "mystery",
+        "sci-fi",
+        "adventure"
+      ],
+      "importance": 0.0,
+      "consolidated": false,
+      "created_cycle": 40
+    },
+    {
+      "id": "You 44",
+      "role": "You",
+      "text": "I like Leverage, Psych, and Quantum Leap",
+      "topics": [
+        "entertainment",
+        "tv-show",
+        "leverage",
+        "psych",
+        "quantum-leap"
+      ],
+      "importance": 0.1500000000000001,
+      "consolidated": false
+    },
+    {
+      "id": "AI 43",
+      "role": "Assistant",
+      "text": "That points to a preference for clever ensemble problem-solving, light mystery-comedy, and inventive premise-driven stories. Other good matches may include Monk, The Mentalist, Burn Notice, Castle, White Collar, Eureka, Warehouse 13, and The Librarians.",
+      "topics": [
+        "entertainment",
+        "tv-show",
+        "leverage",
+        "psych",
+        "quantum-leap",
+        "recommendations"
+      ],
+      "importance": 0.049999999999999996,
+      "consolidated": false,
+      "created_cycle": 41
+    },
+    {
+      "id": "You 45",
+      "role": "You",
+      "text": "imagery of the sword in the armor of god",
+      "topics": [
+        "scripture",
+        "armor-of-god",
+        "imagery"
+      ],
+      "importance": 0.3000000000000001,
+      "consolidated": false
+    },
+    {
+      "id": "AI 44",
+      "role": "Assistant",
+      "text": "In Ephesians 6:17, the sword is the 'sword of the Spirit, which is the word of God.' The imagery is defensive and offensive at once: the Word is a Spirit-given weapon for resisting lies, testing truth, and standing firm in spiritual conflict. It pairs with the rest of the armor to show that truth is not only protective but active and discerning.",
+      "topics": [
+        "scripture",
+        "armor-of-god",
+        "imagery",
+        "ephesians"
+      ],
+      "importance": 0.19999999999999998,
+      "consolidated": false,
+      "created_cycle": 42
+    },
+    {
+      "id": "You 46",
+      "role": "You",
+      "text": "enterprise grade motherboards that support multiple full 16x",
+      "topics": [
+        "hardware",
+        "pcie",
+        "enterprise"
+      ],
+      "importance": 0.45000000000000007,
+      "consolidated": false
+    },
+    {
+      "id": "AI 45",
+      "role": "Assistant",
+      "text": "If you mean several PCIe slots that are electrically x16, the usual choices are workstation/server platforms rather than consumer boards. Good families to look at are AMD Threadripper Pro boards on WRX90 or TRX50-class platforms, and Intel Xeon W workstation boards on W790. These are the kinds of motherboards that can provide multiple full-bandwidth PCIe x16 slots, especially for GPU or accelerator builds. In practice, you want to check the board manual for lane sharing and whether each slot is x16 electrical or only x16 physical.",
+      "topics": [
+        "hardware",
+        "pcie",
+        "workstation",
+        "server",
+        "gpu"
+      ],
+      "importance": 0.35,
+      "consolidated": false,
+      "created_cycle": 43
+    },
+    {
+      "id": "You 47",
+      "role": "You",
+      "text": "no shared lane need full 16x on all gpus",
+      "topics": [
+        "hardware",
+        "pcie",
+        "gpu",
+        "lane-sharing"
+      ],
+      "importance": 0.6000000000000001,
+      "consolidated": false
+    },
+    {
+      "id": "AI 46",
+      "role": "Assistant",
+      "text": "If you need full x16 electrically on every GPU, you\u2019re in workstation or server territory with enough total PCIe lanes \u2014 typically AMD Threadripper Pro on WRX90 or Intel Xeon W on W790, with board-specific slot wiring verified in the manual. For four GPUs at x16/x16/x16/x16, WRX90 is usually the strongest practical bet because it has enough lanes to keep multiple slots at full width without lane sharing. You should look for boards marketed for multi-GPU or accelerator use and confirm that each slot is x16 electrical, not just x16 physical. Also check that the platform does not steal lanes for M.2, SATA, or networking in a way that downshifts GPU slots.",
+      "topics": [
+        "hardware",
+        "pcie",
+        "gpu",
+        "workstation",
+        "server"
+      ],
+      "importance": 0.5,
+      "consolidated": false,
+      "created_cycle": 44
+    },
+    {
+      "id": "You 48",
+      "role": "You",
+      "text": "pricing for wrx90 boards",
+      "topics": [
+        "hardware",
+        "pcie",
+        "wrx90"
+      ],
+      "importance": 0.75,
+      "consolidated": false
+    },
+    {
+      "id": "AI 47",
+      "role": "Assistant",
+      "text": "WRX90 workstation boards are expensive: the ASUS Pro WS WRX90E-SAGE SE is typically around ,192 to ,337 USD depending on retailer, with most listings near ,299. A similar WRX90 board like the ASRock WRX90 WS EVO often lands around ,100 to ,840 depending on seller and stock. If you need multiple GPUs at full x16, WRX90 is usually the platform to target, but the motherboard alone is already in workstation-tier pricing.",
+      "topics": [
+        "hardware",
+        "pcie",
+        "wrx90",
+        "pricing"
+      ],
+      "importance": 0.65,
+      "consolidated": false,
+      "created_cycle": 45
+    },
+    {
+      "id": "You 49",
+      "role": "You",
+      "text": "finance may be lightly related to  gpus and crypto, but is it soley in finance or is it under evaluation?",
+      "topics": [
+        "finance",
+        "crypto",
+        "gpu",
+        "evaluation"
+      ],
+      "importance": 0.9,
+      "consolidated": false
+    },
+    {
+      "id": "AI 48",
+      "role": "Assistant",
+      "text": "The underlying topic belongs in the finance cluster, with cross-links to crypto and GPU hardware. It is not solely an evaluation topic unless the conversation is about classifying or comparing clusters; that meta-question would go under evaluation. In other words: finance is the home cluster, and evaluation is the discussion about where to place it.",
+      "topics": [
+        "finance",
+        "crypto",
+        "gpu",
+        "evaluation",
+        "domain-separation"
+      ],
+      "importance": 0.8,
+      "consolidated": false,
+      "created_cycle": 46
     }
   ],
-  "cycles": 31,
+  "cycles": 46,
   "links": [
     {
       "source": "You 1",
       "target": "AI 1",
-      "strength": 0.13253943673476376,
+      "strength": 0.061404358689529474,
       "kind": "sequence"
     },
     {
       "source": "AI 1",
       "target": "You 2",
-      "strength": 0.07136738901102661,
+      "strength": 0.033063885448208166,
       "kind": "sequence"
     },
     {
       "source": "You 2",
       "target": "AI 2",
-      "strength": 0.13253943673476376,
+      "strength": 0.061404358689529474,
       "kind": "sequence"
     },
     {
       "source": "AI 2",
       "target": "You 3",
-      "strength": 0.16312546059663227,
+      "strength": 0.07557459531019008,
       "kind": "sequence"
     },
     {
       "source": "You 2",
       "target": "You 3",
-      "strength": 0.13253943673476376,
+      "strength": 0.061404358689529474,
       "kind": "topic"
     },
     {
       "source": "You 3",
       "target": "You 4",
-      "strength": 0.07512356738002801,
+      "strength": 0.03480408994548228,
       "kind": "sequence"
     },
     {
       "source": "You 4",
       "target": "AI 3",
-      "strength": 0.13951519656290923,
+      "strength": 0.06463616704160997,
       "kind": "sequence"
     },
     {
       "source": "AI 3",
       "target": "You 5",
-      "strength": 0.07907743934739792,
+      "strength": 0.036635884153139245,
       "kind": "sequence"
     },
     {
       "source": "You 5",
       "target": "AI 4",
-      "strength": 0.1468581016451676,
+      "strength": 0.06803807057011577,
       "kind": "sequence"
     },
     {
       "source": "AI 4",
       "target": "You 6",
-      "strength": 0.08323940983936623,
+      "strength": 0.03856408858225184,
       "kind": "sequence"
     },
     {
       "source": "You 6",
       "target": "AI 5",
-      "strength": 0.1545874754159659,
+      "strength": 0.07161902165275344,
       "kind": "sequence"
     },
     {
       "source": "AI 5",
       "target": "You 7",
-      "strength": 0.08762043140985919,
+      "strength": 0.040593777455001936,
       "kind": "sequence"
     },
     {
       "source": "You 7",
       "target": "AI 6",
-      "strength": 0.1627236583325957,
+      "strength": 0.07538844384500362,
       "kind": "sequence"
     },
     {
       "source": "You 1",
       "target": "You 2",
-      "strength": 0.07758163341118682,
+      "strength": 0.035942890380871735,
       "kind": "similarity"
     },
     {
       "source": "AI 1",
       "target": "AI 2",
-      "strength": 0.10514451769183106,
+      "strength": 0.04871253294600234,
       "kind": "similarity"
     },
     {
       "source": "AI 1",
       "target": "AI 5",
-      "strength": 0.09350351751880694,
+      "strength": 0.04331935965555208,
       "kind": "similarity"
     },
     {
       "source": "AI 2",
       "target": "You 6",
-      "strength": 0.0766052914611912,
+      "strength": 0.03549055971780169,
       "kind": "similarity"
     },
     {
       "source": "You 3",
       "target": "AI 3",
-      "strength": 0.08041052162527652,
+      "strength": 0.03725348948156178,
       "kind": "similarity"
     },
     {
       "source": "You 3",
       "target": "AI 5",
-      "strength": 0.08902235831241696,
+      "strength": 0.04124327789428197,
       "kind": "similarity"
     },
     {
       "source": "You 4",
       "target": "You 5",
-      "strength": 0.10504438005593411,
+      "strength": 0.048666140057482356,
       "kind": "similarity"
     },
     {
       "source": "You 4",
       "target": "AI 4",
-      "strength": 0.07970955817399765,
+      "strength": 0.03692873926192178,
       "kind": "similarity"
     },
     {
       "source": "AI 3",
       "target": "AI 5",
-      "strength": 0.1164851049571643,
+      "strength": 0.05396652757089258,
       "kind": "similarity"
     },
     {
       "source": "AI 3",
       "target": "AI 6",
-      "strength": 0.09805977995211962,
+      "strength": 0.045430236083212186,
       "kind": "similarity"
     },
     {
       "source": "AI 4",
       "target": "AI 5",
-      "strength": 0.10058825525851837,
+      "strength": 0.04660165651834222,
       "kind": "similarity"
     },
     {
       "source": "AI 5",
       "target": "AI 6",
-      "strength": 0.09946170685467737,
+      "strength": 0.04607973652249222,
       "kind": "similarity"
     },
     {
       "source": "You 1",
       "target": "You 3",
-      "strength": 0.07102261825993449,
+      "strength": 0.03290415618281158,
       "kind": "similarity"
     },
     {
       "source": "You 2",
       "target": "You 7",
-      "strength": 0.07239951075351797,
+      "strength": 0.03354205839996161,
       "kind": "similarity"
     },
     {
       "source": "AI 2",
       "target": "You 7",
-      "strength": 0.07184875375608456,
+      "strength": 0.0332868975131016,
       "kind": "similarity"
     },
     {
       "source": "AI 6",
       "target": "You 8",
-      "strength": 0.09223203306300967,
+      "strength": 0.04273029205789678,
       "kind": "sequence"
     },
     {
       "source": "You 8",
       "target": "AI 7",
-      "strength": 0.1712880614027323,
+      "strength": 0.07935625667895119,
       "kind": "topic"
     },
     {
       "source": "You 4",
       "target": "AI 7",
-      "strength": 0.11146899995900891,
+      "strength": 0.0516426101156867,
       "kind": "similarity"
     },
     {
       "source": "AI 7",
       "target": "You 9",
-      "strength": 0.09708635059264177,
+      "strength": 0.044979254797786083,
       "kind": "sequence"
     },
     {
       "source": "You 9",
       "target": "AI 8",
-      "strength": 0.18030322252919193,
+      "strength": 0.08353290176731705,
       "kind": "topic"
     },
     {
       "source": "AI 2",
       "target": "AI 8",
-      "strength": 0.08582433392389535,
+      "strength": 0.03976166124124291,
       "kind": "similarity"
     },
     {
       "source": "You 4",
       "target": "You 9",
-      "strength": 0.07969402435790283,
+      "strength": 0.036921542581154126,
       "kind": "similarity"
     },
     {
       "source": "AI 8",
       "target": "You 10",
-      "strength": 0.1021961585185703,
+      "strength": 0.04734658399766956,
       "kind": "sequence"
     },
     {
       "source": "You 10",
       "target": "AI 9",
-      "strength": 0.14599451216938614,
+      "strength": 0.06763797713952795,
       "kind": "topic"
     },
     {
       "source": "AI 2",
       "target": "AI 9",
-      "strength": 0.12210980997847456,
+      "strength": 0.05657240407950116,
       "kind": "similarity"
     },
     {
       "source": "You 5",
       "target": "AI 9",
-      "strength": 0.1113938127852417,
+      "strength": 0.05160777655745985,
       "kind": "similarity"
     },
     {
       "source": "You 6",
       "target": "AI 9",
-      "strength": 0.10651759607878417,
+      "strength": 0.049348668120999604,
       "kind": "similarity"
     },
     {
       "source": "AI 6",
       "target": "You 10",
-      "strength": 0.1034809102256609,
+      "strength": 0.0479417981964974,
       "kind": "similarity"
     },
     {
       "source": "AI 8",
       "target": "AI 9",
-      "strength": 0.09591839449528672,
+      "strength": 0.04443815098066987,
       "kind": "similarity"
     },
     {
       "source": "AI 9",
       "target": "You 11",
-      "strength": 0.1075749037037582,
+      "strength": 0.04983850947123112,
       "kind": "sequence"
     },
     {
       "source": "You 11",
       "target": "AI 10",
-      "strength": 0.15367843386251173,
+      "strength": 0.07119787067318732,
       "kind": "topic"
     },
     {
       "source": "You 6",
       "target": "AI 10",
-      "strength": 0.15367843386251173,
+      "strength": 0.07119787067318732,
       "kind": "topic"
     },
     {
       "source": "AI 5",
       "target": "AI 10",
-      "strength": 0.15367843386251173,
+      "strength": 0.07119787067318732,
       "kind": "topic"
     },
     {
       "source": "AI 6",
       "target": "You 11",
-      "strength": 0.10431692090587297,
+      "strength": 0.04832911461295955,
       "kind": "similarity"
     },
     {
       "source": "AI 10",
       "target": "You 12",
-      "strength": 0.11323674074079812,
+      "strength": 0.05246158891708539,
       "kind": "sequence"
     },
     {
       "source": "You 12",
       "target": "AI 11",
-      "strength": 0.2102968042329109,
+      "strength": 0.09742866513173006,
       "kind": "topic"
     },
     {
       "source": "AI 6",
       "target": "AI 11",
-      "strength": 0.08806583094184363,
+      "strength": 0.040800127152087584,
       "kind": "similarity"
     },
     {
       "source": "AI 11",
       "target": "You 13",
-      "strength": 0.17028081314405732,
+      "strength": 0.07888960739411338,
       "kind": "topic"
     },
     {
       "source": "You 13",
       "target": "AI 12",
-      "strength": 0.22136505708727464,
+      "strength": 0.10255648961234744,
       "kind": "topic"
     },
     {
       "source": "You 2",
       "target": "You 13",
-      "strength": 0.17028081314405732,
+      "strength": 0.07888960739411338,
       "kind": "topic"
     },
     {
       "source": "AI 2",
       "target": "You 13",
-      "strength": 0.17028081314405732,
+      "strength": 0.07888960739411338,
       "kind": "topic"
     },
     {
       "source": "You 3",
       "target": "You 13",
-      "strength": 0.17028081314405732,
+      "strength": 0.07888960739411338,
       "kind": "topic"
     },
     {
       "source": "You 12",
       "target": "You 13",
-      "strength": 0.17028081314405732,
+      "strength": 0.07888960739411338,
       "kind": "topic"
     },
     {
       "source": "You 2",
       "target": "AI 12",
-      "strength": 0.17028081314405732,
+      "strength": 0.07888960739411338,
       "kind": "topic"
     },
     {
       "source": "AI 2",
       "target": "AI 12",
-      "strength": 0.17028081314405732,
+      "strength": 0.07888960739411338,
       "kind": "topic"
     },
     {
       "source": "You 3",
       "target": "AI 12",
-      "strength": 0.17028081314405732,
+      "strength": 0.07888960739411338,
       "kind": "topic"
     },
     {
       "source": "AI 5",
       "target": "You 13",
-      "strength": 0.10298583578952594,
+      "strength": 0.0477124345519598,
       "kind": "similarity"
     },
     {
       "source": "You 10",
       "target": "AI 12",
-      "strength": 0.15713513436933613,
+      "strength": 0.07279932970328781,
       "kind": "similarity"
     },
     {
       "source": "AI 12",
       "target": "You 14",
-      "strength": 0.17924296120427088,
+      "strength": 0.08304169199380357,
       "kind": "topic"
     },
     {
       "source": "You 14",
       "target": "AI 13",
-      "strength": 0.23301584956555227,
+      "strength": 0.10795419959194467,
       "kind": "topic"
     },
     {
       "source": "You 8",
       "target": "You 14",
-      "strength": 0.17924296120427088,
+      "strength": 0.08304169199380357,
       "kind": "topic"
     },
     {
       "source": "AI 7",
       "target": "You 14",
-      "strength": 0.17924296120427088,
+      "strength": 0.08304169199380357,
       "kind": "topic"
     },
     {
       "source": "You 10",
       "target": "You 14",
-      "strength": 0.17924296120427088,
+      "strength": 0.08304169199380357,
       "kind": "topic"
     },
     {
       "source": "You 10",
       "target": "AI 13",
-      "strength": 0.17924296120427088,
+      "strength": 0.08304169199380357,
       "kind": "topic"
     },
     {
       "source": "AI 12",
       "target": "AI 13",
-      "strength": 0.17924296120427088,
+      "strength": 0.08304169199380357,
       "kind": "topic"
     },
     {
       "source": "AI 7",
       "target": "AI 13",
-      "strength": 0.18637683106020098,
+      "strength": 0.08634675133515698,
       "kind": "similarity"
     },
     {
       "source": "AI 13",
       "target": "You 15",
-      "strength": 0.1320737608873575,
+      "strength": 0.06118861515332894,
       "kind": "sequence"
     },
     {
       "source": "You 15",
       "target": "AI 14",
-      "strength": 0.24527984164794978,
+      "strength": 0.11363599957046808,
       "kind": "topic"
     },
     {
       "source": "You 12",
       "target": "You 15",
-      "strength": 0.24527984164794978,
+      "strength": 0.11363599957046808,
       "kind": "topic"
     },
     {
       "source": "AI 11",
       "target": "You 15",
-      "strength": 0.18867680126765357,
+      "strength": 0.08741230736189849,
       "kind": "topic"
     },
     {
       "source": "You 13",
       "target": "You 15",
-      "strength": 0.18867680126765357,
+      "strength": 0.08741230736189849,
       "kind": "topic"
     },
     {
       "source": "You 12",
       "target": "AI 14",
-      "strength": 0.18867680126765357,
+      "strength": 0.08741230736189849,
       "kind": "topic"
     },
     {
       "source": "AI 11",
       "target": "AI 14",
-      "strength": 0.24527984164794978,
+      "strength": 0.11363599957046808,
       "kind": "topic"
     },
     {
       "source": "You 13",
       "target": "AI 14",
-      "strength": 0.18867680126765357,
+      "strength": 0.08741230736189849,
       "kind": "topic"
     },
     {
       "source": "You 11",
       "target": "AI 14",
-      "strength": 0.1314322597630475,
+      "strength": 0.060891413308298496,
       "kind": "similarity"
     },
     {
       "source": "AI 14",
       "target": "You 16",
-      "strength": 0.13902501146037632,
+      "strength": 0.06440906858245152,
       "kind": "sequence"
     },
     {
       "source": "You 16",
       "target": "AI 15",
-      "strength": 0.25818930699784187,
+      "strength": 0.11961684165312429,
       "kind": "topic"
     },
     {
       "source": "You 13",
       "target": "AI 15",
-      "strength": 0.19860715922910904,
+      "strength": 0.09201295511778788,
       "kind": "topic"
     },
     {
       "source": "AI 12",
       "target": "AI 15",
-      "strength": 0.19860715922910904,
+      "strength": 0.09201295511778788,
       "kind": "topic"
     },
     {
       "source": "You 1",
       "target": "AI 15",
-      "strength": 0.11733710967255766,
+      "strength": 0.0543612538835891,
       "kind": "similarity"
     },
     {
       "source": "AI 10",
       "target": "AI 15",
-      "strength": 0.17294711425670825,
+      "strength": 0.08012488131656971,
       "kind": "similarity"
     },
     {
       "source": "AI 15",
       "target": "You 17",
-      "strength": 0.20906016760958848,
+      "strength": 0.0968557422292504,
       "kind": "topic"
     },
     {
       "source": "You 17",
       "target": "AI 16",
-      "strength": 0.27177821789246515,
+      "strength": 0.12591246489802557,
       "kind": "topic"
     },
     {
       "source": "You 11",
       "target": "You 17",
-      "strength": 0.20906016760958848,
+      "strength": 0.0968557422292504,
       "kind": "topic"
     },
     {
       "source": "AI 10",
       "target": "You 17",
-      "strength": 0.20906016760958848,
+      "strength": 0.0968557422292504,
       "kind": "topic"
     },
     {
       "source": "You 16",
       "target": "You 17",
-      "strength": 0.20906016760958848,
+      "strength": 0.0968557422292504,
       "kind": "topic"
     },
     {
       "source": "You 11",
       "target": "AI 16",
-      "strength": 0.20906016760958848,
+      "strength": 0.0968557422292504,
       "kind": "topic"
     },
     {
       "source": "AI 10",
       "target": "AI 16",
-      "strength": 0.20906016760958848,
+      "strength": 0.0968557422292504,
       "kind": "topic"
     },
     {
       "source": "You 16",
       "target": "AI 16",
-      "strength": 0.20906016760958848,
+      "strength": 0.0968557422292504,
       "kind": "topic"
     },
     {
       "source": "AI 15",
       "target": "AI 16",
-      "strength": 0.20906016760958848,
+      "strength": 0.0968557422292504,
       "kind": "topic"
     },
     {
       "source": "AI 16",
       "target": "You 18",
-      "strength": 0.35210133492141227,
+      "strength": 0.16312546059663227,
       "kind": "topic"
     },
     {
       "source": "You 18",
       "target": "AI 17",
-      "strength": 0.35210133492141227,
+      "strength": 0.16312546059663227,
       "kind": "topic"
     },
     {
       "source": "You 11",
       "target": "You 18",
-      "strength": 0.22006333432588263,
+      "strength": 0.10195341287289517,
       "kind": "topic"
     },
     {
       "source": "AI 10",
       "target": "You 18",
-      "strength": 0.22006333432588263,
+      "strength": 0.10195341287289517,
       "kind": "topic"
     },
     {
       "source": "You 16",
       "target": "You 18",
-      "strength": 0.22006333432588263,
+      "strength": 0.10195341287289517,
       "kind": "topic"
     },
     {
       "source": "AI 15",
       "target": "You 18",
-      "strength": 0.22006333432588263,
+      "strength": 0.10195341287289517,
       "kind": "topic"
     },
     {
       "source": "You 17",
       "target": "You 18",
-      "strength": 0.2860823346236475,
+      "strength": 0.13253943673476376,
       "kind": "topic"
     },
     {
       "source": "You 11",
       "target": "AI 17",
-      "strength": 0.22006333432588263,
+      "strength": 0.10195341287289517,
       "kind": "topic"
     },
     {
       "source": "AI 10",
       "target": "AI 17",
-      "strength": 0.22006333432588263,
+      "strength": 0.10195341287289517,
       "kind": "topic"
     },
     {
       "source": "You 16",
       "target": "AI 17",
-      "strength": 0.22006333432588263,
+      "strength": 0.10195341287289517,
       "kind": "topic"
     },
     {
       "source": "AI 15",
       "target": "AI 17",
-      "strength": 0.22006333432588263,
+      "strength": 0.10195341287289517,
       "kind": "topic"
     },
     {
       "source": "You 17",
       "target": "AI 17",
-      "strength": 0.2860823346236475,
+      "strength": 0.13253943673476376,
       "kind": "topic"
     },
     {
       "source": "AI 16",
       "target": "AI 17",
-      "strength": 0.35210133492141227,
+      "strength": 0.16312546059663227,
       "kind": "topic"
     },
     {
       "source": "You 1",
       "target": "You 18",
-      "strength": 0.18089206081587555,
+      "strength": 0.08380570538151984,
       "kind": "similarity"
     },
     {
       "source": "You 10",
       "target": "AI 17",
-      "strength": 0.22732542435863676,
+      "strength": 0.1053178754977007,
       "kind": "similarity"
     },
     {
       "source": "AI 17",
       "target": "You 19",
-      "strength": 0.3011392996038395,
+      "strength": 0.13951519656290923,
       "kind": "topic"
     },
     {
       "source": "You 19",
       "target": "AI 18",
-      "strength": 0.3706329841278024,
+      "strength": 0.17171101115434978,
       "kind": "topic"
     },
     {
       "source": "You 16",
       "target": "You 19",
-      "strength": 0.23164561507987647,
+      "strength": 0.1073193819714686,
       "kind": "topic"
     },
     {
       "source": "AI 15",
       "target": "You 19",
-      "strength": 0.23164561507987647,
+      "strength": 0.1073193819714686,
       "kind": "topic"
     },
     {
       "source": "You 17",
       "target": "You 19",
-      "strength": 0.23164561507987647,
+      "strength": 0.1073193819714686,
       "kind": "topic"
     },
     {
       "source": "AI 16",
       "target": "You 19",
-      "strength": 0.3011392996038395,
+      "strength": 0.13951519656290923,
       "kind": "topic"
     },
     {
       "source": "You 18",
       "target": "You 19",
-      "strength": 0.3011392996038395,
+      "strength": 0.13951519656290923,
       "kind": "topic"
     },
     {
       "source": "You 16",
       "target": "AI 18",
-      "strength": 0.23164561507987647,
+      "strength": 0.1073193819714686,
       "kind": "topic"
     },
     {
       "source": "AI 15",
       "target": "AI 18",
-      "strength": 0.23164561507987647,
+      "strength": 0.1073193819714686,
       "kind": "topic"
     },
     {
       "source": "You 17",
       "target": "AI 18",
-      "strength": 0.23164561507987647,
+      "strength": 0.1073193819714686,
       "kind": "topic"
     },
     {
       "source": "AI 16",
       "target": "AI 18",
-      "strength": 0.3011392996038395,
+      "strength": 0.13951519656290923,
       "kind": "topic"
     },
     {
       "source": "You 18",
       "target": "AI 18",
-      "strength": 0.3011392996038395,
+      "strength": 0.13951519656290923,
       "kind": "topic"
     },
     {
       "source": "AI 17",
       "target": "AI 18",
-      "strength": 0.3011392996038395,
+      "strength": 0.13951519656290923,
       "kind": "topic"
     },
     {
       "source": "You 13",
       "target": "AI 18",
-      "strength": 0.15738003088526809,
+      "strength": 0.07291278811141579,
       "kind": "similarity"
     },
     {
       "source": "AI 18",
       "target": "You 20",
-      "strength": 0.17068624269043528,
+      "strength": 0.07907743934739792,
       "kind": "sequence"
     },
     {
       "source": "You 20",
       "target": "AI 19",
-      "strength": 0.39013998329242355,
+      "strength": 0.18074843279405242,
       "kind": "topic"
     },
     {
       "source": "You 2",
       "target": "You 20",
-      "strength": 0.24383748955776471,
+      "strength": 0.11296777049628275,
       "kind": "topic"
     },
     {
       "source": "AI 2",
       "target": "You 20",
-      "strength": 0.24383748955776471,
+      "strength": 0.11296777049628275,
       "kind": "topic"
     },
     {
       "source": "You 3",
       "target": "You 20",
-      "strength": 0.24383748955776471,
+      "strength": 0.11296777049628275,
       "kind": "topic"
     },
     {
       "source": "You 8",
       "target": "You 20",
-      "strength": 0.24383748955776471,
+      "strength": 0.11296777049628275,
       "kind": "topic"
     },
     {
       "source": "AI 7",
       "target": "You 20",
-      "strength": 0.24383748955776471,
+      "strength": 0.11296777049628275,
       "kind": "topic"
     },
     {
       "source": "You 13",
       "target": "You 20",
-      "strength": 0.31698873642509423,
+      "strength": 0.1468581016451676,
       "kind": "topic"
     },
     {
       "source": "AI 12",
       "target": "You 20",
-      "strength": 0.31698873642509423,
+      "strength": 0.1468581016451676,
       "kind": "topic"
     },
     {
       "source": "You 14",
       "target": "You 20",
-      "strength": 0.24383748955776471,
+      "strength": 0.11296777049628275,
       "kind": "topic"
     },
     {
       "source": "AI 15",
       "target": "You 20",
-      "strength": 0.24383748955776471,
+      "strength": 0.11296777049628275,
       "kind": "topic"
     },
     {
       "source": "You 2",
       "target": "AI 19",
-      "strength": 0.24383748955776471,
+      "strength": 0.11296777049628275,
       "kind": "topic"
     },
     {
       "source": "AI 2",
       "target": "AI 19",
-      "strength": 0.24383748955776471,
+      "strength": 0.11296777049628275,
       "kind": "topic"
     },
     {
       "source": "You 3",
       "target": "AI 19",
-      "strength": 0.24383748955776471,
+      "strength": 0.11296777049628275,
       "kind": "topic"
     },
     {
       "source": "You 8",
       "target": "AI 19",
-      "strength": 0.24383748955776471,
+      "strength": 0.11296777049628275,
       "kind": "topic"
     },
     {
       "source": "AI 7",
       "target": "AI 19",
-      "strength": 0.24383748955776471,
+      "strength": 0.11296777049628275,
       "kind": "topic"
     },
     {
       "source": "You 13",
       "target": "AI 19",
-      "strength": 0.31698873642509423,
+      "strength": 0.1468581016451676,
       "kind": "topic"
     },
     {
       "source": "AI 12",
       "target": "AI 19",
-      "strength": 0.31698873642509423,
+      "strength": 0.1468581016451676,
       "kind": "topic"
     },
     {
       "source": "You 14",
       "target": "AI 19",
-      "strength": 0.24383748955776471,
+      "strength": 0.11296777049628275,
       "kind": "topic"
     },
     {
       "source": "AI 15",
       "target": "AI 19",
-      "strength": 0.24383748955776471,
+      "strength": 0.11296777049628275,
       "kind": "topic"
     },
     {
       "source": "You 1",
       "target": "You 20",
-      "strength": 0.1850726545743434,
+      "strength": 0.08574253780667859,
       "kind": "similarity"
     },
     {
       "source": "You 7",
       "target": "You 20",
-      "strength": 0.15576338832950015,
+      "strength": 0.07216381179302546,
       "kind": "similarity"
     },
     {
       "source": "You 9",
       "target": "You 20",
-      "strength": 0.14542467877225085,
+      "strength": 0.06737397832398302,
       "kind": "similarity"
     },
     {
       "source": "AI 13",
       "target": "AI 19",
-      "strength": 0.27148866087361523,
+      "strength": 0.1257783156705612,
       "kind": "similarity"
     },
     {
       "source": "You 17",
       "target": "You 20",
-      "strength": 0.17039363770296598,
+      "strength": 0.07894187802280235,
       "kind": "similarity"
     },
     {
       "source": "AI 19",
       "target": "You 21",
-      "strength": 0.3336723541316782,
+      "strength": 0.1545874754159659,
       "kind": "topic"
     },
     {
       "source": "You 21",
       "target": "AI 20",
-      "strength": 0.4106736666236038,
+      "strength": 0.1902615082042657,
       "kind": "topic"
     },
     {
       "source": "You 2",
       "target": "You 21",
-      "strength": 0.25667104163975235,
+      "strength": 0.11891344262766605,
       "kind": "topic"
     },
     {
       "source": "AI 2",
       "target": "You 21",
-      "strength": 0.25667104163975235,
+      "strength": 0.11891344262766605,
       "kind": "topic"
     },
     {
       "source": "You 3",
       "target": "You 21",
-      "strength": 0.25667104163975235,
+      "strength": 0.11891344262766605,
       "kind": "topic"
     },
     {
       "source": "AI 7",
       "target": "You 21",
-      "strength": 0.25667104163975235,
+      "strength": 0.11891344262766605,
       "kind": "topic"
     },
     {
       "source": "You 13",
       "target": "You 21",
-      "strength": 0.3336723541316782,
+      "strength": 0.1545874754159659,
       "kind": "topic"
     },
     {
       "source": "AI 12",
       "target": "You 21",
-      "strength": 0.3336723541316782,
+      "strength": 0.1545874754159659,
       "kind": "topic"
     },
     {
       "source": "AI 15",
       "target": "You 21",
-      "strength": 0.25667104163975235,
+      "strength": 0.11891344262766605,
       "kind": "topic"
     },
     {
       "source": "You 20",
       "target": "You 21",
-      "strength": 0.3336723541316782,
+      "strength": 0.1545874754159659,
       "kind": "topic"
     },
     {
       "source": "You 2",
       "target": "AI 20",
-      "strength": 0.25667104163975235,
+      "strength": 0.11891344262766605,
       "kind": "topic"
     },
     {
       "source": "AI 2",
       "target": "AI 20",
-      "strength": 0.25667104163975235,
+      "strength": 0.11891344262766605,
       "kind": "topic"
     },
     {
       "source": "You 3",
       "target": "AI 20",
-      "strength": 0.25667104163975235,
+      "strength": 0.11891344262766605,
       "kind": "topic"
     },
     {
       "source": "AI 7",
       "target": "AI 20",
-      "strength": 0.25667104163975235,
+      "strength": 0.11891344262766605,
       "kind": "topic"
     },
     {
       "source": "You 13",
       "target": "AI 20",
-      "strength": 0.3336723541316782,
+      "strength": 0.1545874754159659,
       "kind": "topic"
     },
     {
       "source": "AI 12",
       "target": "AI 20",
-      "strength": 0.3336723541316782,
+      "strength": 0.1545874754159659,
       "kind": "topic"
     },
     {
       "source": "AI 15",
       "target": "AI 20",
-      "strength": 0.25667104163975235,
+      "strength": 0.11891344262766605,
       "kind": "topic"
     },
     {
       "source": "You 20",
       "target": "AI 20",
-      "strength": 0.3336723541316782,
+      "strength": 0.1545874754159659,
       "kind": "topic"
     },
     {
       "source": "AI 19",
       "target": "AI 20",
-      "strength": 0.3336723541316782,
+      "strength": 0.1545874754159659,
       "kind": "topic"
     },
     {
       "source": "AI 3",
       "target": "AI 20",
-      "strength": 0.19445398114627643,
+      "strength": 0.09008882413471982,
       "kind": "similarity"
     },
     {
       "source": "You 8",
       "target": "You 21",
-      "strength": 0.3336723541316782,
+      "strength": 0.1545874754159659,
       "kind": "similarity"
     },
     {
       "source": "You 10",
       "target": "You 21",
-      "strength": 0.22930990860095485,
+      "strength": 0.1062372696435569,
       "kind": "similarity"
     },
     {
       "source": "You 14",
       "target": "You 21",
-      "strength": 0.27438134351289534,
+      "strength": 0.12711847016897504,
       "kind": "similarity"
     },
     {
       "source": "AI 20",
       "target": "You 22",
-      "strength": 0.2701800438313183,
+      "strength": 0.12517204487122743,
       "kind": "topic"
     },
     {
       "source": "You 22",
       "target": "AI 21",
-      "strength": 0.35123405698071386,
+      "strength": 0.1627236583325957,
       "kind": "topic"
     },
     {
       "source": "You 13",
       "target": "You 22",
-      "strength": 0.2701800438313183,
+      "strength": 0.12517204487122743,
       "kind": "topic"
     },
     {
       "source": "AI 12",
       "target": "You 22",
-      "strength": 0.2701800438313183,
+      "strength": 0.12517204487122743,
       "kind": "topic"
     },
     {
       "source": "AI 15",
       "target": "You 22",
-      "strength": 0.2701800438313183,
+      "strength": 0.12517204487122743,
       "kind": "topic"
     },
     {
       "source": "You 20",
       "target": "You 22",
-      "strength": 0.2701800438313183,
+      "strength": 0.12517204487122743,
       "kind": "topic"
     },
     {
       "source": "AI 19",
       "target": "You 22",
-      "strength": 0.2701800438313183,
+      "strength": 0.12517204487122743,
       "kind": "topic"
     },
     {
       "source": "You 21",
       "target": "You 22",
-      "strength": 0.2701800438313183,
+      "strength": 0.12517204487122743,
       "kind": "topic"
     },
     {
       "source": "AI 1",
       "target": "You 22",
-      "strength": 0.1787511169988002,
+      "strength": 0.08281382488680408,
       "kind": "similarity"
     },
     {
       "source": "AI 15",
       "target": "AI 21",
-      "strength": 0.23224676567740132,
+      "strength": 0.10759788977130716,
       "kind": "similarity"
     },
     {
       "source": "AI 21",
       "target": "You 23",
-      "strength": 0.19908003229676083,
+      "strength": 0.09223203306300967,
       "kind": "sequence"
     },
     {
       "source": "You 23",
       "target": "AI 22",
-      "strength": 0.4550400738211676,
+      "strength": 0.2108160755725936,
       "kind": "topic"
     },
     {
       "source": "You 11",
       "target": "You 23",
-      "strength": 0.2844000461382298,
+      "strength": 0.131760047232871,
       "kind": "topic"
     },
     {
       "source": "AI 10",
       "target": "You 23",
-      "strength": 0.2844000461382298,
+      "strength": 0.131760047232871,
       "kind": "topic"
     },
     {
       "source": "You 17",
       "target": "You 23",
-      "strength": 0.2844000461382298,
+      "strength": 0.131760047232871,
       "kind": "topic"
     },
     {
       "source": "AI 16",
       "target": "You 23",
-      "strength": 0.2844000461382298,
+      "strength": 0.131760047232871,
       "kind": "topic"
     },
     {
       "source": "You 18",
       "target": "You 23",
-      "strength": 0.2844000461382298,
+      "strength": 0.131760047232871,
       "kind": "topic"
     },
     {
       "source": "AI 17",
       "target": "You 23",
-      "strength": 0.2844000461382298,
+      "strength": 0.131760047232871,
       "kind": "topic"
     },
     {
       "source": "You 11",
       "target": "AI 22",
-      "strength": 0.2844000461382298,
+      "strength": 0.131760047232871,
       "kind": "topic"
     },
     {
       "source": "AI 10",
       "target": "AI 22",
-      "strength": 0.2844000461382298,
+      "strength": 0.131760047232871,
       "kind": "topic"
     },
     {
       "source": "You 17",
       "target": "AI 22",
-      "strength": 0.2844000461382298,
+      "strength": 0.131760047232871,
       "kind": "topic"
     },
     {
       "source": "AI 16",
       "target": "AI 22",
-      "strength": 0.2844000461382298,
+      "strength": 0.131760047232871,
       "kind": "topic"
     },
     {
       "source": "You 18",
       "target": "AI 22",
-      "strength": 0.2844000461382298,
+      "strength": 0.131760047232871,
       "kind": "topic"
     },
     {
       "source": "AI 17",
       "target": "AI 22",
-      "strength": 0.2844000461382298,
+      "strength": 0.131760047232871,
       "kind": "topic"
     },
     {
       "source": "You 7",
       "target": "AI 22",
-      "strength": 0.18309674970379236,
+      "strength": 0.08482711840852235,
       "kind": "similarity"
     },
     {
       "source": "AI 15",
       "target": "AI 22",
-      "strength": 0.20704323358863125,
+      "strength": 0.09592131438553007,
       "kind": "similarity"
     },
     {
       "source": "AI 22",
       "target": "You 24",
-      "strength": 0.47898955139070276,
+      "strength": 0.22191165849746697,
       "kind": "topic"
     },
     {
       "source": "You 24",
       "target": "AI 23",
-      "strength": 0.47898955139070276,
+      "strength": 0.22191165849746697,
       "kind": "topic"
     },
     {
       "source": "You 11",
       "target": "You 24",
-      "strength": 0.2993684696191893,
+      "strength": 0.13869478656091683,
       "kind": "topic"
     },
     {
       "source": "AI 10",
       "target": "You 24",
-      "strength": 0.2993684696191893,
+      "strength": 0.13869478656091683,
       "kind": "topic"
     },
     {
       "source": "You 17",
       "target": "You 24",
-      "strength": 0.2993684696191893,
+      "strength": 0.13869478656091683,
       "kind": "topic"
     },
     {
       "source": "AI 16",
       "target": "You 24",
-      "strength": 0.2993684696191893,
+      "strength": 0.13869478656091683,
       "kind": "topic"
     },
     {
       "source": "You 18",
       "target": "You 24",
-      "strength": 0.2993684696191893,
+      "strength": 0.13869478656091683,
       "kind": "topic"
     },
     {
       "source": "AI 17",
       "target": "You 24",
-      "strength": 0.2993684696191893,
+      "strength": 0.13869478656091683,
       "kind": "topic"
     },
     {
       "source": "You 23",
       "target": "You 24",
-      "strength": 0.47898955139070276,
+      "strength": 0.22191165849746697,
       "kind": "topic"
     },
     {
       "source": "You 11",
       "target": "AI 23",
-      "strength": 0.2993684696191893,
+      "strength": 0.13869478656091683,
       "kind": "topic"
     },
     {
       "source": "AI 10",
       "target": "AI 23",
-      "strength": 0.2993684696191893,
+      "strength": 0.13869478656091683,
       "kind": "topic"
     },
     {
       "source": "You 17",
       "target": "AI 23",
-      "strength": 0.2993684696191893,
+      "strength": 0.13869478656091683,
       "kind": "topic"
     },
     {
       "source": "AI 16",
       "target": "AI 23",
-      "strength": 0.2993684696191893,
+      "strength": 0.13869478656091683,
       "kind": "topic"
     },
     {
       "source": "You 18",
       "target": "AI 23",
-      "strength": 0.2993684696191893,
+      "strength": 0.13869478656091683,
       "kind": "topic"
     },
     {
       "source": "AI 17",
       "target": "AI 23",
-      "strength": 0.2993684696191893,
+      "strength": 0.13869478656091683,
       "kind": "topic"
     },
     {
       "source": "You 23",
       "target": "AI 23",
-      "strength": 0.47898955139070276,
+      "strength": 0.22191165849746697,
       "kind": "topic"
     },
     {
       "source": "AI 22",
       "target": "AI 23",
-      "strength": 0.47898955139070276,
+      "strength": 0.22191165849746697,
       "kind": "topic"
     },
     {
       "source": "You 2",
       "target": "AI 23",
-      "strength": 0.251469514480119,
+      "strength": 0.11650362071117015,
       "kind": "similarity"
     },
     {
       "source": "AI 23",
       "target": "You 25",
-      "strength": 0.22058729340361313,
+      "strength": 0.1021961585185703,
       "kind": "sequence"
     },
     {
       "source": "You 25",
       "target": "AI 24",
-      "strength": 0.5041995277796871,
+      "strength": 0.23359121947101788,
       "kind": "topic"
     },
     {
       "source": "You 22",
       "target": "You 25",
-      "strength": 0.409662116320996,
+      "strength": 0.18979286582020205,
       "kind": "topic"
     },
     {
       "source": "AI 21",
       "target": "You 25",
-      "strength": 0.409662116320996,
+      "strength": 0.18979286582020205,
       "kind": "topic"
     },
     {
       "source": "You 22",
       "target": "AI 24",
-      "strength": 0.409662116320996,
+      "strength": 0.18979286582020205,
       "kind": "topic"
     },
     {
       "source": "AI 21",
       "target": "AI 24",
-      "strength": 0.409662116320996,
+      "strength": 0.18979286582020205,
       "kind": "topic"
     },
     {
       "source": "AI 16",
       "target": "You 25",
-      "strength": 0.24743591825788155,
+      "strength": 0.11463489095540202,
       "kind": "similarity"
     },
     {
       "source": "AI 24",
       "target": "You 26",
-      "strength": 0.23219715095117174,
+      "strength": 0.1075749037037582,
       "kind": "sequence"
     },
     {
       "source": "You 26",
       "target": "AI 25",
-      "strength": 0.6302494097246091,
+      "strength": 0.2919890243387723,
       "kind": "topic"
     },
     {
       "source": "You 16",
       "target": "You 26",
-      "strength": 0.3317102156445311,
+      "strength": 0.15367843386251173,
       "kind": "topic"
     },
     {
       "source": "AI 15",
       "target": "You 26",
-      "strength": 0.3317102156445311,
+      "strength": 0.15367843386251173,
       "kind": "topic"
     },
     {
       "source": "You 17",
       "target": "You 26",
-      "strength": 0.3317102156445311,
+      "strength": 0.15367843386251173,
       "kind": "topic"
     },
     {
       "source": "AI 16",
       "target": "You 26",
-      "strength": 0.3317102156445311,
+      "strength": 0.15367843386251173,
       "kind": "topic"
     },
     {
       "source": "You 18",
       "target": "You 26",
-      "strength": 0.3317102156445311,
+      "strength": 0.15367843386251173,
       "kind": "topic"
     },
     {
       "source": "AI 17",
       "target": "You 26",
-      "strength": 0.3317102156445311,
+      "strength": 0.15367843386251173,
       "kind": "topic"
     },
     {
       "source": "You 19",
       "target": "You 26",
-      "strength": 0.3317102156445311,
+      "strength": 0.15367843386251173,
       "kind": "topic"
     },
     {
       "source": "AI 18",
       "target": "You 26",
-      "strength": 0.3317102156445311,
+      "strength": 0.15367843386251173,
       "kind": "topic"
     },
     {
       "source": "You 16",
       "target": "AI 25",
-      "strength": 0.3317102156445311,
+      "strength": 0.15367843386251173,
       "kind": "topic"
     },
     {
       "source": "AI 15",
       "target": "AI 25",
-      "strength": 0.3317102156445311,
+      "strength": 0.15367843386251173,
       "kind": "topic"
     },
     {
       "source": "You 17",
       "target": "AI 25",
-      "strength": 0.3317102156445311,
+      "strength": 0.15367843386251173,
       "kind": "topic"
     },
     {
       "source": "AI 16",
       "target": "AI 25",
-      "strength": 0.3317102156445311,
+      "strength": 0.15367843386251173,
       "kind": "topic"
     },
     {
       "source": "You 18",
       "target": "AI 25",
-      "strength": 0.3317102156445311,
+      "strength": 0.15367843386251173,
       "kind": "topic"
     },
     {
       "source": "AI 17",
       "target": "AI 25",
-      "strength": 0.3317102156445311,
+      "strength": 0.15367843386251173,
       "kind": "topic"
     },
     {
       "source": "You 19",
       "target": "AI 25",
-      "strength": 0.3317102156445311,
+      "strength": 0.15367843386251173,
       "kind": "topic"
     },
     {
       "source": "AI 18",
       "target": "AI 25",
-      "strength": 0.3317102156445311,
+      "strength": 0.15367843386251173,
       "kind": "topic"
     },
     {
       "source": "You 7",
       "target": "You 26",
-      "strength": 0.22622636706957022,
+      "strength": 0.10480869189423306,
       "kind": "similarity"
     },
     {
       "source": "You 11",
       "target": "AI 25",
-      "strength": 0.28228539351349596,
+      "strength": 0.1307803472169975,
       "kind": "similarity"
     },
     {
       "source": "You 20",
       "target": "You 26",
-      "strength": 0.237703540530871,
+      "strength": 0.11012596570587595,
       "kind": "similarity"
     },
     {
       "source": "AI 25",
       "target": "You 27",
-      "strength": 0.24441805363281238,
+      "strength": 0.11323674074079812,
       "kind": "sequence"
     },
     {
       "source": "You 27",
       "target": "AI 26",
-      "strength": 0.6634204312890623,
+      "strength": 0.30735686772502346,
       "kind": "topic"
     },
     {
       "source": "You 22",
       "target": "You 27",
-      "strength": 0.4539192424609374,
+      "strength": 0.2102968042329109,
       "kind": "topic"
     },
     {
       "source": "AI 21",
       "target": "You 27",
-      "strength": 0.4539192424609374,
+      "strength": 0.2102968042329109,
       "kind": "topic"
     },
     {
       "source": "You 25",
       "target": "You 27",
-      "strength": 0.4539192424609374,
+      "strength": 0.2102968042329109,
       "kind": "topic"
     },
     {
       "source": "AI 24",
       "target": "You 27",
-      "strength": 0.4539192424609374,
+      "strength": 0.2102968042329109,
       "kind": "topic"
     },
     {
       "source": "You 22",
       "target": "AI 26",
-      "strength": 0.4539192424609374,
+      "strength": 0.2102968042329109,
       "kind": "topic"
     },
     {
       "source": "AI 21",
       "target": "AI 26",
-      "strength": 0.4539192424609374,
+      "strength": 0.2102968042329109,
       "kind": "topic"
     },
     {
       "source": "You 25",
       "target": "AI 26",
-      "strength": 0.4539192424609374,
+      "strength": 0.2102968042329109,
       "kind": "topic"
     },
     {
       "source": "AI 24",
       "target": "AI 26",
-      "strength": 0.4539192424609374,
+      "strength": 0.2102968042329109,
       "kind": "topic"
     },
     {
       "source": "You 16",
       "target": "You 27",
-      "strength": 0.2838042771324999,
+      "strength": 0.13148403267731534,
       "kind": "similarity"
     },
     {
       "source": "AI 26",
       "target": "You 28",
-      "strength": 0.4778097289062499,
+      "strength": 0.22136505708727464,
       "kind": "topic"
     },
     {
       "source": "You 28",
       "target": "AI 27",
-      "strength": 0.5880735124999997,
+      "strength": 0.2724493010304918,
       "kind": "topic"
     },
     {
       "source": "You 27",
       "target": "You 28",
-      "strength": 0.4778097289062499,
+      "strength": 0.22136505708727464,
       "kind": "topic"
     },
     {
       "source": "You 27",
       "target": "AI 27",
-      "strength": 0.4778097289062499,
+      "strength": 0.22136505708727464,
       "kind": "topic"
     },
     {
       "source": "AI 26",
       "target": "AI 27",
-      "strength": 0.4778097289062499,
+      "strength": 0.22136505708727464,
       "kind": "topic"
     },
     {
       "source": "AI 24",
       "target": "You 28",
-      "strength": 0.23184798230312495,
+      "strength": 0.10741313693127144,
       "kind": "similarity"
     },
     {
       "source": "AI 24",
       "target": "AI 27",
-      "strength": 0.21369121260468746,
+      "strength": 0.09900126476195498,
       "kind": "similarity"
     },
     {
       "source": "AI 27",
       "target": "You 29",
-      "strength": 0.38689046874999994,
+      "strength": 0.17924296120427088,
       "kind": "topic"
     },
     {
       "source": "You 29",
       "target": "AI 28",
-      "strength": 0.6190247499999998,
+      "strength": 0.2867887379268335,
       "kind": "topic"
     },
     {
       "source": "You 22",
       "target": "You 29",
-      "strength": 0.38689046874999994,
+      "strength": 0.17924296120427088,
       "kind": "topic"
     },
     {
       "source": "AI 21",
       "target": "You 29",
-      "strength": 0.38689046874999994,
+      "strength": 0.17924296120427088,
       "kind": "topic"
     },
     {
       "source": "You 25",
       "target": "You 29",
-      "strength": 0.38689046874999994,
+      "strength": 0.17924296120427088,
       "kind": "topic"
     },
     {
       "source": "AI 24",
       "target": "You 29",
-      "strength": 0.38689046874999994,
+      "strength": 0.17924296120427088,
       "kind": "topic"
     },
     {
       "source": "You 27",
       "target": "You 29",
-      "strength": 0.5029576093749999,
+      "strength": 0.23301584956555227,
       "kind": "topic"
     },
     {
       "source": "AI 26",
       "target": "You 29",
-      "strength": 0.5029576093749999,
+      "strength": 0.23301584956555227,
       "kind": "topic"
     },
     {
       "source": "You 28",
       "target": "You 29",
-      "strength": 0.38689046874999994,
+      "strength": 0.17924296120427088,
       "kind": "topic"
     },
     {
       "source": "You 22",
       "target": "AI 28",
-      "strength": 0.38689046874999994,
+      "strength": 0.17924296120427088,
       "kind": "topic"
     },
     {
       "source": "AI 21",
       "target": "AI 28",
-      "strength": 0.38689046874999994,
+      "strength": 0.17924296120427088,
       "kind": "topic"
     },
     {
       "source": "You 25",
       "target": "AI 28",
-      "strength": 0.38689046874999994,
+      "strength": 0.17924296120427088,
       "kind": "topic"
     },
     {
       "source": "AI 24",
       "target": "AI 28",
-      "strength": 0.38689046874999994,
+      "strength": 0.17924296120427088,
       "kind": "topic"
     },
     {
       "source": "You 27",
       "target": "AI 28",
-      "strength": 0.5029576093749999,
+      "strength": 0.23301584956555227,
       "kind": "topic"
     },
     {
       "source": "AI 26",
       "target": "AI 28",
-      "strength": 0.5029576093749999,
+      "strength": 0.23301584956555227,
       "kind": "topic"
     },
     {
       "source": "You 28",
       "target": "AI 28",
-      "strength": 0.38689046874999994,
+      "strength": 0.17924296120427088,
       "kind": "topic"
     },
     {
       "source": "AI 27",
       "target": "AI 28",
-      "strength": 0.38689046874999994,
+      "strength": 0.17924296120427088,
       "kind": "topic"
     },
     {
       "source": "AI 28",
       "target": "You 30",
-      "strength": 0.28507718749999994,
+      "strength": 0.1320737608873575,
       "kind": "sequence"
     },
     {
       "source": "You 30",
       "target": "AI 29",
-      "strength": 0.6516049999999998,
+      "strength": 0.3018828820282458,
       "kind": "topic"
     },
     {
       "source": "You 23",
       "target": "You 30",
-      "strength": 0.25160098062499997,
+      "strength": 0.11656452782315643,
       "kind": "similarity"
     },
     {
       "source": "You 24",
       "target": "AI 29",
-      "strength": 0.32401058624999995,
+      "strength": 0.15011126308854528,
       "kind": "similarity"
     },
     {
       "source": "AI 23",
       "target": "AI 29",
-      "strength": 0.28515863812500003,
+      "strength": 0.13211149624761112,
       "kind": "similarity"
     },
     {
       "source": "AI 29",
       "target": "You 31",
-      "strength": 0.30008124999999997,
+      "strength": 0.13902501146037632,
       "kind": "sequence"
     },
     {
       "source": "You 31",
       "target": "AI 30",
-      "strength": 0.6858999999999998,
+      "strength": 0.31777145476657453,
       "kind": "topic"
     },
     {
       "source": "You 3",
       "target": "AI 30",
-      "strength": 0.32485938749999993,
+      "strength": 0.15050450526381887,
       "kind": "similarity"
     },
     {
       "source": "AI 3",
       "target": "AI 30",
-      "strength": 0.3322328125,
+      "strength": 0.1539205484025596,
       "kind": "similarity"
     },
     {
       "source": "You 9",
       "target": "You 31",
-      "strength": 0.25961314999999996,
+      "strength": 0.12027649562914848,
       "kind": "similarity"
     },
     {
       "source": "You 10",
       "target": "You 31",
-      "strength": 0.30393943749999996,
+      "strength": 0.14081247589343834,
       "kind": "similarity"
     },
     {
       "source": "You 30",
       "target": "AI 30",
-      "strength": 0.265957725,
+      "strength": 0.1232158815857393,
       "kind": "similarity"
     },
     {
       "source": "AI 30",
       "target": "You 32",
-      "strength": 0.586625,
+      "strength": 0.27177821789246515,
       "kind": "topic"
     },
     {
       "source": "You 32",
       "target": "AI 31",
-      "strength": 0.7219999999999999,
+      "strength": 0.3344962681753416,
       "kind": "topic"
     },
     {
       "source": "You 31",
       "target": "You 32",
-      "strength": 0.586625,
+      "strength": 0.27177821789246515,
       "kind": "topic"
     },
     {
       "source": "You 31",
       "target": "AI 31",
-      "strength": 0.586625,
+      "strength": 0.27177821789246515,
       "kind": "topic"
     },
     {
       "source": "AI 30",
       "target": "AI 31",
-      "strength": 0.586625,
+      "strength": 0.27177821789246515,
       "kind": "topic"
     },
     {
       "source": "AI 22",
       "target": "AI 31",
-      "strength": 0.36289524999999995,
+      "strength": 0.16812618679163102,
       "kind": "similarity"
     },
     {
       "source": "AI 29",
       "target": "AI 31",
-      "strength": 0.31416025,
+      "strength": 0.14554768868979556,
       "kind": "similarity"
     },
     {
       "source": "AI 31",
       "target": "You 33",
-      "strength": 0.33249999999999996,
+      "strength": 0.15404433402811782,
       "kind": "sequence",
       "created_cycle": 30
     },
     {
       "source": "You 33",
       "target": "AI 32",
-      "strength": 0.7599999999999999,
+      "strength": 0.35210133492141227,
       "kind": "topic",
       "created_cycle": 30
     },
     {
       "source": "You 12",
       "target": "You 33",
-      "strength": 0.475,
+      "strength": 0.22006333432588263,
       "kind": "topic",
       "created_cycle": 30
     },
     {
       "source": "AI 11",
       "target": "You 33",
-      "strength": 0.475,
+      "strength": 0.22006333432588263,
       "kind": "topic",
       "created_cycle": 30
     },
     {
       "source": "You 13",
       "target": "You 33",
-      "strength": 0.475,
+      "strength": 0.22006333432588263,
       "kind": "topic",
       "created_cycle": 30
     },
     {
       "source": "You 15",
       "target": "You 33",
-      "strength": 0.475,
+      "strength": 0.22006333432588263,
       "kind": "topic",
       "created_cycle": 30
     },
     {
       "source": "AI 14",
       "target": "You 33",
-      "strength": 0.475,
+      "strength": 0.22006333432588263,
       "kind": "topic",
       "created_cycle": 30
     },
     {
       "source": "You 12",
       "target": "AI 32",
-      "strength": 0.475,
+      "strength": 0.22006333432588263,
       "kind": "topic",
       "created_cycle": 30
     },
     {
       "source": "AI 11",
       "target": "AI 32",
-      "strength": 0.475,
+      "strength": 0.22006333432588263,
       "kind": "topic",
       "created_cycle": 30
     },
     {
       "source": "You 13",
       "target": "AI 32",
-      "strength": 0.475,
+      "strength": 0.22006333432588263,
       "kind": "topic",
       "created_cycle": 30
     },
     {
       "source": "You 15",
       "target": "AI 32",
-      "strength": 0.475,
+      "strength": 0.22006333432588263,
       "kind": "topic",
       "created_cycle": 30
     },
     {
       "source": "AI 14",
       "target": "AI 32",
-      "strength": 0.475,
+      "strength": 0.22006333432588263,
       "kind": "topic",
       "created_cycle": 30
     },
     {
       "source": "You 11",
       "target": "You 33",
-      "strength": 0.44289,
+      "strength": 0.20518705292545303,
       "kind": "similarity",
       "created_cycle": 30
     },
     {
       "source": "AI 32",
       "target": "You 34",
-      "strength": 0.35,
+      "strength": 0.1621519305559135,
       "kind": "sequence",
       "created_cycle": 31
     },
     {
       "source": "You 34",
       "target": "AI 33",
-      "strength": 0.35,
+      "strength": 0.1621519305559135,
       "kind": "sequence",
       "created_cycle": 31
     },
     {
       "source": "AI 2",
       "target": "AI 33",
-      "strength": 0.3579,
+      "strength": 0.16581193127417565,
       "kind": "similarity",
       "created_cycle": 31
     },
     {
       "source": "You 4",
       "target": "AI 19",
-      "strength": 0.3952,
+      "strength": 0.18309269415913446,
       "kind": "similarity",
       "created_cycle": 31
     },
     {
       "source": "AI 19",
       "target": "AI 33",
-      "strength": 0.3961,
+      "strength": 0.18350965626627816,
       "kind": "similarity",
       "created_cycle": 31
+    },
+    {
+      "source": "AI 33",
+      "target": "You 35",
+      "strength": 0.17068624269043528,
+      "kind": "sequence",
+      "created_cycle": 32
+    },
+    {
+      "source": "You 35",
+      "target": "AI 34",
+      "strength": 0.24383748955776471,
+      "kind": "topic",
+      "created_cycle": 32
+    },
+    {
+      "source": "You 1",
+      "target": "AI 34",
+      "strength": 0.15117924352581416,
+      "kind": "similarity",
+      "created_cycle": 32
+    },
+    {
+      "source": "You 8",
+      "target": "You 35",
+      "strength": 0.20706679613245388,
+      "kind": "similarity",
+      "created_cycle": 32
+    },
+    {
+      "source": "AI 34",
+      "target": "You 36",
+      "strength": 0.1796697291478266,
+      "kind": "sequence",
+      "created_cycle": 33
+    },
+    {
+      "source": "You 36",
+      "target": "AI 35",
+      "strength": 0.3336723541316782,
+      "kind": "topic",
+      "created_cycle": 33
+    },
+    {
+      "source": "You 35",
+      "target": "AI 35",
+      "strength": 0.25667104163975235,
+      "kind": "topic",
+      "created_cycle": 33
+    },
+    {
+      "source": "AI 34",
+      "target": "AI 35",
+      "strength": 0.25667104163975235,
+      "kind": "topic",
+      "created_cycle": 33
+    },
+    {
+      "source": "AI 35",
+      "target": "You 37",
+      "strength": 0.35123405698071386,
+      "kind": "topic",
+      "created_cycle": 34
+    },
+    {
+      "source": "You 37",
+      "target": "AI 36",
+      "strength": 0.35123405698071386,
+      "kind": "topic",
+      "created_cycle": 34
+    },
+    {
+      "source": "You 36",
+      "target": "You 37",
+      "strength": 0.35123405698071386,
+      "kind": "topic",
+      "created_cycle": 34
+    },
+    {
+      "source": "You 36",
+      "target": "AI 36",
+      "strength": 0.35123405698071386,
+      "kind": "topic",
+      "created_cycle": 34
+    },
+    {
+      "source": "AI 35",
+      "target": "AI 36",
+      "strength": 0.35123405698071386,
+      "kind": "topic",
+      "created_cycle": 34
+    },
+    {
+      "source": "AI 36",
+      "target": "You 38",
+      "strength": 0.19908003229676083,
+      "kind": "sequence",
+      "created_cycle": 35
+    },
+    {
+      "source": "You 38",
+      "target": "AI 37",
+      "strength": 0.2844000461382298,
+      "kind": "topic",
+      "created_cycle": 35
+    },
+    {
+      "source": "You 16",
+      "target": "You 38",
+      "strength": 0.2844000461382298,
+      "kind": "topic",
+      "created_cycle": 35
+    },
+    {
+      "source": "AI 15",
+      "target": "You 38",
+      "strength": 0.2844000461382298,
+      "kind": "topic",
+      "created_cycle": 35
+    },
+    {
+      "source": "You 17",
+      "target": "You 38",
+      "strength": 0.2844000461382298,
+      "kind": "topic",
+      "created_cycle": 35
+    },
+    {
+      "source": "AI 16",
+      "target": "You 38",
+      "strength": 0.2844000461382298,
+      "kind": "topic",
+      "created_cycle": 35
+    },
+    {
+      "source": "You 18",
+      "target": "You 38",
+      "strength": 0.2844000461382298,
+      "kind": "topic",
+      "created_cycle": 35
+    },
+    {
+      "source": "AI 17",
+      "target": "You 38",
+      "strength": 0.2844000461382298,
+      "kind": "topic",
+      "created_cycle": 35
+    },
+    {
+      "source": "You 19",
+      "target": "You 38",
+      "strength": 0.2844000461382298,
+      "kind": "topic",
+      "created_cycle": 35
+    },
+    {
+      "source": "AI 18",
+      "target": "You 38",
+      "strength": 0.2844000461382298,
+      "kind": "topic",
+      "created_cycle": 35
+    },
+    {
+      "source": "You 26",
+      "target": "You 38",
+      "strength": 0.2844000461382298,
+      "kind": "topic",
+      "created_cycle": 35
+    },
+    {
+      "source": "AI 25",
+      "target": "You 38",
+      "strength": 0.2844000461382298,
+      "kind": "topic",
+      "created_cycle": 35
+    },
+    {
+      "source": "You 16",
+      "target": "AI 37",
+      "strength": 0.2844000461382298,
+      "kind": "topic",
+      "created_cycle": 35
+    },
+    {
+      "source": "AI 15",
+      "target": "AI 37",
+      "strength": 0.2844000461382298,
+      "kind": "topic",
+      "created_cycle": 35
+    },
+    {
+      "source": "You 17",
+      "target": "AI 37",
+      "strength": 0.2844000461382298,
+      "kind": "topic",
+      "created_cycle": 35
+    },
+    {
+      "source": "AI 16",
+      "target": "AI 37",
+      "strength": 0.2844000461382298,
+      "kind": "topic",
+      "created_cycle": 35
+    },
+    {
+      "source": "You 18",
+      "target": "AI 37",
+      "strength": 0.2844000461382298,
+      "kind": "topic",
+      "created_cycle": 35
+    },
+    {
+      "source": "AI 17",
+      "target": "AI 37",
+      "strength": 0.2844000461382298,
+      "kind": "topic",
+      "created_cycle": 35
+    },
+    {
+      "source": "You 19",
+      "target": "AI 37",
+      "strength": 0.2844000461382298,
+      "kind": "topic",
+      "created_cycle": 35
+    },
+    {
+      "source": "AI 18",
+      "target": "AI 37",
+      "strength": 0.2844000461382298,
+      "kind": "topic",
+      "created_cycle": 35
+    },
+    {
+      "source": "You 26",
+      "target": "AI 37",
+      "strength": 0.2844000461382298,
+      "kind": "topic",
+      "created_cycle": 35
+    },
+    {
+      "source": "AI 25",
+      "target": "AI 37",
+      "strength": 0.2844000461382298,
+      "kind": "topic",
+      "created_cycle": 35
+    },
+    {
+      "source": "AI 37",
+      "target": "You 39",
+      "strength": 0.20955792873343246,
+      "kind": "sequence",
+      "created_cycle": 36
+    },
+    {
+      "source": "You 39",
+      "target": "AI 38",
+      "strength": 0.2993684696191893,
+      "kind": "topic",
+      "created_cycle": 36
+    },
+    {
+      "source": "You 12",
+      "target": "You 39",
+      "strength": 0.2993684696191893,
+      "kind": "topic",
+      "created_cycle": 36
+    },
+    {
+      "source": "AI 11",
+      "target": "You 39",
+      "strength": 0.2993684696191893,
+      "kind": "topic",
+      "created_cycle": 36
+    },
+    {
+      "source": "You 13",
+      "target": "You 39",
+      "strength": 0.2993684696191893,
+      "kind": "topic",
+      "created_cycle": 36
+    },
+    {
+      "source": "You 15",
+      "target": "You 39",
+      "strength": 0.2993684696191893,
+      "kind": "topic",
+      "created_cycle": 36
+    },
+    {
+      "source": "AI 14",
+      "target": "You 39",
+      "strength": 0.2993684696191893,
+      "kind": "topic",
+      "created_cycle": 36
+    },
+    {
+      "source": "You 33",
+      "target": "You 39",
+      "strength": 0.2993684696191893,
+      "kind": "topic",
+      "created_cycle": 36
+    },
+    {
+      "source": "AI 32",
+      "target": "You 39",
+      "strength": 0.2993684696191893,
+      "kind": "topic",
+      "created_cycle": 36
+    },
+    {
+      "source": "You 12",
+      "target": "AI 38",
+      "strength": 0.2993684696191893,
+      "kind": "topic",
+      "created_cycle": 36
+    },
+    {
+      "source": "AI 11",
+      "target": "AI 38",
+      "strength": 0.2993684696191893,
+      "kind": "topic",
+      "created_cycle": 36
+    },
+    {
+      "source": "You 13",
+      "target": "AI 38",
+      "strength": 0.2993684696191893,
+      "kind": "topic",
+      "created_cycle": 36
+    },
+    {
+      "source": "You 15",
+      "target": "AI 38",
+      "strength": 0.2993684696191893,
+      "kind": "topic",
+      "created_cycle": 36
+    },
+    {
+      "source": "AI 14",
+      "target": "AI 38",
+      "strength": 0.2993684696191893,
+      "kind": "topic",
+      "created_cycle": 36
+    },
+    {
+      "source": "You 33",
+      "target": "AI 38",
+      "strength": 0.38917901050494613,
+      "kind": "topic",
+      "created_cycle": 36
+    },
+    {
+      "source": "AI 32",
+      "target": "AI 38",
+      "strength": 0.38917901050494613,
+      "kind": "topic",
+      "created_cycle": 36
+    },
+    {
+      "source": "AI 18",
+      "target": "You 39",
+      "strength": 0.27332341276231986,
+      "kind": "similarity",
+      "created_cycle": 36
+    },
+    {
+      "source": "AI 38",
+      "target": "You 40",
+      "strength": 0.22058729340361313,
+      "kind": "sequence",
+      "created_cycle": 37
+    },
+    {
+      "source": "You 40",
+      "target": "AI 39",
+      "strength": 0.31512470486230454,
+      "kind": "topic",
+      "created_cycle": 37
+    },
+    {
+      "source": "You 35",
+      "target": "You 40",
+      "strength": 0.31512470486230454,
+      "kind": "topic",
+      "created_cycle": 37
+    },
+    {
+      "source": "AI 34",
+      "target": "You 40",
+      "strength": 0.31512470486230454,
+      "kind": "topic",
+      "created_cycle": 37
+    },
+    {
+      "source": "AI 35",
+      "target": "You 40",
+      "strength": 0.31512470486230454,
+      "kind": "topic",
+      "created_cycle": 37
+    },
+    {
+      "source": "You 35",
+      "target": "AI 39",
+      "strength": 0.31512470486230454,
+      "kind": "topic",
+      "created_cycle": 37
+    },
+    {
+      "source": "AI 34",
+      "target": "AI 39",
+      "strength": 0.409662116320996,
+      "kind": "topic",
+      "created_cycle": 37
+    },
+    {
+      "source": "AI 35",
+      "target": "AI 39",
+      "strength": 0.31512470486230454,
+      "kind": "topic",
+      "created_cycle": 37
+    },
+    {
+      "source": "AI 39",
+      "target": "You 41",
+      "strength": 0.3317102156445311,
+      "kind": "topic",
+      "created_cycle": 38
+    },
+    {
+      "source": "You 41",
+      "target": "AI 40",
+      "strength": 0.43122328033789054,
+      "kind": "topic",
+      "created_cycle": 38
+    },
+    {
+      "source": "You 11",
+      "target": "You 41",
+      "strength": 0.3317102156445311,
+      "kind": "topic",
+      "created_cycle": 38
+    },
+    {
+      "source": "AI 10",
+      "target": "You 41",
+      "strength": 0.3317102156445311,
+      "kind": "topic",
+      "created_cycle": 38
+    },
+    {
+      "source": "You 17",
+      "target": "You 41",
+      "strength": 0.3317102156445311,
+      "kind": "topic",
+      "created_cycle": 38
+    },
+    {
+      "source": "AI 16",
+      "target": "You 41",
+      "strength": 0.3317102156445311,
+      "kind": "topic",
+      "created_cycle": 38
+    },
+    {
+      "source": "You 18",
+      "target": "You 41",
+      "strength": 0.3317102156445311,
+      "kind": "topic",
+      "created_cycle": 38
+    },
+    {
+      "source": "AI 17",
+      "target": "You 41",
+      "strength": 0.3317102156445311,
+      "kind": "topic",
+      "created_cycle": 38
+    },
+    {
+      "source": "You 23",
+      "target": "You 41",
+      "strength": 0.3317102156445311,
+      "kind": "topic",
+      "created_cycle": 38
+    },
+    {
+      "source": "AI 22",
+      "target": "You 41",
+      "strength": 0.3317102156445311,
+      "kind": "topic",
+      "created_cycle": 38
+    },
+    {
+      "source": "You 24",
+      "target": "You 41",
+      "strength": 0.3317102156445311,
+      "kind": "topic",
+      "created_cycle": 38
+    },
+    {
+      "source": "AI 23",
+      "target": "You 41",
+      "strength": 0.3317102156445311,
+      "kind": "topic",
+      "created_cycle": 38
+    },
+    {
+      "source": "You 35",
+      "target": "You 41",
+      "strength": 0.3317102156445311,
+      "kind": "topic",
+      "created_cycle": 38
+    },
+    {
+      "source": "AI 34",
+      "target": "You 41",
+      "strength": 0.3317102156445311,
+      "kind": "topic",
+      "created_cycle": 38
+    },
+    {
+      "source": "AI 35",
+      "target": "You 41",
+      "strength": 0.3317102156445311,
+      "kind": "topic",
+      "created_cycle": 38
+    },
+    {
+      "source": "You 40",
+      "target": "You 41",
+      "strength": 0.3317102156445311,
+      "kind": "topic",
+      "created_cycle": 38
+    },
+    {
+      "source": "You 11",
+      "target": "AI 40",
+      "strength": 0.3317102156445311,
+      "kind": "topic",
+      "created_cycle": 38
+    },
+    {
+      "source": "AI 10",
+      "target": "AI 40",
+      "strength": 0.3317102156445311,
+      "kind": "topic",
+      "created_cycle": 38
+    },
+    {
+      "source": "You 17",
+      "target": "AI 40",
+      "strength": 0.3317102156445311,
+      "kind": "topic",
+      "created_cycle": 38
+    },
+    {
+      "source": "AI 16",
+      "target": "AI 40",
+      "strength": 0.3317102156445311,
+      "kind": "topic",
+      "created_cycle": 38
+    },
+    {
+      "source": "You 18",
+      "target": "AI 40",
+      "strength": 0.3317102156445311,
+      "kind": "topic",
+      "created_cycle": 38
+    },
+    {
+      "source": "AI 17",
+      "target": "AI 40",
+      "strength": 0.3317102156445311,
+      "kind": "topic",
+      "created_cycle": 38
+    },
+    {
+      "source": "You 23",
+      "target": "AI 40",
+      "strength": 0.3317102156445311,
+      "kind": "topic",
+      "created_cycle": 38
+    },
+    {
+      "source": "AI 22",
+      "target": "AI 40",
+      "strength": 0.3317102156445311,
+      "kind": "topic",
+      "created_cycle": 38
+    },
+    {
+      "source": "You 24",
+      "target": "AI 40",
+      "strength": 0.3317102156445311,
+      "kind": "topic",
+      "created_cycle": 38
+    },
+    {
+      "source": "AI 23",
+      "target": "AI 40",
+      "strength": 0.3317102156445311,
+      "kind": "topic",
+      "created_cycle": 38
+    },
+    {
+      "source": "You 35",
+      "target": "AI 40",
+      "strength": 0.3317102156445311,
+      "kind": "topic",
+      "created_cycle": 38
+    },
+    {
+      "source": "AI 34",
+      "target": "AI 40",
+      "strength": 0.3317102156445311,
+      "kind": "topic",
+      "created_cycle": 38
+    },
+    {
+      "source": "AI 35",
+      "target": "AI 40",
+      "strength": 0.3317102156445311,
+      "kind": "topic",
+      "created_cycle": 38
+    },
+    {
+      "source": "You 40",
+      "target": "AI 40",
+      "strength": 0.3317102156445311,
+      "kind": "topic",
+      "created_cycle": 38
+    },
+    {
+      "source": "AI 39",
+      "target": "AI 40",
+      "strength": 0.3317102156445311,
+      "kind": "topic",
+      "created_cycle": 38
+    },
+    {
+      "source": "AI 21",
+      "target": "AI 40",
+      "strength": 0.2984065099938202,
+      "kind": "similarity",
+      "created_cycle": 38
+    },
+    {
+      "source": "AI 40",
+      "target": "You 42",
+      "strength": 0.24441805363281238,
+      "kind": "sequence",
+      "created_cycle": 39
+    },
+    {
+      "source": "You 42",
+      "target": "AI 41",
+      "strength": 0.4539192424609374,
+      "kind": "topic",
+      "created_cycle": 39
+    },
+    {
+      "source": "You 36",
+      "target": "You 42",
+      "strength": 0.4539192424609374,
+      "kind": "topic",
+      "created_cycle": 39
+    },
+    {
+      "source": "AI 35",
+      "target": "You 42",
+      "strength": 0.4539192424609374,
+      "kind": "topic",
+      "created_cycle": 39
+    },
+    {
+      "source": "You 37",
+      "target": "You 42",
+      "strength": 0.4539192424609374,
+      "kind": "topic",
+      "created_cycle": 39
+    },
+    {
+      "source": "AI 36",
+      "target": "You 42",
+      "strength": 0.4539192424609374,
+      "kind": "topic",
+      "created_cycle": 39
+    },
+    {
+      "source": "You 36",
+      "target": "AI 41",
+      "strength": 0.4539192424609374,
+      "kind": "topic",
+      "created_cycle": 39
+    },
+    {
+      "source": "AI 35",
+      "target": "AI 41",
+      "strength": 0.4539192424609374,
+      "kind": "topic",
+      "created_cycle": 39
+    },
+    {
+      "source": "You 37",
+      "target": "AI 41",
+      "strength": 0.5586698368749997,
+      "kind": "topic",
+      "created_cycle": 39
+    },
+    {
+      "source": "AI 36",
+      "target": "AI 41",
+      "strength": 0.6634204312890623,
+      "kind": "topic",
+      "created_cycle": 39
+    },
+    {
+      "source": "AI 41",
+      "target": "You 43",
+      "strength": 0.2572821617187499,
+      "kind": "sequence",
+      "created_cycle": 40
+    },
+    {
+      "source": "You 43",
+      "target": "AI 42",
+      "strength": 0.5880735124999997,
+      "kind": "topic",
+      "created_cycle": 40
+    },
+    {
+      "source": "You 22",
+      "target": "You 43",
+      "strength": 0.3675459453124999,
+      "kind": "topic",
+      "created_cycle": 40
+    },
+    {
+      "source": "AI 21",
+      "target": "You 43",
+      "strength": 0.3675459453124999,
+      "kind": "topic",
+      "created_cycle": 40
+    },
+    {
+      "source": "You 25",
+      "target": "You 43",
+      "strength": 0.3675459453124999,
+      "kind": "topic",
+      "created_cycle": 40
+    },
+    {
+      "source": "AI 24",
+      "target": "You 43",
+      "strength": 0.3675459453124999,
+      "kind": "topic",
+      "created_cycle": 40
+    },
+    {
+      "source": "You 27",
+      "target": "You 43",
+      "strength": 0.4778097289062499,
+      "kind": "topic",
+      "created_cycle": 40
+    },
+    {
+      "source": "AI 26",
+      "target": "You 43",
+      "strength": 0.4778097289062499,
+      "kind": "topic",
+      "created_cycle": 40
+    },
+    {
+      "source": "You 28",
+      "target": "You 43",
+      "strength": 0.3675459453124999,
+      "kind": "topic",
+      "created_cycle": 40
+    },
+    {
+      "source": "AI 27",
+      "target": "You 43",
+      "strength": 0.3675459453124999,
+      "kind": "topic",
+      "created_cycle": 40
+    },
+    {
+      "source": "You 29",
+      "target": "You 43",
+      "strength": 0.4778097289062499,
+      "kind": "topic",
+      "created_cycle": 40
+    },
+    {
+      "source": "AI 28",
+      "target": "You 43",
+      "strength": 0.4778097289062499,
+      "kind": "topic",
+      "created_cycle": 40
+    },
+    {
+      "source": "You 22",
+      "target": "AI 42",
+      "strength": 0.3675459453124999,
+      "kind": "topic",
+      "created_cycle": 40
+    },
+    {
+      "source": "AI 21",
+      "target": "AI 42",
+      "strength": 0.3675459453124999,
+      "kind": "topic",
+      "created_cycle": 40
+    },
+    {
+      "source": "You 25",
+      "target": "AI 42",
+      "strength": 0.3675459453124999,
+      "kind": "topic",
+      "created_cycle": 40
+    },
+    {
+      "source": "AI 24",
+      "target": "AI 42",
+      "strength": 0.3675459453124999,
+      "kind": "topic",
+      "created_cycle": 40
+    },
+    {
+      "source": "You 27",
+      "target": "AI 42",
+      "strength": 0.4778097289062499,
+      "kind": "topic",
+      "created_cycle": 40
+    },
+    {
+      "source": "AI 26",
+      "target": "AI 42",
+      "strength": 0.4778097289062499,
+      "kind": "topic",
+      "created_cycle": 40
+    },
+    {
+      "source": "You 28",
+      "target": "AI 42",
+      "strength": 0.3675459453124999,
+      "kind": "topic",
+      "created_cycle": 40
+    },
+    {
+      "source": "AI 27",
+      "target": "AI 42",
+      "strength": 0.3675459453124999,
+      "kind": "topic",
+      "created_cycle": 40
+    },
+    {
+      "source": "You 29",
+      "target": "AI 42",
+      "strength": 0.4778097289062499,
+      "kind": "topic",
+      "created_cycle": 40
+    },
+    {
+      "source": "AI 28",
+      "target": "AI 42",
+      "strength": 0.4778097289062499,
+      "kind": "topic",
+      "created_cycle": 40
+    },
+    {
+      "source": "AI 42",
+      "target": "You 44",
+      "strength": 0.5029576093749999,
+      "kind": "topic",
+      "created_cycle": 41
+    },
+    {
+      "source": "You 44",
+      "target": "AI 43",
+      "strength": 0.7350918906249998,
+      "kind": "topic",
+      "created_cycle": 41
+    },
+    {
+      "source": "You 22",
+      "target": "You 44",
+      "strength": 0.38689046874999994,
+      "kind": "topic",
+      "created_cycle": 41
+    },
+    {
+      "source": "AI 21",
+      "target": "You 44",
+      "strength": 0.38689046874999994,
+      "kind": "topic",
+      "created_cycle": 41
+    },
+    {
+      "source": "You 25",
+      "target": "You 44",
+      "strength": 0.38689046874999994,
+      "kind": "topic",
+      "created_cycle": 41
+    },
+    {
+      "source": "AI 24",
+      "target": "You 44",
+      "strength": 0.38689046874999994,
+      "kind": "topic",
+      "created_cycle": 41
+    },
+    {
+      "source": "You 27",
+      "target": "You 44",
+      "strength": 0.5029576093749999,
+      "kind": "topic",
+      "created_cycle": 41
+    },
+    {
+      "source": "AI 26",
+      "target": "You 44",
+      "strength": 0.5029576093749999,
+      "kind": "topic",
+      "created_cycle": 41
+    },
+    {
+      "source": "You 28",
+      "target": "You 44",
+      "strength": 0.38689046874999994,
+      "kind": "topic",
+      "created_cycle": 41
+    },
+    {
+      "source": "AI 27",
+      "target": "You 44",
+      "strength": 0.38689046874999994,
+      "kind": "topic",
+      "created_cycle": 41
+    },
+    {
+      "source": "You 29",
+      "target": "You 44",
+      "strength": 0.5029576093749999,
+      "kind": "topic",
+      "created_cycle": 41
+    },
+    {
+      "source": "AI 28",
+      "target": "You 44",
+      "strength": 0.5029576093749999,
+      "kind": "topic",
+      "created_cycle": 41
+    },
+    {
+      "source": "You 43",
+      "target": "You 44",
+      "strength": 0.5029576093749999,
+      "kind": "topic",
+      "created_cycle": 41
+    },
+    {
+      "source": "You 22",
+      "target": "AI 43",
+      "strength": 0.38689046874999994,
+      "kind": "topic",
+      "created_cycle": 41
+    },
+    {
+      "source": "AI 21",
+      "target": "AI 43",
+      "strength": 0.38689046874999994,
+      "kind": "topic",
+      "created_cycle": 41
+    },
+    {
+      "source": "You 25",
+      "target": "AI 43",
+      "strength": 0.38689046874999994,
+      "kind": "topic",
+      "created_cycle": 41
+    },
+    {
+      "source": "AI 24",
+      "target": "AI 43",
+      "strength": 0.38689046874999994,
+      "kind": "topic",
+      "created_cycle": 41
+    },
+    {
+      "source": "You 27",
+      "target": "AI 43",
+      "strength": 0.5029576093749999,
+      "kind": "topic",
+      "created_cycle": 41
+    },
+    {
+      "source": "AI 26",
+      "target": "AI 43",
+      "strength": 0.5029576093749999,
+      "kind": "topic",
+      "created_cycle": 41
+    },
+    {
+      "source": "You 28",
+      "target": "AI 43",
+      "strength": 0.38689046874999994,
+      "kind": "topic",
+      "created_cycle": 41
+    },
+    {
+      "source": "AI 27",
+      "target": "AI 43",
+      "strength": 0.38689046874999994,
+      "kind": "topic",
+      "created_cycle": 41
+    },
+    {
+      "source": "You 29",
+      "target": "AI 43",
+      "strength": 0.5029576093749999,
+      "kind": "topic",
+      "created_cycle": 41
+    },
+    {
+      "source": "AI 28",
+      "target": "AI 43",
+      "strength": 0.5029576093749999,
+      "kind": "topic",
+      "created_cycle": 41
+    },
+    {
+      "source": "You 43",
+      "target": "AI 43",
+      "strength": 0.6190247499999998,
+      "kind": "topic",
+      "created_cycle": 41
+    },
+    {
+      "source": "AI 42",
+      "target": "AI 43",
+      "strength": 0.6190247499999998,
+      "kind": "topic",
+      "created_cycle": 41
+    },
+    {
+      "source": "You 7",
+      "target": "AI 43",
+      "strength": 0.23940782206249997,
+      "kind": "similarity",
+      "created_cycle": 41
+    },
+    {
+      "source": "AI 43",
+      "target": "You 45",
+      "strength": 0.28507718749999994,
+      "kind": "sequence",
+      "created_cycle": 42
+    },
+    {
+      "source": "You 45",
+      "target": "AI 44",
+      "strength": 0.6516049999999998,
+      "kind": "topic",
+      "created_cycle": 42
+    },
+    {
+      "source": "You 12",
+      "target": "You 45",
+      "strength": 0.40725312499999994,
+      "kind": "topic",
+      "created_cycle": 42
+    },
+    {
+      "source": "AI 11",
+      "target": "You 45",
+      "strength": 0.40725312499999994,
+      "kind": "topic",
+      "created_cycle": 42
+    },
+    {
+      "source": "You 13",
+      "target": "You 45",
+      "strength": 0.40725312499999994,
+      "kind": "topic",
+      "created_cycle": 42
+    },
+    {
+      "source": "You 15",
+      "target": "You 45",
+      "strength": 0.40725312499999994,
+      "kind": "topic",
+      "created_cycle": 42
+    },
+    {
+      "source": "AI 14",
+      "target": "You 45",
+      "strength": 0.40725312499999994,
+      "kind": "topic",
+      "created_cycle": 42
+    },
+    {
+      "source": "You 33",
+      "target": "You 45",
+      "strength": 0.5294290624999999,
+      "kind": "topic",
+      "created_cycle": 42
+    },
+    {
+      "source": "AI 32",
+      "target": "You 45",
+      "strength": 0.5294290624999999,
+      "kind": "topic",
+      "created_cycle": 42
+    },
+    {
+      "source": "You 39",
+      "target": "You 45",
+      "strength": 0.40725312499999994,
+      "kind": "topic",
+      "created_cycle": 42
+    },
+    {
+      "source": "AI 38",
+      "target": "You 45",
+      "strength": 0.40725312499999994,
+      "kind": "topic",
+      "created_cycle": 42
+    },
+    {
+      "source": "You 12",
+      "target": "AI 44",
+      "strength": 0.40725312499999994,
+      "kind": "topic",
+      "created_cycle": 42
+    },
+    {
+      "source": "AI 11",
+      "target": "AI 44",
+      "strength": 0.40725312499999994,
+      "kind": "topic",
+      "created_cycle": 42
+    },
+    {
+      "source": "You 13",
+      "target": "AI 44",
+      "strength": 0.40725312499999994,
+      "kind": "topic",
+      "created_cycle": 42
+    },
+    {
+      "source": "You 15",
+      "target": "AI 44",
+      "strength": 0.40725312499999994,
+      "kind": "topic",
+      "created_cycle": 42
+    },
+    {
+      "source": "AI 14",
+      "target": "AI 44",
+      "strength": 0.40725312499999994,
+      "kind": "topic",
+      "created_cycle": 42
+    },
+    {
+      "source": "You 33",
+      "target": "AI 44",
+      "strength": 0.5294290624999999,
+      "kind": "topic",
+      "created_cycle": 42
+    },
+    {
+      "source": "AI 32",
+      "target": "AI 44",
+      "strength": 0.5294290624999999,
+      "kind": "topic",
+      "created_cycle": 42
+    },
+    {
+      "source": "You 39",
+      "target": "AI 44",
+      "strength": 0.40725312499999994,
+      "kind": "topic",
+      "created_cycle": 42
+    },
+    {
+      "source": "AI 38",
+      "target": "AI 44",
+      "strength": 0.40725312499999994,
+      "kind": "topic",
+      "created_cycle": 42
+    },
+    {
+      "source": "AI 44",
+      "target": "You 46",
+      "strength": 0.30008124999999997,
+      "kind": "sequence",
+      "created_cycle": 43
+    },
+    {
+      "source": "You 46",
+      "target": "AI 45",
+      "strength": 0.5572937499999999,
+      "kind": "topic",
+      "created_cycle": 43
+    },
+    {
+      "source": "AI 36",
+      "target": "You 46",
+      "strength": 0.42868749999999994,
+      "kind": "topic",
+      "created_cycle": 43
+    },
+    {
+      "source": "AI 41",
+      "target": "You 46",
+      "strength": 0.42868749999999994,
+      "kind": "topic",
+      "created_cycle": 43
+    },
+    {
+      "source": "AI 36",
+      "target": "AI 45",
+      "strength": 0.42868749999999994,
+      "kind": "topic",
+      "created_cycle": 43
+    },
+    {
+      "source": "AI 41",
+      "target": "AI 45",
+      "strength": 0.42868749999999994,
+      "kind": "topic",
+      "created_cycle": 43
+    },
+    {
+      "source": "You 1",
+      "target": "AI 45",
+      "strength": 0.26501461249999997,
+      "kind": "similarity",
+      "created_cycle": 43
+    },
+    {
+      "source": "AI 3",
+      "target": "You 46",
+      "strength": 0.24298007499999993,
+      "kind": "similarity",
+      "created_cycle": 43
+    },
+    {
+      "source": "AI 45",
+      "target": "You 47",
+      "strength": 0.7219999999999999,
+      "kind": "topic",
+      "created_cycle": 44
+    },
+    {
+      "source": "You 47",
+      "target": "AI 46",
+      "strength": 0.7219999999999999,
+      "kind": "topic",
+      "created_cycle": 44
+    },
+    {
+      "source": "AI 36",
+      "target": "You 47",
+      "strength": 0.45125,
+      "kind": "topic",
+      "created_cycle": 44
+    },
+    {
+      "source": "AI 41",
+      "target": "You 47",
+      "strength": 0.45125,
+      "kind": "topic",
+      "created_cycle": 44
+    },
+    {
+      "source": "You 46",
+      "target": "You 47",
+      "strength": 0.586625,
+      "kind": "topic",
+      "created_cycle": 44
+    },
+    {
+      "source": "AI 36",
+      "target": "AI 46",
+      "strength": 0.45125,
+      "kind": "topic",
+      "created_cycle": 44
+    },
+    {
+      "source": "AI 41",
+      "target": "AI 46",
+      "strength": 0.45125,
+      "kind": "topic",
+      "created_cycle": 44
+    },
+    {
+      "source": "You 46",
+      "target": "AI 46",
+      "strength": 0.586625,
+      "kind": "topic",
+      "created_cycle": 44
+    },
+    {
+      "source": "AI 45",
+      "target": "AI 46",
+      "strength": 0.8573749999999999,
+      "kind": "topic",
+      "created_cycle": 44
+    },
+    {
+      "source": "AI 46",
+      "target": "You 48",
+      "strength": 0.6174999999999999,
+      "kind": "topic",
+      "created_cycle": 45
+    },
+    {
+      "source": "You 48",
+      "target": "AI 47",
+      "strength": 0.7599999999999999,
+      "kind": "topic",
+      "created_cycle": 45
+    },
+    {
+      "source": "AI 36",
+      "target": "You 48",
+      "strength": 0.475,
+      "kind": "topic",
+      "created_cycle": 45
+    },
+    {
+      "source": "AI 41",
+      "target": "You 48",
+      "strength": 0.475,
+      "kind": "topic",
+      "created_cycle": 45
+    },
+    {
+      "source": "You 46",
+      "target": "You 48",
+      "strength": 0.6174999999999999,
+      "kind": "topic",
+      "created_cycle": 45
+    },
+    {
+      "source": "AI 45",
+      "target": "You 48",
+      "strength": 0.6174999999999999,
+      "kind": "topic",
+      "created_cycle": 45
+    },
+    {
+      "source": "You 47",
+      "target": "You 48",
+      "strength": 0.6174999999999999,
+      "kind": "topic",
+      "created_cycle": 45
+    },
+    {
+      "source": "AI 36",
+      "target": "AI 47",
+      "strength": 0.475,
+      "kind": "topic",
+      "created_cycle": 45
+    },
+    {
+      "source": "AI 41",
+      "target": "AI 47",
+      "strength": 0.475,
+      "kind": "topic",
+      "created_cycle": 45
+    },
+    {
+      "source": "You 46",
+      "target": "AI 47",
+      "strength": 0.6174999999999999,
+      "kind": "topic",
+      "created_cycle": 45
+    },
+    {
+      "source": "AI 45",
+      "target": "AI 47",
+      "strength": 0.6174999999999999,
+      "kind": "topic",
+      "created_cycle": 45
+    },
+    {
+      "source": "You 47",
+      "target": "AI 47",
+      "strength": 0.6174999999999999,
+      "kind": "topic",
+      "created_cycle": 45
+    },
+    {
+      "source": "AI 46",
+      "target": "AI 47",
+      "strength": 0.6174999999999999,
+      "kind": "topic",
+      "created_cycle": 45
+    },
+    {
+      "source": "AI 47",
+      "target": "You 49",
+      "strength": 0.35,
+      "kind": "sequence",
+      "created_cycle": 46
+    },
+    {
+      "source": "You 49",
+      "target": "AI 48",
+      "strength": 0.95,
+      "kind": "topic",
+      "created_cycle": 46
+    },
+    {
+      "source": "You 23",
+      "target": "You 49",
+      "strength": 0.5,
+      "kind": "topic",
+      "created_cycle": 46
+    },
+    {
+      "source": "AI 22",
+      "target": "You 49",
+      "strength": 0.5,
+      "kind": "topic",
+      "created_cycle": 46
+    },
+    {
+      "source": "You 24",
+      "target": "You 49",
+      "strength": 0.5,
+      "kind": "topic",
+      "created_cycle": 46
+    },
+    {
+      "source": "AI 23",
+      "target": "You 49",
+      "strength": 0.5,
+      "kind": "topic",
+      "created_cycle": 46
+    },
+    {
+      "source": "You 35",
+      "target": "You 49",
+      "strength": 0.5,
+      "kind": "topic",
+      "created_cycle": 46
+    },
+    {
+      "source": "AI 34",
+      "target": "You 49",
+      "strength": 0.5,
+      "kind": "topic",
+      "created_cycle": 46
+    },
+    {
+      "source": "You 36",
+      "target": "You 49",
+      "strength": 0.5,
+      "kind": "topic",
+      "created_cycle": 46
+    },
+    {
+      "source": "AI 35",
+      "target": "You 49",
+      "strength": 0.6499999999999999,
+      "kind": "topic",
+      "created_cycle": 46
+    },
+    {
+      "source": "You 37",
+      "target": "You 49",
+      "strength": 0.5,
+      "kind": "topic",
+      "created_cycle": 46
+    },
+    {
+      "source": "AI 36",
+      "target": "You 49",
+      "strength": 0.5,
+      "kind": "topic",
+      "created_cycle": 46
+    },
+    {
+      "source": "You 40",
+      "target": "You 49",
+      "strength": 0.5,
+      "kind": "topic",
+      "created_cycle": 46
+    },
+    {
+      "source": "AI 39",
+      "target": "You 49",
+      "strength": 0.5,
+      "kind": "topic",
+      "created_cycle": 46
+    },
+    {
+      "source": "You 41",
+      "target": "You 49",
+      "strength": 0.5,
+      "kind": "topic",
+      "created_cycle": 46
+    },
+    {
+      "source": "AI 40",
+      "target": "You 49",
+      "strength": 0.5,
+      "kind": "topic",
+      "created_cycle": 46
+    },
+    {
+      "source": "You 42",
+      "target": "You 49",
+      "strength": 0.5,
+      "kind": "topic",
+      "created_cycle": 46
+    },
+    {
+      "source": "AI 41",
+      "target": "You 49",
+      "strength": 0.5,
+      "kind": "topic",
+      "created_cycle": 46
+    },
+    {
+      "source": "AI 45",
+      "target": "You 49",
+      "strength": 0.5,
+      "kind": "topic",
+      "created_cycle": 46
+    },
+    {
+      "source": "You 47",
+      "target": "You 49",
+      "strength": 0.5,
+      "kind": "topic",
+      "created_cycle": 46
+    },
+    {
+      "source": "AI 46",
+      "target": "You 49",
+      "strength": 0.5,
+      "kind": "topic",
+      "created_cycle": 46
+    },
+    {
+      "source": "You 11",
+      "target": "AI 48",
+      "strength": 0.5,
+      "kind": "topic",
+      "created_cycle": 46
+    },
+    {
+      "source": "AI 10",
+      "target": "AI 48",
+      "strength": 0.5,
+      "kind": "topic",
+      "created_cycle": 46
+    },
+    {
+      "source": "You 17",
+      "target": "AI 48",
+      "strength": 0.5,
+      "kind": "topic",
+      "created_cycle": 46
+    },
+    {
+      "source": "AI 16",
+      "target": "AI 48",
+      "strength": 0.5,
+      "kind": "topic",
+      "created_cycle": 46
+    },
+    {
+      "source": "You 18",
+      "target": "AI 48",
+      "strength": 0.5,
+      "kind": "topic",
+      "created_cycle": 46
+    },
+    {
+      "source": "AI 17",
+      "target": "AI 48",
+      "strength": 0.5,
+      "kind": "topic",
+      "created_cycle": 46
+    },
+    {
+      "source": "You 23",
+      "target": "AI 48",
+      "strength": 0.6499999999999999,
+      "kind": "topic",
+      "created_cycle": 46
+    },
+    {
+      "source": "AI 22",
+      "target": "AI 48",
+      "strength": 0.6499999999999999,
+      "kind": "topic",
+      "created_cycle": 46
+    },
+    {
+      "source": "You 24",
+      "target": "AI 48",
+      "strength": 0.6499999999999999,
+      "kind": "topic",
+      "created_cycle": 46
+    },
+    {
+      "source": "AI 23",
+      "target": "AI 48",
+      "strength": 0.6499999999999999,
+      "kind": "topic",
+      "created_cycle": 46
+    },
+    {
+      "source": "You 35",
+      "target": "AI 48",
+      "strength": 0.5,
+      "kind": "topic",
+      "created_cycle": 46
+    },
+    {
+      "source": "AI 34",
+      "target": "AI 48",
+      "strength": 0.5,
+      "kind": "topic",
+      "created_cycle": 46
+    },
+    {
+      "source": "You 36",
+      "target": "AI 48",
+      "strength": 0.5,
+      "kind": "topic",
+      "created_cycle": 46
+    },
+    {
+      "source": "AI 35",
+      "target": "AI 48",
+      "strength": 0.6499999999999999,
+      "kind": "topic",
+      "created_cycle": 46
+    },
+    {
+      "source": "You 37",
+      "target": "AI 48",
+      "strength": 0.5,
+      "kind": "topic",
+      "created_cycle": 46
+    },
+    {
+      "source": "AI 36",
+      "target": "AI 48",
+      "strength": 0.5,
+      "kind": "topic",
+      "created_cycle": 46
+    },
+    {
+      "source": "You 40",
+      "target": "AI 48",
+      "strength": 0.5,
+      "kind": "topic",
+      "created_cycle": 46
+    },
+    {
+      "source": "AI 39",
+      "target": "AI 48",
+      "strength": 0.5,
+      "kind": "topic",
+      "created_cycle": 46
+    },
+    {
+      "source": "You 41",
+      "target": "AI 48",
+      "strength": 0.6499999999999999,
+      "kind": "topic",
+      "created_cycle": 46
+    },
+    {
+      "source": "AI 40",
+      "target": "AI 48",
+      "strength": 0.6499999999999999,
+      "kind": "topic",
+      "created_cycle": 46
+    },
+    {
+      "source": "You 42",
+      "target": "AI 48",
+      "strength": 0.5,
+      "kind": "topic",
+      "created_cycle": 46
+    },
+    {
+      "source": "AI 41",
+      "target": "AI 48",
+      "strength": 0.5,
+      "kind": "topic",
+      "created_cycle": 46
+    },
+    {
+      "source": "AI 45",
+      "target": "AI 48",
+      "strength": 0.5,
+      "kind": "topic",
+      "created_cycle": 46
+    },
+    {
+      "source": "You 47",
+      "target": "AI 48",
+      "strength": 0.5,
+      "kind": "topic",
+      "created_cycle": 46
+    },
+    {
+      "source": "AI 46",
+      "target": "AI 48",
+      "strength": 0.5,
+      "kind": "topic",
+      "created_cycle": 46
+    },
+    {
+      "source": "AI 29",
+      "target": "AI 48",
+      "strength": 0.3679,
+      "kind": "similarity",
+      "created_cycle": 46
     }
   ]
 }

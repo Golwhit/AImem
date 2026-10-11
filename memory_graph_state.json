@@ -2,846 +2,1568 @@
   "nodes": [
     {
       "id": "You 1",
+      "content": "You: look this over and see what we can do with it. I want to see the visual of the memory in action",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1154041,
+      "kind": "message",
+      "role": "You",
+      "text": "look this over and see what we can do with it. I want to see the visual of the memory in action",
+      "topics": [
+        "visualization",
+        "interactivity"
+      ],
       "rawImportance": 0,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "AI 1",
+      "content": "Assistant: Replaced the broken Plotly placeholder with a self-contained interactive SVG memory graph generated from the actual MemoryGraph demo data. The browser preview is open and verified: recalling from Python lights up related memories and strengthens links; decay lowers importance/connection strengths; consolidation marks strong memories and boosts importance. Updated generate_html_graph.py, regenerated memory_graph.html, and confirmed the interactive controls work in the browser.",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1154156,
+      "kind": "message",
+      "role": "Assistant",
+      "text": "Replaced the broken Plotly placeholder with a self-contained interactive SVG memory graph generated from the actual MemoryGraph demo data. The browser preview is open and verified: recalling from Python lights up related memories and strengthens links; decay lowers importance/connection strengths; consolidation marks strong memories and boosts importance. Updated generate_html_graph.py, regenerated memory_graph.html, and confirmed the interactive controls work in the browser.",
+      "topics": [
+        "visualization",
+        "interactivity",
+        "recall",
+        "decay",
+        "consolidation",
+        "memory_model"
+      ],
       "rawImportance": 0,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "You 2",
+      "content": "You: is there real memory that can be used and not demo?",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1154206,
+      "kind": "message",
+      "role": "You",
+      "text": "is there real memory that can be used and not demo?",
+      "topics": [
+        "real_memory",
+        "persistence"
+      ],
       "rawImportance": 0,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "AI 2",
+      "content": "Assistant: Yes, but not in the current implementation. The visualization is built from a hard-coded six-node sample in generate_html_graph.py, and its recall/decay changes exist only in browser memory and reset when the page reloads. memory_system.py provides the graph behavior but no persistence or real-memory ingestion. The separate push server stores only temporary push-demo state in server/index.js. To use actual memories, the next step would be to connect a real source—such as your notes or memories you enter—to persistent storage, then render that stored graph instead of the sample.",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1154249,
+      "kind": "message",
+      "role": "Assistant",
+      "text": "Yes, but not in the current implementation. The visualization is built from a hard-coded six-node sample in generate_html_graph.py, and its recall/decay changes exist only in browser memory and reset when the page reloads. memory_system.py provides the graph behavior but no persistence or real-memory ingestion. The separate push server stores only temporary push-demo state in server/index.js. To use actual memories, the next step would be to connect a real source—such as your notes or memories you enter—to persistent storage, then render that stored graph instead of the sample.",
+      "topics": [
+        "real_memory",
+        "persistence",
+        "memory_system",
+        "ingestion"
+      ],
       "rawImportance": 0,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "You 3",
+      "content": "You: can we take everything in this chat and put into memory and see what comes out of it?",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1154282,
+      "kind": "message",
+      "role": "You",
+      "text": "can we take everything in this chat and put into memory and see what comes out of it?",
+      "topics": [
+        "real_memory",
+        "persistence",
+        "chat_transcript",
+        "ingestion"
+      ],
       "rawImportance": 0,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "You 4",
+      "content": "You: keep adding to the memory and update each cycle. what is the practical use of this model?",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1154306,
+      "kind": "message",
+      "role": "You",
+      "text": "keep adding to the memory and update each cycle. what is the practical use of this model?",
+      "topics": [
+        "persistent-memory",
+        "practical-use"
+      ],
       "rawImportance": 0,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "AI 3",
+      "content": "Assistant: Yes. I added a persistent exchange updater: each saved exchange decays older memories and links once, adds the user and assistant turns, saves updated graph weights to chat_memory.json, and regenerates the visualization. I will need the conversation text supplied to the updater; this workspace cannot automatically read future Copilot chat turns. Practically, a memory graph can organize notes or support history, spread a query to related context, rank stronger/recently-used items, and fade stale associations. This prototype's links are heuristic and topic-tagged, so real semantic retrieval would need an embedding/search layer and a trusted source of memories.",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.115434,
+      "kind": "message",
+      "role": "Assistant",
+      "text": "Yes. I added a persistent exchange updater: each saved exchange decays older memories and links once, adds the user and assistant turns, saves updated graph weights to chat_memory.json, and regenerates the visualization. I will need the conversation text supplied to the updater; this workspace cannot automatically read future Copilot chat turns. Practically, a memory graph can organize notes or support history, spread a query to related context, rank stronger/recently-used items, and fade stale associations. This prototype's links are heuristic and topic-tagged, so real semantic retrieval would need an embedding/search layer and a trusted source of memories.",
+      "topics": [
+        "persistent-memory",
+        "practical-use",
+        "graph-retrieval"
+      ],
       "rawImportance": 0,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "You 5",
+      "content": "You: is this a learning model?",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1154366,
+      "kind": "message",
+      "role": "You",
+      "text": "is this a learning model?",
+      "topics": [
+        "learning-model",
+        "memory-model"
+      ],
       "rawImportance": 0,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "AI 4",
+      "content": "Assistant: Not in the usual machine-learning sense. It is a hand-coded memory graph with Hebbian-inspired link strengthening on activation, importance and link decay per cycle, and a consolidation threshold. Those are learning-like state updates, but it does not train a predictive model, infer topics automatically, learn from examples, or optimize parameters. Topic links are supplied manually, and recall spreads using existing weighted edges.",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1154437,
+      "kind": "message",
+      "role": "Assistant",
+      "text": "Not in the usual machine-learning sense. It is a hand-coded memory graph with Hebbian-inspired link strengthening on activation, importance and link decay per cycle, and a consolidation threshold. Those are learning-like state updates, but it does not train a predictive model, infer topics automatically, learn from examples, or optimize parameters. Topic links are supplied manually, and recall spreads using existing weighted edges.",
+      "topics": [
+        "learning-model",
+        "memory-model",
+        "limitations"
+      ],
       "rawImportance": 0,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "You 6",
+      "content": "You: storage and retrieval?",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1154463,
+      "kind": "message",
+      "role": "You",
+      "text": "storage and retrieval?",
+      "topics": [
+        "storage",
+        "retrieval"
+      ],
       "rawImportance": 0,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "AI 5",
+      "content": "Assistant: Storage is currently the local chat_memory.json file: it keeps the saved messages, topic tags, importance scores, cycle count, and weighted links across runs. Retrieval is the graph's spreading activation: starting from a selected memory, it follows connected links and ranks reachable memories by their link strength and importance. Clicking a node or Recall this chat demonstrates that behavior. It is not yet semantic search: it cannot take a new natural-language question and find matching memories unless the relevant topic links were manually supplied. A practical next step would be add embeddings or full-text search to identify candidate memories, then use this graph to spread/rank associated context.",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1154485,
+      "kind": "message",
+      "role": "Assistant",
+      "text": "Storage is currently the local chat_memory.json file: it keeps the saved messages, topic tags, importance scores, cycle count, and weighted links across runs. Retrieval is the graph's spreading activation: starting from a selected memory, it follows connected links and ranks reachable memories by their link strength and importance. Clicking a node or Recall this chat demonstrates that behavior. It is not yet semantic search: it cannot take a new natural-language question and find matching memories unless the relevant topic links were manually supplied. A practical next step would be add embeddings or full-text search to identify candidate memories, then use this graph to spread/rank associated context.",
+      "topics": [
+        "storage",
+        "retrieval",
+        "graph-search"
+      ],
       "rawImportance": 0,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "You 7",
+      "content": "You: some of these things should likely connect at least partially with other things to make this a good memory",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1154513,
+      "kind": "message",
+      "role": "You",
+      "text": "some of these things should likely connect at least partially with other things to make this a good memory",
+      "topics": [
+        "graph-quality",
+        "memory-links"
+      ],
       "rawImportance": 0,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "AI 6",
+      "content": "Assistant: You're right: chronology-only links are too weak, and indiscriminately connecting everything makes recall noisy. I added sparse TF-IDF word-similarity links alongside chronology and topic links, selecting up to two strong text matches per message. This can connect related wording even when topic tags differ, but it is lexical matching rather than deep semantic understanding. This exchange is saved as cycle 4; the updated graph now includes the inferred associations.",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1154537,
+      "kind": "message",
+      "role": "Assistant",
+      "text": "You're right: chronology-only links are too weak, and indiscriminately connecting everything makes recall noisy. I added sparse TF-IDF word-similarity links alongside chronology and topic links, selecting up to two strong text matches per message. This can connect related wording even when topic tags differ, but it is lexical matching rather than deep semantic understanding. This exchange is saved as cycle 4; the updated graph now includes the inferred associations.",
+      "topics": [
+        "graph-quality",
+        "memory-links",
+        "tfidf",
+        "lexical-retrieval"
+      ],
       "rawImportance": 0,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "You 8",
+      "content": "You: should be updating on every prompt and response",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1154563,
+      "kind": "message",
+      "role": "You",
+      "text": "should be updating on every prompt and response",
+      "topics": [
+        "refresh",
+        "live-updates"
+      ],
       "rawImportance": 0,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "AI 7",
+      "content": "Assistant: Yes — I updated the graph so it auto-refreshes, and I’ll keep capturing each prompt and response as we go.",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1154587,
+      "kind": "message",
+      "role": "Assistant",
+      "text": "Yes — I updated the graph so it auto-refreshes, and I’ll keep capturing each prompt and response as we go.",
+      "topics": [
+        "refresh",
+        "automation",
+        "live-updates"
+      ],
       "rawImportance": 0,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "You 9",
+      "content": "You: You have not yet marked the task as complete using the task_complete tool. If you were planning, stop planning and start implementing. You aren't done until you have fully completed the task. IMPORTANT: Do NOT call task_complete if: You have open questions or ambiguities - make good decisions and keep working. You encountered an error - try to resolve it or find an alternative approach. There are remaining steps - complete them first. Keep working autonomously until the task is truly finished, then call task_complete.",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1154652,
+      "kind": "message",
+      "role": "You",
+      "text": "You have not yet marked the task as complete using the task_complete tool. If you were planning, stop planning and start implementing. You aren't done until you have fully completed the task. IMPORTANT: Do NOT call task_complete if: You have open questions or ambiguities - make good decisions and keep working. You encountered an error - try to resolve it or find an alternative approach. There are remaining steps - complete them first. Keep working autonomously until the task is truly finished, then call task_complete.",
+      "topics": [
+        "task-completion",
+        "autopilot"
+      ],
       "rawImportance": 0,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "AI 8",
+      "content": "Assistant: Understood — I’ll keep working instead of stopping, and I’ll only mark the task complete once the remaining work is actually finished and verified.",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1154678,
+      "kind": "message",
+      "role": "Assistant",
+      "text": "Understood — I’ll keep working instead of stopping, and I’ll only mark the task complete once the remaining work is actually finished and verified.",
+      "topics": [
+        "task-completion",
+        "autopilot",
+        "verification"
+      ],
       "rawImportance": 0,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "You 10",
+      "content": "You: what are we doing right now?",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.11547,
+      "kind": "message",
+      "role": "You",
+      "text": "what are we doing right now?",
+      "topics": [
+        "status",
+        "semantic-retrieval",
+        "workflow"
+      ],
       "rawImportance": 0,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "AI 9",
+      "content": "Assistant: We’re in the middle of upgrading the memory graph into semantic retrieval with persistent learning, so the page can rank memories by meaning and feedback instead of only word overlap.",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.115472,
+      "kind": "message",
+      "role": "Assistant",
+      "text": "We’re in the middle of upgrading the memory graph into semantic retrieval with persistent learning, so the page can rank memories by meaning and feedback instead of only word overlap.",
+      "topics": [
+        "semantic-retrieval",
+        "learning-layer",
+        "graph-status"
+      ],
       "rawImportance": 0,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "You 11",
+      "content": "You: this is all related to ai memory what happens if we have a topic that is way off topic i.e. bible verses?",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1154742,
+      "kind": "message",
+      "role": "You",
+      "text": "this is all related to ai memory what happens if we have a topic that is way off topic i.e. bible verses?",
+      "topics": [
+        "off-topic",
+        "namespaces",
+        "domain-separation"
+      ],
       "rawImportance": 0,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "AI 10",
+      "content": "Assistant: Off-topic material should become its own cluster or namespace so it doesn’t pollute the AI-memory graph unless you intentionally link it across domains.",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1154761,
+      "kind": "message",
+      "role": "Assistant",
+      "text": "Off-topic material should become its own cluster or namespace so it doesn’t pollute the AI-memory graph unless you intentionally link it across domains.",
+      "topics": [
+        "domain-separation",
+        "retrieval",
+        "topic-clustering"
+      ],
       "rawImportance": 0,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "You 12",
+      "content": "You: tell me about John 3:16",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1154783,
+      "kind": "message",
+      "role": "You",
+      "text": "tell me about John 3:16",
+      "topics": [
+        "scripture",
+        "john-3-16",
+        "christianity"
+      ],
       "rawImportance": 0,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "AI 11",
+      "content": "Assistant: John 3:16 says that God loved the world, gave his Son, and offers eternal life to whoever believes; it’s often treated as a compact summary of the Christian message.",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1154814,
+      "kind": "message",
+      "role": "Assistant",
+      "text": "John 3:16 says that God loved the world, gave his Son, and offers eternal life to whoever believes; it’s often treated as a compact summary of the Christian message.",
+      "topics": [
+        "scripture",
+        "john-3-16",
+        "explanation"
+      ],
       "rawImportance": 0,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "You 13",
+      "content": "You: I don't see that scripture added a new node or anything?",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1154833,
+      "kind": "message",
+      "role": "You",
+      "text": "I don't see that scripture added a new node or anything?",
+      "topics": [
+        "memory-ingestion",
+        "scripture",
+        "persistence"
+      ],
       "rawImportance": 0,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "AI 12",
+      "content": "Assistant: Right — it was only answered in chat, not written into the memory file, so no new node or embedding entry appeared yet.",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1154852,
+      "kind": "message",
+      "role": "Assistant",
+      "text": "Right — it was only answered in chat, not written into the memory file, so no new node or embedding entry appeared yet.",
+      "topics": [
+        "memory-ingestion",
+        "persistence",
+        "auto-ingest"
+      ],
       "rawImportance": 0,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "You 14",
+      "content": "You: I thought I was clear about that earlier. We should be adding to and updating the graph with every prompt and response",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1154869,
+      "kind": "message",
+      "role": "You",
+      "text": "I thought I was clear about that earlier. We should be adding to and updating the graph with every prompt and response",
+      "topics": [
+        "auto-ingest",
+        "workflow",
+        "live-updates"
+      ],
       "rawImportance": 0,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "AI 13",
+      "content": "Assistant: You’re right. I should be capturing each prompt-response pair into memory, and I’m backfilling the missing turns now so the graph stays in sync with the conversation.",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.115489,
+      "kind": "message",
+      "role": "Assistant",
+      "text": "You’re right. I should be capturing each prompt-response pair into memory, and I’m backfilling the missing turns now so the graph stays in sync with the conversation.",
+      "topics": [
+        "auto-ingest",
+        "workflow",
+        "correction"
+      ],
       "rawImportance": 0,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "You 15",
+      "content": "You: let's talk a bit about Romans 3:23 and see what that does",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1154914,
+      "kind": "message",
+      "role": "You",
+      "text": "let's talk a bit about Romans 3:23 and see what that does",
+      "topics": [
+        "scripture",
+        "romans-3-23",
+        "christianity"
+      ],
       "rawImportance": 0,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "AI 14",
+      "content": "Assistant: Romans 3:23 says that all people have sinned and fall short of God’s glory. In Christian teaching, it highlights the universal need for grace rather than self-righteousness, and it pairs naturally with verses about redemption and forgiveness.",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.115493,
+      "kind": "message",
+      "role": "Assistant",
+      "text": "Romans 3:23 says that all people have sinned and fall short of God’s glory. In Christian teaching, it highlights the universal need for grace rather than self-righteousness, and it pairs naturally with verses about redemption and forgiveness.",
+      "topics": [
+        "scripture",
+        "romans-3-23",
+        "explanation",
+        "grace"
+      ],
       "rawImportance": 0,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "You 16",
+      "content": "You: Pizza is a favorite food",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.115495,
+      "kind": "message",
+      "role": "You",
+      "text": "Pizza is a favorite food",
+      "topics": [
+        "food",
+        "favorite-foods",
+        "pizza"
+      ],
       "rawImportance": 0,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "AI 15",
+      "content": "Assistant: Logged — this will currently behave like a general memory unless we add a food namespace, so it will land in the main AI-memory cluster for now.",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1154966,
+      "kind": "message",
+      "role": "Assistant",
+      "text": "Logged — this will currently behave like a general memory unless we add a food namespace, so it will land in the main AI-memory cluster for now.",
+      "topics": [
+        "food",
+        "favorite-foods",
+        "memory-ingestion"
+      ],
       "rawImportance": 0,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "You 17",
+      "content": "You: I think it's so different that it doesn't connect well or loosely connects with others so maybe it sits outside until it grows in importances, but doesn't sit in with the others",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1154985,
+      "kind": "message",
+      "role": "You",
+      "text": "I think it's so different that it doesn't connect well or loosely connects with others so maybe it sits outside until it grows in importances, but doesn't sit in with the others",
+      "topics": [
+        "food",
+        "domain-separation",
+        "memory-clustering"
+      ],
       "rawImportance": 0,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "AI 16",
+      "content": "Assistant: Implemented: food now gets its own peripheral domain, placed outside the main AI-memory cluster by default and only promoted to a stronger side cluster if it accumulates enough weight. It no longer sits inside the main cluster with unrelated memories.",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1155043,
+      "kind": "message",
+      "role": "Assistant",
+      "text": "Implemented: food now gets its own peripheral domain, placed outside the main AI-memory cluster by default and only promoted to a stronger side cluster if it accumulates enough weight. It no longer sits inside the main cluster with unrelated memories.",
+      "topics": [
+        "food",
+        "domain-separation",
+        "visual-layout"
+      ],
       "rawImportance": 0,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "You 18",
+      "content": "You: Food is siting outside of the visual area",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1155062,
+      "kind": "message",
+      "role": "You",
+      "text": "Food is siting outside of the visual area",
+      "topics": [
+        "food",
+        "visual-layout",
+        "domain-separation"
+      ],
       "rawImportance": 0,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "AI 17",
+      "content": "Assistant: I pulled the food cluster back into the visible canvas while keeping it separate from the core AI-memory cluster. It should now sit to the right/lower-right as a peripheral domain instead of disappearing off-screen.",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1155076,
+      "kind": "message",
+      "role": "Assistant",
+      "text": "I pulled the food cluster back into the visible canvas while keeping it separate from the core AI-memory cluster. It should now sit to the right/lower-right as a peripheral domain instead of disappearing off-screen.",
+      "topics": [
+        "food",
+        "visual-layout",
+        "domain-separation"
+      ],
       "rawImportance": 0,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "You 19",
+      "content": "You: now it overlaps and looks odd",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1155097,
+      "kind": "message",
+      "role": "You",
+      "text": "now it overlaps and looks odd",
+      "topics": [
+        "food",
+        "visual-layout",
+        "overlap"
+      ],
       "rawImportance": 0,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "AI 18",
+      "content": "Assistant: I moved Food below Scripture so it stays separated without colliding with the main cluster or the verse cluster.",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1155112,
+      "kind": "message",
+      "role": "Assistant",
+      "text": "I moved Food below Scripture so it stays separated without colliding with the main cluster or the verse cluster.",
+      "topics": [
+        "food",
+        "visual-layout",
+        "overlap"
+      ],
       "rawImportance": 0,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "You 20",
+      "content": "You: this is good for now.  but it doesn't look like new memories are being created which should be done for every prompt and response",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1155133,
+      "kind": "message",
+      "role": "You",
+      "text": "this is good for now.  but it doesn't look like new memories are being created which should be done for every prompt and response",
+      "topics": [
+        "memory-ingestion",
+        "live-updates",
+        "persistence"
+      ],
       "rawImportance": 0,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "AI 19",
+      "content": "Assistant: You're right — I should be appending each prompt/response pair as a new memory. I’m adding this exchange now, and the graph should refresh with a new node pair for it.",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1155157,
+      "kind": "message",
+      "role": "Assistant",
+      "text": "You're right — I should be appending each prompt/response pair as a new memory. I’m adding this exchange now, and the graph should refresh with a new node pair for it.",
+      "topics": [
+        "memory-ingestion",
+        "live-updates",
+        "persistence"
+      ],
       "rawImportance": 0,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "You 21",
+      "content": "You: should be saving and updating the graph and memory for every prompt question and response right now. what can we do so that I can stop reminding you and you can just do this automatically",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1155174,
+      "kind": "message",
+      "role": "You",
+      "text": "should be saving and updating the graph and memory for every prompt question and response right now. what can we do so that I can stop reminding you and you can just do this automatically",
+      "topics": [
+        "memory-ingestion",
+        "automation",
+        "persistence"
+      ],
       "rawImportance": 0,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "AI 20",
+      "content": "Assistant: The reliable fix is to move turn logging out of the chat and into the app flow: either I treat every incoming message as a memory update before answering, or we add a host-side hook/wrapper that appends each turn to chat_memory.json and regenerates memory_graph.html automatically on every exchange.",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1155193,
+      "kind": "message",
+      "role": "Assistant",
+      "text": "The reliable fix is to move turn logging out of the chat and into the app flow: either I treat every incoming message as a memory update before answering, or we add a host-side hook/wrapper that appends each turn to chat_memory.json and regenerates memory_graph.html automatically on every exchange.",
+      "topics": [
+        "memory-ingestion",
+        "automation",
+        "persistence"
+      ],
       "rawImportance": 0,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "You 22",
+      "content": "You: so now where is Elementary in the graph",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.115521,
+      "kind": "message",
+      "role": "You",
+      "text": "so now where is Elementary in the graph",
+      "topics": [
+        "elementary",
+        "tv-show",
+        "memory-ingestion"
+      ],
       "rawImportance": 0,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "AI 21",
+      "content": "Assistant: Elementary now appears as a new general memory in the AI-memory cluster unless we choose to split TV shows into their own domain. It should sit near this discussion as part of the chat history.",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1155229,
+      "kind": "message",
+      "role": "Assistant",
+      "text": "Elementary now appears as a new general memory in the AI-memory cluster unless we choose to split TV shows into their own domain. It should sit near this discussion as part of the chat history.",
+      "topics": [
+        "elementary",
+        "tv-show",
+        "ai-memory"
+      ],
       "rawImportance": 0,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "You 23",
+      "content": "You: should this be in the ai memory or outside in a general or under evaluation area. doens't seem to related to ai memory to me",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1155262,
+      "kind": "message",
+      "role": "You",
+      "text": "should this be in the ai memory or outside in a general or under evaluation area. doens't seem to related to ai memory to me",
+      "topics": [
+        "evaluation",
+        "meta",
+        "domain-separation"
+      ],
       "rawImportance": 0,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "AI 22",
+      "content": "Assistant: I agree — this should live outside the core AI-memory cluster, likely in a general or evaluation/meta area. It’s about classifying the memory system itself rather than discussing AI memory content, so it fits better as an outboard policy or evaluation node.",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.115528,
+      "kind": "message",
+      "role": "Assistant",
+      "text": "I agree — this should live outside the core AI-memory cluster, likely in a general or evaluation/meta area. It’s about classifying the memory system itself rather than discussing AI memory content, so it fits better as an outboard policy or evaluation node.",
+      "topics": [
+        "evaluation",
+        "meta",
+        "domain-separation"
+      ],
       "rawImportance": 0,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "You 24",
+      "content": "You: not seeing this under evaluation space",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.11553,
+      "kind": "message",
+      "role": "You",
+      "text": "not seeing this under evaluation space",
+      "topics": [
+        "evaluation",
+        "meta",
+        "domain-separation"
+      ],
       "rawImportance": 0,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "AI 23",
+      "content": "Assistant: I’ve added a real Under evaluation cluster so meta and classification turns can sit outside the main AI-memory area instead of blending in with it.",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.115532,
+      "kind": "message",
+      "role": "Assistant",
+      "text": "I’ve added a real Under evaluation cluster so meta and classification turns can sit outside the main AI-memory area instead of blending in with it.",
+      "topics": [
+        "evaluation",
+        "meta",
+        "domain-separation"
+      ],
       "rawImportance": 0,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "You 25",
+      "content": "You: who are the main cast",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1155336,
+      "kind": "message",
+      "role": "You",
+      "text": "who are the main cast",
+      "topics": [
+        "elementary",
+        "cast",
+        "tv-show"
+      ],
       "rawImportance": 0,
       "history": [
         1
       ],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 1
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "AI 24",
+      "content": "Assistant: The main cast of Elementary includes Jonny Lee Miller as Sherlock Holmes, Lucy Liu as Joan Watson, Aidan Quinn as Captain Thomas Gregson, Jon Michael Hill as Detective Marcus Bell, and Natalie Dormer in a recurring role as Irene Adler/Moriarty.",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1155353,
+      "kind": "message",
+      "role": "Assistant",
+      "text": "The main cast of Elementary includes Jonny Lee Miller as Sherlock Holmes, Lucy Liu as Joan Watson, Aidan Quinn as Captain Thomas Gregson, Jon Michael Hill as Detective Marcus Bell, and Natalie Dormer in a recurring role as Irene Adler/Moriarty.",
+      "topics": [
+        "elementary",
+        "cast",
+        "tv-show"
+      ],
       "rawImportance": 0,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "You 26",
+      "content": "You: I like a good spagetti and meat sauce",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.115537,
+      "kind": "message",
+      "role": "You",
+      "text": "I like a good spagetti and meat sauce",
+      "topics": [
+        "food",
+        "pasta",
+        "spaghetti",
+        "meat-sauce"
+      ],
       "rawImportance": 0,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "AI 25",
+      "content": "Assistant: Logged as a food memory: spaghetti and meat sauce fits the Food cluster, alongside the other off-topic food-related turns.",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1155431,
+      "kind": "message",
+      "role": "Assistant",
+      "text": "Logged as a food memory: spaghetti and meat sauce fits the Food cluster, alongside the other off-topic food-related turns.",
+      "topics": [
+        "food",
+        "pasta",
+        "spaghetti",
+        "meat-sauce"
+      ],
       "rawImportance": 0,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "You 27",
+      "content": "You: Elemenatry is one of my favorite tv shows. I also like star trek the next generation and Mcg",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1155448,
+      "kind": "message",
+      "role": "You",
+      "text": "Elemenatry is one of my favorite tv shows. I also like star trek the next generation and Mcg",
+      "topics": [
+        "entertainment",
+        "tv-show",
+        "elementary",
+        "star-trek",
+        "next-generation",
+        "mcgyver"
+      ],
       "rawImportance": 0,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "AI 26",
+      "content": "Assistant: Logged as Entertainment rather than core AI memory. Elementary, Star Trek: The Next Generation, and McGyver now belong in the TV-show cluster so they stay separate from the AI-memory discussion.",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1155467,
+      "kind": "message",
+      "role": "Assistant",
+      "text": "Logged as Entertainment rather than core AI memory. Elementary, Star Trek: The Next Generation, and McGyver now belong in the TV-show cluster so they stay separate from the AI-memory discussion.",
+      "topics": [
+        "entertainment",
+        "tv-show",
+        "elementary",
+        "star-trek",
+        "next-generation",
+        "mcgyver"
+      ],
       "rawImportance": 0,
       "history": [
         1
       ],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 1
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "You 28",
+      "content": "You: who plays captain picard?",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1155486,
+      "kind": "message",
+      "role": "You",
+      "text": "who plays captain picard?",
+      "topics": [
+        "entertainment",
+        "star-trek",
+        "captain-picard"
+      ],
       "rawImportance": 0.15,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "AI 27",
+      "content": "Assistant: Captain Jean-Luc Picard is played by Patrick Stewart.",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1155505,
+      "kind": "message",
+      "role": "Assistant",
+      "text": "Captain Jean-Luc Picard is played by Patrick Stewart.",
+      "topics": [
+        "entertainment",
+        "star-trek",
+        "captain-picard"
+      ],
       "rawImportance": 0.05,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "You 29",
+      "content": "You: how many tv shows are we tracking now",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.115552,
+      "kind": "message",
+      "role": "You",
+      "text": "how many tv shows are we tracking now",
+      "topics": [
+        "entertainment",
+        "tv-show",
+        "count"
+      ],
       "rawImportance": 0.3,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "AI 28",
+      "content": "Assistant: We’re tracking three TV shows right now: Elementary, Star Trek: The Next Generation, and McGyver. Captain Picard is a character reference inside Star Trek, not a separate show.",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1155543,
+      "kind": "message",
+      "role": "Assistant",
+      "text": "We’re tracking three TV shows right now: Elementary, Star Trek: The Next Generation, and McGyver. Captain Picard is a character reference inside Star Trek, not a separate show.",
+      "topics": [
+        "entertainment",
+        "tv-show",
+        "count"
+      ],
       "rawImportance": 0.2,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "You 30",
+      "content": "You: what memory concepts should we be considering for evolving",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1155562,
+      "kind": "message",
+      "role": "You",
+      "text": "what memory concepts should we be considering for evolving",
+      "topics": [
+        "memory-design",
+        "evolution",
+        "domains"
+      ],
       "rawImportance": 0.45,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "AI 29",
+      "content": "Assistant: Key memory concepts to evolve next include: domains/namespaces, cluster promotion thresholds, salience and importance, recency vs. permanence, retrieval modes, consolidation vs. transient notes, cross-domain bridges, evaluation/meta space, and decay or pruning policies.",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1155584,
+      "kind": "message",
+      "role": "Assistant",
+      "text": "Key memory concepts to evolve next include: domains/namespaces, cluster promotion thresholds, salience and importance, recency vs. permanence, retrieval modes, consolidation vs. transient notes, cross-domain bridges, evaluation/meta space, and decay or pruning policies.",
+      "topics": [
+        "memory-design",
+        "evolution",
+        "domains"
+      ],
       "rawImportance": 0.35,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "You 31",
+      "content": "You: that's good and may build that into the memory somehow. maybe a reference. Eventually the memory is going to have agents and begin working separately from this chat so we need to keep that in mind for architecture and instruction. Right now we're building it as the source, but soon we will be querying it and then later it will be querying you.",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1155603,
+      "kind": "message",
+      "role": "You",
+      "text": "that's good and may build that into the memory somehow. maybe a reference. Eventually the memory is going to have agents and begin working separately from this chat so we need to keep that in mind for architecture and instruction. Right now we're building it as the source, but soon we will be querying it and then later it will be querying you.",
+      "topics": [
+        "memory-architecture",
+        "agents",
+        "querying"
+      ],
       "rawImportance": 0.6,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "AI 30",
+      "content": "Assistant: Logged as a memory reference for future architecture: the system should evolve from chat-source memory into a queryable memory layer, and later into a multi-agent system that can query and act from memory independently of this chat.",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.115562,
+      "kind": "message",
+      "role": "Assistant",
+      "text": "Logged as a memory reference for future architecture: the system should evolve from chat-source memory into a queryable memory layer, and later into a multi-agent system that can query and act from memory independently of this chat.",
+      "topics": [
+        "memory-architecture",
+        "agents",
+        "querying"
+      ],
       "rawImportance": 0.5,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "You 32",
+      "content": "You: go for it",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1155639,
+      "kind": "message",
+      "role": "You",
+      "text": "go for it",
+      "topics": [
+        "memory-architecture",
+        "policy",
+        "agents"
+      ],
       "rawImportance": 0.75,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "AI 31",
+      "content": "Assistant: Added a memory architecture policy to the project docs: preserve provenance, separate domains, keep evaluation/meta distinct, promote clusters only when they earn weight, and make the system retrieval-friendly for future agents.",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1155655,
+      "kind": "message",
+      "role": "Assistant",
+      "text": "Added a memory architecture policy to the project docs: preserve provenance, separate domains, keep evaluation/meta distinct, promote clusters only when they earn weight, and make the system retrieval-friendly for future agents.",
+      "topics": [
+        "memory-architecture",
+        "policy",
+        "agents"
+      ],
       "rawImportance": 0.65,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "You 33",
+      "content": "You: what bible verses discuss the armor of god?",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1155674,
+      "kind": "message",
+      "role": "You",
+      "text": "what bible verses discuss the armor of god?",
+      "topics": [
+        "scripture",
+        "bible",
+        "armor-of-god"
+      ],
       "rawImportance": 0.9,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "AI 32",
+      "content": "Assistant: The main passage is Ephesians 6:10-18 — that’s the classic armor of God section. Other related verses include Isaiah 59:17, 1 Thessalonians 5:8, Romans 13:12, 2 Corinthians 6:7, and 1 Peter 5:8-9. If you want, I can also give you a short summary of each piece of the armor in Ephesians 6.",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1155696,
+      "kind": "message",
+      "role": "Assistant",
+      "text": "The main passage is Ephesians 6:10-18 — that’s the classic armor of God section. Other related verses include Isaiah 59:17, 1 Thessalonians 5:8, Romans 13:12, 2 Corinthians 6:7, and 1 Peter 5:8-9. If you want, I can also give you a short summary of each piece of the armor in Ephesians 6.",
+      "topics": [
+        "scripture",
+        "bible",
+        "armor-of-god"
+      ],
+      "created_cycle": 30,
       "rawImportance": 0.8,
       "history": [],
-      "consolidated": false,
-      "created_cycle": 30,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
@@ -851,10 +1573,16 @@
     },
     {
       "id": "You 34",
+      "content": "You: go for it",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1155713,
+      "kind": "message",
+      "role": "You",
+      "text": "go for it",
+      "topics": [],
       "rawImportance": 0.9,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "0": "n",
         "1": "e",
@@ -867,14 +1595,22 @@
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "AI 33",
+      "content": "Assistant: Added backend graph-state timestamps, automatic polling refresh, and a server endpoint for appending exchanges.",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1155727,
+      "kind": "message",
+      "role": "Assistant",
+      "text": "Added backend graph-state timestamps, automatic polling refresh, and a server endpoint for appending exchanges.",
+      "topics": [],
+      "created_cycle": 31,
       "rawImportance": 0.8,
       "history": [],
-      "consolidated": false,
-      "created_cycle": 31,
       "feedback": {
         "0": "n",
         "1": "e",
@@ -890,1022 +1626,2777 @@
       }
     },
     {
+      "id": "You 35",
+      "content": "You: memories are not updating again noting about finance is showing",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1155746,
+      "kind": "message",
+      "role": "You",
+      "text": "memories are not updating again noting about finance is showing",
+      "topics": [
+        "finance",
+        "memory-updates"
+      ],
+      "rawImportance": 0.9,
+      "history": [],
+      "feedback": {
+        "0": "n",
+        "1": "e",
+        "2": "u",
+        "3": "t",
+        "4": "r",
+        "5": "a",
+        "6": "l",
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      },
+      "created_cycle": null
+    },
+    {
+      "id": "AI 34",
+      "content": "Assistant: I’m treating this as a finance thread: investing, compound growth, and double-returns ideas belong together, but returns are never guaranteed. If you want, I can turn it into a finance cluster around investing, diversification, and the Rule of 72.",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1155767,
+      "kind": "message",
+      "role": "Assistant",
+      "text": "I’m treating this as a finance thread: investing, compound growth, and double-returns ideas belong together, but returns are never guaranteed. If you want, I can turn it into a finance cluster around investing, diversification, and the Rule of 72.",
+      "topics": [
+        "finance",
+        "investing",
+        "compound-growth"
+      ],
+      "created_cycle": 32,
+      "rawImportance": 0.8,
+      "history": [],
+      "feedback": {
+        "0": "n",
+        "1": "e",
+        "2": "u",
+        "3": "t",
+        "4": "r",
+        "5": "a",
+        "6": "l",
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "You 36",
+      "content": "You: crypto mining",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.115579,
+      "kind": "message",
+      "role": "You",
+      "text": "crypto mining",
+      "topics": [
+        "crypto",
+        "mining"
+      ],
+      "rawImportance": 0.9,
+      "history": [
+        1
+      ],
+      "feedback": {
+        "0": "n",
+        "1": "e",
+        "2": "u",
+        "3": "t",
+        "4": "r",
+        "5": "a",
+        "6": "l",
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 1
+      },
+      "created_cycle": null
+    },
+    {
+      "id": "AI 35",
+      "content": "Assistant: Crypto mining is best treated as a finance-plus-technology topic: it sits near investing, but it has its own hardware, energy, and profitability concerns. If you want, I can treat it as a crypto subcluster or keep it linked under the broader finance thread.",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1155813,
+      "kind": "message",
+      "role": "Assistant",
+      "text": "Crypto mining is best treated as a finance-plus-technology topic: it sits near investing, but it has its own hardware, energy, and profitability concerns. If you want, I can treat it as a crypto subcluster or keep it linked under the broader finance thread.",
+      "topics": [
+        "crypto",
+        "mining",
+        "finance"
+      ],
+      "created_cycle": 33,
+      "rawImportance": 0.8,
+      "history": [],
+      "feedback": {
+        "0": "n",
+        "1": "e",
+        "2": "u",
+        "3": "t",
+        "4": "r",
+        "5": "a",
+        "6": "l",
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "You 37",
+      "content": "You: best ways to crypto mine",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.115583,
+      "kind": "message",
+      "role": "You",
+      "text": "best ways to crypto mine",
+      "topics": [
+        "crypto",
+        "mining",
+        "profitability"
+      ],
+      "rawImportance": 0.9,
+      "history": [],
+      "feedback": {
+        "0": "n",
+        "1": "e",
+        "2": "u",
+        "3": "t",
+        "4": "r",
+        "5": "a",
+        "6": "l",
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      },
+      "created_cycle": null
+    },
+    {
+      "id": "AI 36",
+      "content": "Assistant: At a high level, the most practical ways to mine crypto are usually: choose hardware matched to the coin (often ASICs for major proof-of-work networks, GPUs only where they still make sense), keep electricity costs low, join a reputable mining pool for steadier payouts, and watch profitability against power, cooling, and hardware wear. Always check the network difficulty and local regulations before starting.",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.115585,
+      "kind": "message",
+      "role": "Assistant",
+      "text": "At a high level, the most practical ways to mine crypto are usually: choose hardware matched to the coin (often ASICs for major proof-of-work networks, GPUs only where they still make sense), keep electricity costs low, join a reputable mining pool for steadier payouts, and watch profitability against power, cooling, and hardware wear. Always check the network difficulty and local regulations before starting.",
+      "topics": [
+        "crypto",
+        "mining",
+        "electricity",
+        "hardware"
+      ],
+      "created_cycle": 34,
+      "rawImportance": 0.8,
+      "history": [],
+      "feedback": {
+        "0": "n",
+        "1": "e",
+        "2": "u",
+        "3": "t",
+        "4": "r",
+        "5": "a",
+        "6": "l",
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "You 38",
+      "content": "You: food",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1155868,
+      "kind": "message",
+      "role": "You",
+      "text": "food",
+      "topics": [
+        "food"
+      ],
+      "rawImportance": 0.9,
+      "history": [],
+      "feedback": {
+        "0": "n",
+        "1": "e",
+        "2": "u",
+        "3": "t",
+        "4": "r",
+        "5": "a",
+        "6": "l",
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      },
+      "created_cycle": null
+    },
+    {
+      "id": "AI 37",
+      "content": "Assistant: Food is usually a separate practical cluster: recipes, meals, favorites, planning, and anything directly about eating or cooking. If you want, I can help sort it into subtopics like recipes, dining, groceries, or favorite foods.",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1155887,
+      "kind": "message",
+      "role": "Assistant",
+      "text": "Food is usually a separate practical cluster: recipes, meals, favorites, planning, and anything directly about eating or cooking. If you want, I can help sort it into subtopics like recipes, dining, groceries, or favorite foods.",
+      "topics": [
+        "food",
+        "recipes",
+        "meals"
+      ],
+      "created_cycle": 35,
+      "rawImportance": 0.8,
+      "history": [],
+      "feedback": {
+        "0": "n",
+        "1": "e",
+        "2": "u",
+        "3": "t",
+        "4": "r",
+        "5": "a",
+        "6": "l",
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "You 39",
+      "content": "You: scripture",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.11559,
+      "kind": "message",
+      "role": "You",
+      "text": "scripture",
+      "topics": [
+        "scripture"
+      ],
+      "rawImportance": 0.9,
+      "history": [],
+      "feedback": {
+        "0": "n",
+        "1": "e",
+        "2": "u",
+        "3": "t",
+        "4": "r",
+        "5": "a",
+        "6": "l",
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      },
+      "created_cycle": null
+    },
+    {
+      "id": "AI 38",
+      "content": "Assistant: Scripture is its own clear cluster in the graph, especially for Bible passages, verses, and related theological discussion. If you want, I can narrow it to a specific passage or keep it grouped as a broader scripture thread.",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.115592,
+      "kind": "message",
+      "role": "Assistant",
+      "text": "Scripture is its own clear cluster in the graph, especially for Bible passages, verses, and related theological discussion. If you want, I can narrow it to a specific passage or keep it grouped as a broader scripture thread.",
+      "topics": [
+        "scripture",
+        "bible",
+        "verses"
+      ],
+      "created_cycle": 36,
+      "rawImportance": 0.8,
+      "history": [],
+      "feedback": {
+        "0": "n",
+        "1": "e",
+        "2": "u",
+        "3": "t",
+        "4": "r",
+        "5": "a",
+        "6": "l",
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "You 40",
+      "content": "You: finance options",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1155937,
+      "kind": "message",
+      "role": "You",
+      "text": "finance options",
+      "topics": [
+        "finance",
+        "options"
+      ],
+      "rawImportance": 0.9,
+      "history": [],
+      "feedback": {
+        "0": "n",
+        "1": "e",
+        "2": "u",
+        "3": "t",
+        "4": "r",
+        "5": "a",
+        "6": "l",
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      },
+      "created_cycle": null
+    },
+    {
+      "id": "AI 39",
+      "content": "Assistant: Finance options usually include budgeting, saving, investing, debt payoff, retirement accounts, and cash-flow planning. If you want, I can break them into a clearer set of finance subtopics for the graph.",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1155958,
+      "kind": "message",
+      "role": "Assistant",
+      "text": "Finance options usually include budgeting, saving, investing, debt payoff, retirement accounts, and cash-flow planning. If you want, I can break them into a clearer set of finance subtopics for the graph.",
+      "topics": [
+        "finance",
+        "budgeting",
+        "investing",
+        "debt"
+      ],
+      "created_cycle": 37,
+      "rawImportance": 0.8,
+      "history": [],
+      "feedback": {
+        "0": "n",
+        "1": "e",
+        "2": "u",
+        "3": "t",
+        "4": "r",
+        "5": "a",
+        "6": "l",
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "You 41",
+      "content": "You: finance has very little to do with ai memory and yet it's pulsing again when finance was discussed",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1155975,
+      "kind": "message",
+      "role": "You",
+      "text": "finance has very little to do with ai memory and yet it's pulsing again when finance was discussed",
+      "topics": [
+        "finance",
+        "domain-separation"
+      ],
+      "rawImportance": 0.9,
+      "history": [],
+      "feedback": {
+        "0": "n",
+        "1": "e",
+        "2": "u",
+        "3": "t",
+        "4": "r",
+        "5": "a",
+        "6": "l",
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      },
+      "created_cycle": null
+    },
+    {
+      "id": "AI 40",
+      "content": "Assistant: The finance memories are in the finance thread, not the AI-memory thread. It was pulsing because finance was still being classified as part of the memory domain; I’ve now split finance into its own cluster so those turns stop lighting up AI memory.",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1155996,
+      "kind": "message",
+      "role": "Assistant",
+      "text": "The finance memories are in the finance thread, not the AI-memory thread. It was pulsing because finance was still being classified as part of the memory domain; I’ve now split finance into its own cluster so those turns stop lighting up AI memory.",
+      "topics": [
+        "finance",
+        "domain-separation",
+        "cluster"
+      ],
+      "created_cycle": 38,
+      "rawImportance": 0.8,
+      "history": [],
+      "feedback": {
+        "0": "n",
+        "1": "e",
+        "2": "u",
+        "3": "t",
+        "4": "r",
+        "5": "a",
+        "6": "l",
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "You 42",
+      "content": "You: what are the best crypto mining techniques",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1156013,
+      "kind": "message",
+      "role": "You",
+      "text": "what are the best crypto mining techniques",
+      "topics": [
+        "crypto",
+        "mining",
+        "techniques"
+      ],
+      "rawImportance": 0.9,
+      "history": [],
+      "feedback": "neutral",
+      "created_cycle": null
+    },
+    {
+      "id": "AI 41",
+      "content": "Assistant: At a high level, the best crypto-mining techniques are: use the right hardware for the coin (usually ASICs for major proof-of-work networks), keep power costs low, mine through a reputable pool, optimize cooling and uptime, and continually compare profitability against difficulty, fees, and hardware wear. For most people, the best technique is disciplined profitability management rather than chasing raw hash rate.",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1156032,
+      "kind": "message",
+      "role": "Assistant",
+      "text": "At a high level, the best crypto-mining techniques are: use the right hardware for the coin (usually ASICs for major proof-of-work networks), keep power costs low, mine through a reputable pool, optimize cooling and uptime, and continually compare profitability against difficulty, fees, and hardware wear. For most people, the best technique is disciplined profitability management rather than chasing raw hash rate.",
+      "topics": [
+        "crypto",
+        "mining",
+        "hardware",
+        "electricity",
+        "profitability"
+      ],
+      "created_cycle": 39,
+      "rawImportance": 0.8,
+      "history": [],
+      "feedback": "neutral"
+    },
+    {
+      "id": "You 43",
+      "content": "You: based on my entertainment preferences what are other tv shows I might enjoy?",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1156049,
+      "kind": "message",
+      "role": "You",
+      "text": "based on my entertainment preferences what are other tv shows I might enjoy?",
+      "topics": [
+        "entertainment",
+        "tv-show",
+        "recommendations"
+      ],
+      "rawImportance": 0.9,
+      "history": [],
+      "feedback": "neutral",
+      "created_cycle": null
+    },
+    {
+      "id": "AI 42",
+      "content": "Assistant: Based on Elementary, Star Trek: The Next Generation, and McGyver, you may enjoy shows with smart case-of-the-week storytelling, strong ensemble chemistry, and a mix of mystery or adventure. Good fits include Psych, Monk, The Mentalist, Castle, Leverage, Burn Notice, Fringe, Stargate SG-1, The Orville, and Quantum Leap. If you want, I can narrow that to more detective shows, more sci-fi, or more light adventure.",
+      "importance": 0.0,
+      "consolidated": false,
+      "timestamp": 1791689083.1156068,
+      "kind": "message",
+      "role": "Assistant",
+      "text": "Based on Elementary, Star Trek: The Next Generation, and McGyver, you may enjoy shows with smart case-of-the-week storytelling, strong ensemble chemistry, and a mix of mystery or adventure. Good fits include Psych, Monk, The Mentalist, Castle, Leverage, Burn Notice, Fringe, Stargate SG-1, The Orville, and Quantum Leap. If you want, I can narrow that to more detective shows, more sci-fi, or more light adventure.",
+      "topics": [
+        "entertainment",
+        "tv-show",
+        "recommendations",
+        "mystery",
+        "sci-fi",
+        "adventure"
+      ],
+      "created_cycle": 40,
+      "rawImportance": 0.8,
+      "history": [],
+      "feedback": "neutral"
+    },
+    {
+      "id": "You 44",
+      "content": "You: I like Leverage, Psych, and Quantum Leap",
+      "importance": 0.15,
+      "consolidated": false,
+      "timestamp": 1791689083.115609,
+      "kind": "message",
+      "role": "You",
+      "text": "I like Leverage, Psych, and Quantum Leap",
+      "topics": [
+        "entertainment",
+        "tv-show",
+        "leverage",
+        "psych",
+        "quantum-leap"
+      ],
+      "rawImportance": 0.9,
+      "history": [],
+      "feedback": "neutral",
+      "created_cycle": null
+    },
+    {
+      "id": "AI 43",
+      "content": "Assistant: That points to a preference for clever ensemble problem-solving, light mystery-comedy, and inventive premise-driven stories. Other good matches may include Monk, The Mentalist, Burn Notice, Castle, White Collar, Eureka, Warehouse 13, and The Librarians.",
+      "importance": 0.05,
+      "consolidated": false,
+      "timestamp": 1791689083.1156137,
+      "kind": "message",
+      "role": "Assistant",
+      "text": "That points to a preference for clever ensemble problem-solving, light mystery-comedy, and inventive premise-driven stories. Other good matches may include Monk, The Mentalist, Burn Notice, Castle, White Collar, Eureka, Warehouse 13, and The Librarians.",
+      "topics": [
+        "entertainment",
+        "tv-show",
+        "leverage",
+        "psych",
+        "quantum-leap",
+        "recommendations"
+      ],
+      "created_cycle": 41,
+      "rawImportance": 0.8,
+      "history": [],
+      "feedback": "neutral"
+    },
+    {
+      "id": "You 45",
+      "content": "You: imagery of the sword in the armor of god",
+      "importance": 0.3,
+      "consolidated": false,
+      "timestamp": 1791689083.115616,
+      "kind": "message",
+      "role": "You",
+      "text": "imagery of the sword in the armor of god",
+      "topics": [
+        "scripture",
+        "armor-of-god",
+        "imagery"
+      ],
+      "rawImportance": 0.9,
+      "history": [],
+      "feedback": "neutral",
+      "created_cycle": null
+    },
+    {
+      "id": "AI 44",
+      "content": "Assistant: In Ephesians 6:17, the sword is the 'sword of the Spirit, which is the word of God.' The imagery is defensive and offensive at once: the Word is a Spirit-given weapon for resisting lies, testing truth, and standing firm in spiritual conflict. It pairs with the rest of the armor to show that truth is not only protective but active and discerning.",
+      "importance": 0.2,
+      "consolidated": false,
+      "timestamp": 1791689083.1156175,
+      "kind": "message",
+      "role": "Assistant",
+      "text": "In Ephesians 6:17, the sword is the 'sword of the Spirit, which is the word of God.' The imagery is defensive and offensive at once: the Word is a Spirit-given weapon for resisting lies, testing truth, and standing firm in spiritual conflict. It pairs with the rest of the armor to show that truth is not only protective but active and discerning.",
+      "topics": [
+        "scripture",
+        "armor-of-god",
+        "imagery",
+        "ephesians"
+      ],
+      "created_cycle": 42,
+      "rawImportance": 0.8,
+      "history": [],
+      "feedback": "neutral"
+    },
+    {
+      "id": "You 46",
+      "content": "You: enterprise grade motherboards that support multiple full 16x",
+      "importance": 0.45,
+      "consolidated": false,
+      "timestamp": 1791689083.1156192,
+      "kind": "message",
+      "role": "You",
+      "text": "enterprise grade motherboards that support multiple full 16x",
+      "topics": [
+        "hardware",
+        "pcie",
+        "enterprise"
+      ],
+      "rawImportance": 0.9,
+      "history": [],
+      "feedback": "neutral",
+      "created_cycle": null
+    },
+    {
+      "id": "AI 45",
+      "content": "Assistant: If you mean several PCIe slots that are electrically x16, the usual choices are workstation/server platforms rather than consumer boards. Good families to look at are AMD Threadripper Pro boards on WRX90 or TRX50-class platforms, and Intel Xeon W workstation boards on W790. These are the kinds of motherboards that can provide multiple full-bandwidth PCIe x16 slots, especially for GPU or accelerator builds. In practice, you want to check the board manual for lane sharing and whether each slot is x16 electrical or only x16 physical.",
+      "importance": 0.35,
+      "consolidated": false,
+      "timestamp": 1791689083.1156206,
+      "kind": "message",
+      "role": "Assistant",
+      "text": "If you mean several PCIe slots that are electrically x16, the usual choices are workstation/server platforms rather than consumer boards. Good families to look at are AMD Threadripper Pro boards on WRX90 or TRX50-class platforms, and Intel Xeon W workstation boards on W790. These are the kinds of motherboards that can provide multiple full-bandwidth PCIe x16 slots, especially for GPU or accelerator builds. In practice, you want to check the board manual for lane sharing and whether each slot is x16 electrical or only x16 physical.",
+      "topics": [
+        "hardware",
+        "pcie",
+        "workstation",
+        "server",
+        "gpu"
+      ],
+      "created_cycle": 43,
+      "rawImportance": 0.8,
+      "history": [],
+      "feedback": "neutral"
+    },
+    {
+      "id": "You 47",
+      "content": "You: no shared lane need full 16x on all gpus",
+      "importance": 0.6,
+      "consolidated": false,
+      "timestamp": 1791689083.1156223,
+      "kind": "message",
+      "role": "You",
+      "text": "no shared lane need full 16x on all gpus",
+      "topics": [
+        "hardware",
+        "pcie",
+        "gpu",
+        "lane-sharing"
+      ],
+      "rawImportance": 0.9,
+      "history": [],
+      "feedback": "neutral",
+      "created_cycle": null
+    },
+    {
+      "id": "AI 46",
+      "content": "Assistant: If you need full x16 electrically on every GPU, you’re in workstation or server territory with enough total PCIe lanes — typically AMD Threadripper Pro on WRX90 or Intel Xeon W on W790, with board-specific slot wiring verified in the manual. For four GPUs at x16/x16/x16/x16, WRX90 is usually the strongest practical bet because it has enough lanes to keep multiple slots at full width without lane sharing. You should look for boards marketed for multi-GPU or accelerator use and confirm that each slot is x16 electrical, not just x16 physical. Also check that the platform does not steal lanes for M.2, SATA, or networking in a way that downshifts GPU slots.",
+      "importance": 0.5,
+      "consolidated": false,
+      "timestamp": 1791689083.1156242,
+      "kind": "message",
+      "role": "Assistant",
+      "text": "If you need full x16 electrically on every GPU, you’re in workstation or server territory with enough total PCIe lanes — typically AMD Threadripper Pro on WRX90 or Intel Xeon W on W790, with board-specific slot wiring verified in the manual. For four GPUs at x16/x16/x16/x16, WRX90 is usually the strongest practical bet because it has enough lanes to keep multiple slots at full width without lane sharing. You should look for boards marketed for multi-GPU or accelerator use and confirm that each slot is x16 electrical, not just x16 physical. Also check that the platform does not steal lanes for M.2, SATA, or networking in a way that downshifts GPU slots.",
+      "topics": [
+        "hardware",
+        "pcie",
+        "gpu",
+        "workstation",
+        "server"
+      ],
+      "created_cycle": 44,
+      "rawImportance": 0.8,
+      "history": [],
+      "feedback": "neutral"
+    },
+    {
+      "id": "You 48",
+      "content": "You: pricing for wrx90 boards",
+      "importance": 0.75,
+      "consolidated": false,
+      "timestamp": 1791689083.115626,
+      "kind": "message",
+      "role": "You",
+      "text": "pricing for wrx90 boards",
+      "topics": [
+        "hardware",
+        "pcie",
+        "wrx90"
+      ],
+      "rawImportance": 0.9,
+      "history": [],
+      "feedback": "neutral",
+      "created_cycle": null
+    },
+    {
+      "id": "AI 47",
+      "content": "Assistant: WRX90 workstation boards are expensive: the ASUS Pro WS WRX90E-SAGE SE is typically around ,192 to ,337 USD depending on retailer, with most listings near ,299. A similar WRX90 board like the ASRock WRX90 WS EVO often lands around ,100 to ,840 depending on seller and stock. If you need multiple GPUs at full x16, WRX90 is usually the platform to target, but the motherboard alone is already in workstation-tier pricing.",
+      "importance": 0.65,
+      "consolidated": false,
+      "timestamp": 1791689083.1156278,
+      "kind": "message",
+      "role": "Assistant",
+      "text": "WRX90 workstation boards are expensive: the ASUS Pro WS WRX90E-SAGE SE is typically around ,192 to ,337 USD depending on retailer, with most listings near ,299. A similar WRX90 board like the ASRock WRX90 WS EVO often lands around ,100 to ,840 depending on seller and stock. If you need multiple GPUs at full x16, WRX90 is usually the platform to target, but the motherboard alone is already in workstation-tier pricing.",
+      "topics": [
+        "hardware",
+        "pcie",
+        "wrx90",
+        "pricing"
+      ],
+      "created_cycle": 45,
+      "rawImportance": 0.8,
+      "history": [],
+      "feedback": "neutral"
+    },
+    {
+      "id": "You 49",
+      "content": "You: finance may be lightly related to  gpus and crypto, but is it soley in finance or is it under evaluation?",
+      "importance": 0.9,
+      "consolidated": false,
+      "timestamp": 1791689083.11563,
+      "kind": "message",
+      "role": "You",
+      "text": "finance may be lightly related to  gpus and crypto, but is it soley in finance or is it under evaluation?",
+      "topics": [
+        "finance",
+        "crypto",
+        "gpu",
+        "evaluation"
+      ],
+      "rawImportance": 0.9,
+      "history": [],
+      "feedback": "neutral",
+      "created_cycle": null
+    },
+    {
+      "id": "AI 48",
+      "content": "Assistant: The underlying topic belongs in the finance cluster, with cross-links to crypto and GPU hardware. It is not solely an evaluation topic unless the conversation is about classifying or comparing clusters; that meta-question would go under evaluation. In other words: finance is the home cluster, and evaluation is the discussion about where to place it.",
+      "importance": 0.8,
+      "consolidated": false,
+      "timestamp": 1791689083.1156316,
+      "kind": "message",
+      "role": "Assistant",
+      "text": "The underlying topic belongs in the finance cluster, with cross-links to crypto and GPU hardware. It is not solely an evaluation topic unless the conversation is about classifying or comparing clusters; that meta-question would go under evaluation. In other words: finance is the home cluster, and evaluation is the discussion about where to place it.",
+      "topics": [
+        "finance",
+        "crypto",
+        "gpu",
+        "evaluation",
+        "domain-separation"
+      ],
+      "created_cycle": 46,
+      "rawImportance": 0.8,
+      "history": [],
+      "feedback": "neutral"
+    },
+    {
       "id": "domain-separation",
+      "content": "Topic: domain-separation",
+      "importance": 0.95,
+      "consolidated": false,
+      "timestamp": 1791689083.1309102,
+      "kind": "topic",
+      "topic": "domain-separation",
       "rawImportance": 0.95,
       "history": [
         1,
         1
       ],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 2
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "food",
+      "content": "Topic: food",
+      "importance": 0.95,
+      "consolidated": false,
+      "timestamp": 1791689083.1309834,
+      "kind": "topic",
+      "topic": "food",
       "rawImportance": 0.95,
       "history": [
         1
       ],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 1
-      }
-    },
-    {
-      "id": "persistence",
-      "rawImportance": 0.95,
-      "history": [
-        1
-      ],
-      "consolidated": false,
-      "created_cycle": null,
-      "feedback": {
-        "helpful": 0,
-        "corrections": 0,
-        "weak": 0,
-        "recalls": 1
-      }
-    },
-    {
-      "id": "memory-ingestion",
-      "rawImportance": 0.95,
-      "history": [
-        1
-      ],
-      "consolidated": false,
-      "created_cycle": null,
-      "feedback": {
-        "helpful": 0,
-        "corrections": 0,
-        "weak": 0,
-        "recalls": 1
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "tv-show",
+      "content": "Topic: tv-show",
+      "importance": 0.95,
+      "consolidated": false,
+      "timestamp": 1791689083.131019,
+      "kind": "topic",
+      "topic": "tv-show",
       "rawImportance": 0.95,
       "history": [
         1,
         1
       ],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 2
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "scripture",
+      "content": "Topic: scripture",
+      "importance": 0.95,
+      "consolidated": false,
+      "timestamp": 1791689083.1310573,
+      "kind": "topic",
+      "topic": "scripture",
       "rawImportance": 0.9,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
-    },
-    {
-      "id": "elementary",
-      "rawImportance": 0.8,
-      "history": [],
-      "consolidated": false,
-      "created_cycle": null,
-      "feedback": {
-        "helpful": 0,
-        "corrections": 0,
-        "weak": 0,
-        "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "entertainment",
+      "content": "Topic: entertainment",
+      "importance": 0.95,
+      "consolidated": false,
+      "timestamp": 1791689083.1310925,
+      "kind": "topic",
+      "topic": "entertainment",
       "rawImportance": 0.8,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
-      "id": "live-updates",
-      "rawImportance": 0.7,
+      "id": "finance",
+      "content": "Topic: finance",
+      "importance": 0.95,
+      "consolidated": false,
+      "timestamp": 1791689083.1311197,
+      "kind": "topic",
+      "topic": "finance",
+      "rawImportance": 0.4,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
+        "0": "n",
+        "1": "e",
+        "2": "u",
+        "3": "t",
+        "4": "r",
+        "5": "a",
+        "6": "l",
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
-      "id": "visual-layout",
-      "rawImportance": 0.7,
-      "history": [],
+      "id": "persistence",
+      "content": "Topic: persistence",
+      "importance": 0.95,
       "consolidated": false,
-      "created_cycle": null,
-      "feedback": {
-        "helpful": 0,
-        "corrections": 0,
-        "weak": 0,
-        "recalls": 0
-      }
-    },
-    {
-      "id": "agents",
-      "rawImportance": 0.6,
-      "history": [],
-      "consolidated": false,
-      "created_cycle": null,
-      "feedback": {
-        "helpful": 0,
-        "corrections": 0,
-        "weak": 0,
-        "recalls": 0
-      }
-    },
-    {
-      "id": "evaluation",
-      "rawImportance": 0.6,
-      "history": [],
-      "consolidated": false,
-      "created_cycle": null,
-      "feedback": {
-        "helpful": 0,
-        "corrections": 0,
-        "weak": 0,
-        "recalls": 0
-      }
-    },
-    {
-      "id": "memory-architecture",
-      "rawImportance": 0.6,
-      "history": [],
-      "consolidated": false,
-      "created_cycle": null,
-      "feedback": {
-        "helpful": 0,
-        "corrections": 0,
-        "weak": 0,
-        "recalls": 0
-      }
-    },
-    {
-      "id": "meta",
-      "rawImportance": 0.6,
+      "timestamp": 1791689083.1311443,
+      "kind": "topic",
+      "topic": "persistence",
+      "rawImportance": 0.95,
       "history": [
         1
       ],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 1
-      }
+      },
+      "created_cycle": null
     },
     {
-      "id": "star-trek",
+      "id": "crypto",
+      "content": "Topic: crypto",
+      "importance": 0.95,
+      "consolidated": false,
+      "timestamp": 1791689083.131178,
+      "kind": "topic",
+      "topic": "crypto",
+      "rawImportance": 0.4,
+      "history": [],
+      "feedback": {
+        "0": "n",
+        "1": "e",
+        "2": "u",
+        "3": "t",
+        "4": "r",
+        "5": "a",
+        "6": "l",
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      },
+      "created_cycle": null
+    },
+    {
+      "id": "hardware",
+      "content": "Topic: hardware",
+      "importance": 0.95,
+      "consolidated": false,
+      "timestamp": 1791689083.1312072,
+      "kind": "topic",
+      "topic": "hardware",
+      "rawImportance": 0.3,
+      "history": [],
+      "feedback": {
+        "0": "n",
+        "1": "e",
+        "2": "u",
+        "3": "t",
+        "4": "r",
+        "5": "a",
+        "6": "l",
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      },
+      "created_cycle": null
+    },
+    {
+      "id": "memory-ingestion",
+      "content": "Topic: memory-ingestion",
+      "importance": 0.95,
+      "consolidated": false,
+      "timestamp": 1791689083.1312344,
+      "kind": "topic",
+      "topic": "memory-ingestion",
+      "rawImportance": 0.95,
+      "history": [
+        1
+      ],
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 1
+      },
+      "created_cycle": null
+    },
+    {
+      "id": "elementary",
+      "content": "Topic: elementary",
+      "importance": 0.8,
+      "consolidated": false,
+      "timestamp": 1791689083.131257,
+      "kind": "topic",
+      "topic": "elementary",
+      "rawImportance": 0.8,
+      "history": [],
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      },
+      "created_cycle": null
+    },
+    {
+      "id": "evaluation",
+      "content": "Topic: evaluation",
+      "importance": 0.8,
+      "consolidated": false,
+      "timestamp": 1791689083.1312807,
+      "kind": "topic",
+      "topic": "evaluation",
       "rawImportance": 0.6,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
-      "id": "auto-ingest",
-      "rawImportance": 0.5,
-      "history": [],
+      "id": "mining",
+      "content": "Topic: mining",
+      "importance": 0.8,
       "consolidated": false,
-      "created_cycle": null,
+      "timestamp": 1791689083.131302,
+      "kind": "topic",
+      "topic": "mining",
+      "rawImportance": 0.4,
+      "history": [],
       "feedback": {
+        "0": "n",
+        "1": "e",
+        "2": "u",
+        "3": "t",
+        "4": "r",
+        "5": "a",
+        "6": "l",
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
-      "id": "automation",
-      "rawImportance": 0.5,
-      "history": [],
+      "id": "pcie",
+      "content": "Topic: pcie",
+      "importance": 0.8,
       "consolidated": false,
-      "created_cycle": null,
-      "feedback": {
-        "helpful": 0,
-        "corrections": 0,
-        "weak": 0,
-        "recalls": 0
-      }
+      "timestamp": 1791689083.1313193,
+      "kind": "topic",
+      "topic": "pcie",
+      "rawImportance": 0.4,
+      "history": [],
+      "feedback": "neutral"
     },
     {
-      "id": "real-memory",
-      "rawImportance": 0.5,
-      "history": [],
+      "id": "gpu",
+      "content": "Topic: gpu",
+      "importance": 0.7,
       "consolidated": false,
-      "created_cycle": null,
-      "feedback": {
-        "helpful": 0,
-        "corrections": 0,
-        "weak": 0,
-        "recalls": 0
-      }
+      "timestamp": 1791689083.131341,
+      "kind": "topic",
+      "topic": "gpu",
+      "rawImportance": 0.3,
+      "history": [],
+      "feedback": "neutral"
     },
     {
-      "id": "retrieval",
-      "rawImportance": 0.5,
-      "history": [],
+      "id": "live-updates",
+      "content": "Topic: live-updates",
+      "importance": 0.7,
       "consolidated": false,
-      "created_cycle": null,
+      "timestamp": 1791689083.1313584,
+      "kind": "topic",
+      "topic": "live-updates",
+      "rawImportance": 0.7,
+      "history": [],
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
-      "id": "workflow",
-      "rawImportance": 0.5,
-      "history": [],
+      "id": "visual-layout",
+      "content": "Topic: visual-layout",
+      "importance": 0.7,
       "consolidated": false,
-      "created_cycle": null,
+      "timestamp": 1791689083.1313672,
+      "kind": "topic",
+      "topic": "visual-layout",
+      "rawImportance": 0.7,
+      "history": [],
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
+    },
+    {
+      "id": "agents",
+      "content": "Topic: agents",
+      "importance": 0.6,
+      "consolidated": false,
+      "timestamp": 1791689083.1313758,
+      "kind": "topic",
+      "topic": "agents",
+      "rawImportance": 0.6,
+      "history": [],
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      },
+      "created_cycle": null
     },
     {
       "id": "armor-of-god",
+      "content": "Topic: armor-of-god",
+      "importance": 0.6,
+      "consolidated": false,
+      "timestamp": 1791689083.1313846,
+      "kind": "topic",
+      "topic": "armor-of-god",
       "rawImportance": 0.4,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
-      "id": "autopilot",
-      "rawImportance": 0.4,
-      "history": [],
+      "id": "memory-architecture",
+      "content": "Topic: memory-architecture",
+      "importance": 0.6,
       "consolidated": false,
-      "created_cycle": null,
+      "timestamp": 1791689083.131393,
+      "kind": "topic",
+      "topic": "memory-architecture",
+      "rawImportance": 0.6,
+      "history": [],
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
+    },
+    {
+      "id": "meta",
+      "content": "Topic: meta",
+      "importance": 0.6,
+      "consolidated": false,
+      "timestamp": 1791689083.1314003,
+      "kind": "topic",
+      "topic": "meta",
+      "rawImportance": 0.6,
+      "history": [
+        1
+      ],
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 1
+      },
+      "created_cycle": null
+    },
+    {
+      "id": "star-trek",
+      "content": "Topic: star-trek",
+      "importance": 0.6,
+      "consolidated": false,
+      "timestamp": 1791689083.1314082,
+      "kind": "topic",
+      "topic": "star-trek",
+      "rawImportance": 0.6,
+      "history": [],
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      },
+      "created_cycle": null
+    },
+    {
+      "id": "auto-ingest",
+      "content": "Topic: auto-ingest",
+      "importance": 0.5,
+      "consolidated": false,
+      "timestamp": 1791689083.1314158,
+      "kind": "topic",
+      "topic": "auto-ingest",
+      "rawImportance": 0.5,
+      "history": [],
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      },
+      "created_cycle": null
+    },
+    {
+      "id": "automation",
+      "content": "Topic: automation",
+      "importance": 0.5,
+      "consolidated": false,
+      "timestamp": 1791689083.131429,
+      "kind": "topic",
+      "topic": "automation",
+      "rawImportance": 0.5,
+      "history": [],
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      },
+      "created_cycle": null
     },
     {
       "id": "bible",
+      "content": "Topic: bible",
+      "importance": 0.5,
+      "consolidated": false,
+      "timestamp": 1791689083.1314397,
+      "kind": "topic",
+      "topic": "bible",
       "rawImportance": 0.4,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
+    },
+    {
+      "id": "real-memory",
+      "content": "Topic: real_memory",
+      "importance": 0.5,
+      "consolidated": false,
+      "timestamp": 1791689083.131449,
+      "kind": "topic",
+      "topic": "real_memory",
+      "rawImportance": 0.5,
+      "history": [],
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      },
+      "created_cycle": null
+    },
+    {
+      "id": "recommendations",
+      "content": "Topic: recommendations",
+      "importance": 0.5,
+      "consolidated": false,
+      "timestamp": 1791689083.1314557,
+      "kind": "topic",
+      "topic": "recommendations",
+      "rawImportance": 0.4,
+      "history": [],
+      "feedback": "neutral"
+    },
+    {
+      "id": "retrieval",
+      "content": "Topic: retrieval",
+      "importance": 0.5,
+      "consolidated": false,
+      "timestamp": 1791689083.131462,
+      "kind": "topic",
+      "topic": "retrieval",
+      "rawImportance": 0.5,
+      "history": [],
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      },
+      "created_cycle": null
+    },
+    {
+      "id": "workflow",
+      "content": "Topic: workflow",
+      "importance": 0.5,
+      "consolidated": false,
+      "timestamp": 1791689083.1314683,
+      "kind": "topic",
+      "topic": "workflow",
+      "rawImportance": 0.5,
+      "history": [],
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      },
+      "created_cycle": null
+    },
+    {
+      "id": "autopilot",
+      "content": "Topic: autopilot",
+      "importance": 0.4,
+      "consolidated": false,
+      "timestamp": 1791689083.1314747,
+      "kind": "topic",
+      "topic": "autopilot",
+      "rawImportance": 0.4,
+      "history": [],
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      },
+      "created_cycle": null
     },
     {
       "id": "captain-picard",
+      "content": "Topic: captain-picard",
+      "importance": 0.4,
+      "consolidated": false,
+      "timestamp": 1791689083.1314807,
+      "kind": "topic",
+      "topic": "captain-picard",
       "rawImportance": 0.4,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "cast",
+      "content": "Topic: cast",
+      "importance": 0.4,
+      "consolidated": false,
+      "timestamp": 1791689083.1314888,
+      "kind": "topic",
+      "topic": "cast",
       "rawImportance": 0.4,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "christianity",
+      "content": "Topic: christianity",
+      "importance": 0.4,
+      "consolidated": false,
+      "timestamp": 1791689083.1315005,
+      "kind": "topic",
+      "topic": "christianity",
       "rawImportance": 0.4,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "count",
+      "content": "Topic: count",
+      "importance": 0.4,
+      "consolidated": false,
+      "timestamp": 1791689083.1315072,
+      "kind": "topic",
+      "topic": "count",
       "rawImportance": 0.4,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "domains",
+      "content": "Topic: domains",
+      "importance": 0.4,
+      "consolidated": false,
+      "timestamp": 1791689083.1315143,
+      "kind": "topic",
+      "topic": "domains",
       "rawImportance": 0.4,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
+    },
+    {
+      "id": "electricity",
+      "content": "Topic: electricity",
+      "importance": 0.4,
+      "consolidated": false,
+      "timestamp": 1791689083.1315196,
+      "kind": "topic",
+      "topic": "electricity",
+      "rawImportance": 0.3,
+      "history": [],
+      "feedback": {
+        "0": "n",
+        "1": "e",
+        "2": "u",
+        "3": "t",
+        "4": "r",
+        "5": "a",
+        "6": "l",
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      },
+      "created_cycle": null
     },
     {
       "id": "evolution",
+      "content": "Topic: evolution",
+      "importance": 0.4,
+      "consolidated": false,
+      "timestamp": 1791689083.131525,
+      "kind": "topic",
+      "topic": "evolution",
       "rawImportance": 0.4,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "explanation",
+      "content": "Topic: explanation",
+      "importance": 0.4,
+      "consolidated": false,
+      "timestamp": 1791689083.1315303,
+      "kind": "topic",
+      "topic": "explanation",
       "rawImportance": 0.4,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "favorite-foods",
+      "content": "Topic: favorite-foods",
+      "importance": 0.4,
+      "consolidated": false,
+      "timestamp": 1791689083.1315367,
+      "kind": "topic",
+      "topic": "favorite-foods",
       "rawImportance": 0.4,
       "history": [
         1,
         1
       ],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 2
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "graph-quality",
+      "content": "Topic: graph-quality",
+      "importance": 0.4,
+      "consolidated": false,
+      "timestamp": 1791689083.1315427,
+      "kind": "topic",
+      "topic": "graph-quality",
       "rawImportance": 0.4,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
+    },
+    {
+      "id": "imagery",
+      "content": "Topic: imagery",
+      "importance": 0.4,
+      "consolidated": false,
+      "timestamp": 1791689083.1315484,
+      "kind": "topic",
+      "topic": "imagery",
+      "rawImportance": 0.4,
+      "history": [],
+      "feedback": "neutral"
     },
     {
       "id": "ingestion",
+      "content": "Topic: ingestion",
+      "importance": 0.4,
+      "consolidated": false,
+      "timestamp": 1791689083.131554,
+      "kind": "topic",
+      "topic": "ingestion",
       "rawImportance": 0.4,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "interactivity",
+      "content": "Topic: interactivity",
+      "importance": 0.4,
+      "consolidated": false,
+      "timestamp": 1791689083.1315594,
+      "kind": "topic",
+      "topic": "interactivity",
       "rawImportance": 0.4,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
+    },
+    {
+      "id": "investing",
+      "content": "Topic: investing",
+      "importance": 0.4,
+      "consolidated": false,
+      "timestamp": 1791689083.1315649,
+      "kind": "topic",
+      "topic": "investing",
+      "rawImportance": 0.3,
+      "history": [],
+      "feedback": {
+        "0": "n",
+        "1": "e",
+        "2": "u",
+        "3": "t",
+        "4": "r",
+        "5": "a",
+        "6": "l",
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      },
+      "created_cycle": null
     },
     {
       "id": "john-3-16",
+      "content": "Topic: john-3-16",
+      "importance": 0.4,
+      "consolidated": false,
+      "timestamp": 1791689083.1315715,
+      "kind": "topic",
+      "topic": "john-3-16",
       "rawImportance": 0.4,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "learning-model",
+      "content": "Topic: learning-model",
+      "importance": 0.4,
+      "consolidated": false,
+      "timestamp": 1791689083.1315775,
+      "kind": "topic",
+      "topic": "learning-model",
       "rawImportance": 0.4,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
+    },
+    {
+      "id": "leverage",
+      "content": "Topic: leverage",
+      "importance": 0.4,
+      "consolidated": false,
+      "timestamp": 1791689083.131583,
+      "kind": "topic",
+      "topic": "leverage",
+      "rawImportance": 0.4,
+      "history": [],
+      "feedback": "neutral"
     },
     {
       "id": "mcgyver",
+      "content": "Topic: mcgyver",
+      "importance": 0.4,
+      "consolidated": false,
+      "timestamp": 1791689083.1315887,
+      "kind": "topic",
+      "topic": "mcgyver",
       "rawImportance": 0.4,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "meat-sauce",
+      "content": "Topic: meat-sauce",
+      "importance": 0.4,
+      "consolidated": false,
+      "timestamp": 1791689083.131595,
+      "kind": "topic",
+      "topic": "meat-sauce",
       "rawImportance": 0.4,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "memory-design",
+      "content": "Topic: memory-design",
+      "importance": 0.4,
+      "consolidated": false,
+      "timestamp": 1791689083.1316009,
+      "kind": "topic",
+      "topic": "memory-design",
       "rawImportance": 0.4,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "memory-links",
+      "content": "Topic: memory-links",
+      "importance": 0.4,
+      "consolidated": false,
+      "timestamp": 1791689083.1316068,
+      "kind": "topic",
+      "topic": "memory-links",
       "rawImportance": 0.4,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "memory-model",
+      "content": "Topic: memory-model",
+      "importance": 0.4,
+      "consolidated": false,
+      "timestamp": 1791689083.1316123,
+      "kind": "topic",
+      "topic": "memory-model",
       "rawImportance": 0.4,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "next-generation",
+      "content": "Topic: next-generation",
+      "importance": 0.4,
+      "consolidated": false,
+      "timestamp": 1791689083.1316183,
+      "kind": "topic",
+      "topic": "next-generation",
       "rawImportance": 0.4,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "overlap",
+      "content": "Topic: overlap",
+      "importance": 0.4,
+      "consolidated": false,
+      "timestamp": 1791689083.131624,
+      "kind": "topic",
+      "topic": "overlap",
       "rawImportance": 0.4,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "pasta",
+      "content": "Topic: pasta",
+      "importance": 0.4,
+      "consolidated": false,
+      "timestamp": 1791689083.1316295,
+      "kind": "topic",
+      "topic": "pasta",
       "rawImportance": 0.4,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "persistent-memory",
+      "content": "Topic: persistent-memory",
+      "importance": 0.4,
+      "consolidated": false,
+      "timestamp": 1791689083.1316357,
+      "kind": "topic",
+      "topic": "persistent-memory",
       "rawImportance": 0.4,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "policy",
+      "content": "Topic: policy",
+      "importance": 0.4,
+      "consolidated": false,
+      "timestamp": 1791689083.1316411,
+      "kind": "topic",
+      "topic": "policy",
       "rawImportance": 0.4,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "practical-use",
+      "content": "Topic: practical-use",
+      "importance": 0.4,
+      "consolidated": false,
+      "timestamp": 1791689083.1316473,
+      "kind": "topic",
+      "topic": "practical-use",
       "rawImportance": 0.4,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
+    },
+    {
+      "id": "profitability",
+      "content": "Topic: profitability",
+      "importance": 0.4,
+      "consolidated": false,
+      "timestamp": 1791689083.1316526,
+      "kind": "topic",
+      "topic": "profitability",
+      "rawImportance": 0.3,
+      "history": [],
+      "feedback": {
+        "0": "n",
+        "1": "e",
+        "2": "u",
+        "3": "t",
+        "4": "r",
+        "5": "a",
+        "6": "l",
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      },
+      "created_cycle": null
+    },
+    {
+      "id": "psych",
+      "content": "Topic: psych",
+      "importance": 0.4,
+      "consolidated": false,
+      "timestamp": 1791689083.1316578,
+      "kind": "topic",
+      "topic": "psych",
+      "rawImportance": 0.4,
+      "history": [],
+      "feedback": "neutral"
+    },
+    {
+      "id": "quantum-leap",
+      "content": "Topic: quantum-leap",
+      "importance": 0.4,
+      "consolidated": false,
+      "timestamp": 1791689083.1316636,
+      "kind": "topic",
+      "topic": "quantum-leap",
+      "rawImportance": 0.4,
+      "history": [],
+      "feedback": "neutral"
     },
     {
       "id": "querying",
+      "content": "Topic: querying",
+      "importance": 0.4,
+      "consolidated": false,
+      "timestamp": 1791689083.1316805,
+      "kind": "topic",
+      "topic": "querying",
       "rawImportance": 0.4,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "refresh",
+      "content": "Topic: refresh",
+      "importance": 0.4,
+      "consolidated": false,
+      "timestamp": 1791689083.131688,
+      "kind": "topic",
+      "topic": "refresh",
       "rawImportance": 0.4,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "romans-3-23",
+      "content": "Topic: romans-3-23",
+      "importance": 0.4,
+      "consolidated": false,
+      "timestamp": 1791689083.131708,
+      "kind": "topic",
+      "topic": "romans-3-23",
       "rawImportance": 0.4,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "semantic-retrieval",
+      "content": "Topic: semantic-retrieval",
+      "importance": 0.4,
+      "consolidated": false,
+      "timestamp": 1791689083.1317146,
+      "kind": "topic",
+      "topic": "semantic-retrieval",
       "rawImportance": 0.4,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
+    },
+    {
+      "id": "server",
+      "content": "Topic: server",
+      "importance": 0.4,
+      "consolidated": false,
+      "timestamp": 1791689083.1317203,
+      "kind": "topic",
+      "topic": "server",
+      "rawImportance": 0.3,
+      "history": [],
+      "feedback": "neutral"
     },
     {
       "id": "spaghetti",
+      "content": "Topic: spaghetti",
+      "importance": 0.4,
+      "consolidated": false,
+      "timestamp": 1791689083.1317255,
+      "kind": "topic",
+      "topic": "spaghetti",
       "rawImportance": 0.4,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "storage",
+      "content": "Topic: storage",
+      "importance": 0.4,
+      "consolidated": false,
+      "timestamp": 1791689083.1317315,
+      "kind": "topic",
+      "topic": "storage",
       "rawImportance": 0.4,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "task-completion",
+      "content": "Topic: task-completion",
+      "importance": 0.4,
+      "consolidated": false,
+      "timestamp": 1791689083.1317377,
+      "kind": "topic",
+      "topic": "task-completion",
       "rawImportance": 0.4,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "visualization",
+      "content": "Topic: visualization",
+      "importance": 0.4,
+      "consolidated": false,
+      "timestamp": 1791689083.1317453,
+      "kind": "topic",
+      "topic": "visualization",
       "rawImportance": 0.4,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
+    },
+    {
+      "id": "workstation",
+      "content": "Topic: workstation",
+      "importance": 0.4,
+      "consolidated": false,
+      "timestamp": 1791689083.1317534,
+      "kind": "topic",
+      "topic": "workstation",
+      "rawImportance": 0.3,
+      "history": [],
+      "feedback": "neutral"
+    },
+    {
+      "id": "wrx90",
+      "content": "Topic: wrx90",
+      "importance": 0.4,
+      "consolidated": false,
+      "timestamp": 1791689083.1317594,
+      "kind": "topic",
+      "topic": "wrx90",
+      "rawImportance": 0.4,
+      "history": [],
+      "feedback": "neutral"
+    },
+    {
+      "id": "adventure",
+      "content": "Topic: adventure",
+      "importance": 0.3,
+      "consolidated": false,
+      "timestamp": 1791689083.1317668,
+      "kind": "topic",
+      "topic": "adventure",
+      "rawImportance": 0.3,
+      "history": [],
+      "feedback": "neutral"
     },
     {
       "id": "ai-memory",
+      "content": "Topic: ai-memory",
+      "importance": 0.3,
+      "consolidated": false,
+      "timestamp": 1791689083.1317737,
+      "kind": "topic",
+      "topic": "ai-memory",
       "rawImportance": 0.3,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
+    },
+    {
+      "id": "budgeting",
+      "content": "Topic: budgeting",
+      "importance": 0.3,
+      "consolidated": false,
+      "timestamp": 1791689083.1317868,
+      "kind": "topic",
+      "topic": "budgeting",
+      "rawImportance": 0.3,
+      "history": [],
+      "feedback": {
+        "0": "n",
+        "1": "e",
+        "2": "u",
+        "3": "t",
+        "4": "r",
+        "5": "a",
+        "6": "l",
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      },
+      "created_cycle": null
     },
     {
       "id": "chat-transcript",
+      "content": "Topic: chat_transcript",
+      "importance": 0.3,
+      "consolidated": false,
+      "timestamp": 1791689083.1317918,
+      "kind": "topic",
+      "topic": "chat_transcript",
       "rawImportance": 0.3,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
+    },
+    {
+      "id": "cluster",
+      "content": "Topic: cluster",
+      "importance": 0.3,
+      "consolidated": false,
+      "timestamp": 1791689083.1317966,
+      "kind": "topic",
+      "topic": "cluster",
+      "rawImportance": 0.3,
+      "history": [],
+      "feedback": {
+        "0": "n",
+        "1": "e",
+        "2": "u",
+        "3": "t",
+        "4": "r",
+        "5": "a",
+        "6": "l",
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      },
+      "created_cycle": null
+    },
+    {
+      "id": "compound-growth",
+      "content": "Topic: compound-growth",
+      "importance": 0.3,
+      "consolidated": false,
+      "timestamp": 1791689083.1318016,
+      "kind": "topic",
+      "topic": "compound-growth",
+      "rawImportance": 0.3,
+      "history": [],
+      "feedback": {
+        "0": "n",
+        "1": "e",
+        "2": "u",
+        "3": "t",
+        "4": "r",
+        "5": "a",
+        "6": "l",
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      },
+      "created_cycle": null
     },
     {
       "id": "consolidation",
+      "content": "Topic: consolidation",
+      "importance": 0.3,
+      "consolidated": false,
+      "timestamp": 1791689083.1318061,
+      "kind": "topic",
+      "topic": "consolidation",
       "rawImportance": 0.3,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "correction",
+      "content": "Topic: correction",
+      "importance": 0.3,
+      "consolidated": false,
+      "timestamp": 1791689083.131811,
+      "kind": "topic",
+      "topic": "correction",
       "rawImportance": 0.3,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
+    },
+    {
+      "id": "debt",
+      "content": "Topic: debt",
+      "importance": 0.3,
+      "consolidated": false,
+      "timestamp": 1791689083.131816,
+      "kind": "topic",
+      "topic": "debt",
+      "rawImportance": 0.3,
+      "history": [],
+      "feedback": {
+        "0": "n",
+        "1": "e",
+        "2": "u",
+        "3": "t",
+        "4": "r",
+        "5": "a",
+        "6": "l",
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      },
+      "created_cycle": null
     },
     {
       "id": "decay",
+      "content": "Topic: decay",
+      "importance": 0.3,
+      "consolidated": false,
+      "timestamp": 1791689083.1318228,
+      "kind": "topic",
+      "topic": "decay",
       "rawImportance": 0.3,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
+    },
+    {
+      "id": "enterprise",
+      "content": "Topic: enterprise",
+      "importance": 0.3,
+      "consolidated": false,
+      "timestamp": 1791689083.1318295,
+      "kind": "topic",
+      "topic": "enterprise",
+      "rawImportance": 0.3,
+      "history": [],
+      "feedback": "neutral"
+    },
+    {
+      "id": "ephesians",
+      "content": "Topic: ephesians",
+      "importance": 0.3,
+      "consolidated": false,
+      "timestamp": 1791689083.1318338,
+      "kind": "topic",
+      "topic": "ephesians",
+      "rawImportance": 0.3,
+      "history": [],
+      "feedback": "neutral"
     },
     {
       "id": "grace",
+      "content": "Topic: grace",
+      "importance": 0.3,
+      "consolidated": false,
+      "timestamp": 1791689083.1318383,
+      "kind": "topic",
+      "topic": "grace",
       "rawImportance": 0.3,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "graph-retrieval",
+      "content": "Topic: graph-retrieval",
+      "importance": 0.3,
+      "consolidated": false,
+      "timestamp": 1791689083.131843,
+      "kind": "topic",
+      "topic": "graph-retrieval",
       "rawImportance": 0.3,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "graph-search",
+      "content": "Topic: graph-search",
+      "importance": 0.3,
+      "consolidated": false,
+      "timestamp": 1791689083.1318479,
+      "kind": "topic",
+      "topic": "graph-search",
       "rawImportance": 0.3,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "graph-status",
+      "content": "Topic: graph-status",
+      "importance": 0.3,
+      "consolidated": false,
+      "timestamp": 1791689083.1318526,
+      "kind": "topic",
+      "topic": "graph-status",
       "rawImportance": 0.3,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
+    },
+    {
+      "id": "lane-sharing",
+      "content": "Topic: lane-sharing",
+      "importance": 0.3,
+      "consolidated": false,
+      "timestamp": 1791689083.1318572,
+      "kind": "topic",
+      "topic": "lane-sharing",
+      "rawImportance": 0.3,
+      "history": [],
+      "feedback": "neutral"
     },
     {
       "id": "learning-layer",
+      "content": "Topic: learning-layer",
+      "importance": 0.3,
+      "consolidated": false,
+      "timestamp": 1791689083.131862,
+      "kind": "topic",
+      "topic": "learning-layer",
       "rawImportance": 0.3,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "lexical-retrieval",
+      "content": "Topic: lexical-retrieval",
+      "importance": 0.3,
+      "consolidated": false,
+      "timestamp": 1791689083.131867,
+      "kind": "topic",
+      "topic": "lexical-retrieval",
       "rawImportance": 0.3,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "limitations",
+      "content": "Topic: limitations",
+      "importance": 0.3,
+      "consolidated": false,
+      "timestamp": 1791689083.1318712,
+      "kind": "topic",
+      "topic": "limitations",
       "rawImportance": 0.3,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
+    },
+    {
+      "id": "meals",
+      "content": "Topic: meals",
+      "importance": 0.3,
+      "consolidated": false,
+      "timestamp": 1791689083.1318758,
+      "kind": "topic",
+      "topic": "meals",
+      "rawImportance": 0.3,
+      "history": [],
+      "feedback": {
+        "0": "n",
+        "1": "e",
+        "2": "u",
+        "3": "t",
+        "4": "r",
+        "5": "a",
+        "6": "l",
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      },
+      "created_cycle": null
     },
     {
       "id": "memory-clustering",
+      "content": "Topic: memory-clustering",
+      "importance": 0.3,
+      "consolidated": false,
+      "timestamp": 1791689083.1318808,
+      "kind": "topic",
+      "topic": "memory-clustering",
       "rawImportance": 0.3,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
+    },
+    {
+      "id": "memory-updates",
+      "content": "Topic: memory-updates",
+      "importance": 0.3,
+      "consolidated": false,
+      "timestamp": 1791689083.1318858,
+      "kind": "topic",
+      "topic": "memory-updates",
+      "rawImportance": 0.3,
+      "history": [],
+      "feedback": {
+        "0": "n",
+        "1": "e",
+        "2": "u",
+        "3": "t",
+        "4": "r",
+        "5": "a",
+        "6": "l",
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      },
+      "created_cycle": null
     },
     {
       "id": "memory-system",
+      "content": "Topic: memory_system",
+      "importance": 0.3,
+      "consolidated": false,
+      "timestamp": 1791689083.1318939,
+      "kind": "topic",
+      "topic": "memory_system",
       "rawImportance": 0.3,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
+    },
+    {
+      "id": "mystery",
+      "content": "Topic: mystery",
+      "importance": 0.3,
+      "consolidated": false,
+      "timestamp": 1791689083.1318984,
+      "kind": "topic",
+      "topic": "mystery",
+      "rawImportance": 0.3,
+      "history": [],
+      "feedback": "neutral"
     },
     {
       "id": "namespaces",
+      "content": "Topic: namespaces",
+      "importance": 0.3,
+      "consolidated": false,
+      "timestamp": 1791689083.1319032,
+      "kind": "topic",
+      "topic": "namespaces",
       "rawImportance": 0.3,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "off-topic",
+      "content": "Topic: off-topic",
+      "importance": 0.3,
+      "consolidated": false,
+      "timestamp": 1791689083.131908,
+      "kind": "topic",
+      "topic": "off-topic",
       "rawImportance": 0.3,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
+    },
+    {
+      "id": "options",
+      "content": "Topic: options",
+      "importance": 0.3,
+      "consolidated": false,
+      "timestamp": 1791689083.1319125,
+      "kind": "topic",
+      "topic": "options",
+      "rawImportance": 0.3,
+      "history": [],
+      "feedback": {
+        "0": "n",
+        "1": "e",
+        "2": "u",
+        "3": "t",
+        "4": "r",
+        "5": "a",
+        "6": "l",
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      },
+      "created_cycle": null
     },
     {
       "id": "pizza",
+      "content": "Topic: pizza",
+      "importance": 0.3,
+      "consolidated": false,
+      "timestamp": 1791689083.131917,
+      "kind": "topic",
+      "topic": "pizza",
       "rawImportance": 0.3,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
+    },
+    {
+      "id": "pricing",
+      "content": "Topic: pricing",
+      "importance": 0.3,
+      "consolidated": false,
+      "timestamp": 1791689083.1319218,
+      "kind": "topic",
+      "topic": "pricing",
+      "rawImportance": 0.3,
+      "history": [],
+      "feedback": "neutral"
     },
     {
       "id": "recall",
+      "content": "Topic: recall",
+      "importance": 0.3,
+      "consolidated": false,
+      "timestamp": 1791689083.1319263,
+      "kind": "topic",
+      "topic": "recall",
       "rawImportance": 0.3,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
+    },
+    {
+      "id": "recipes",
+      "content": "Topic: recipes",
+      "importance": 0.3,
+      "consolidated": false,
+      "timestamp": 1791689083.131931,
+      "kind": "topic",
+      "topic": "recipes",
+      "rawImportance": 0.3,
+      "history": [],
+      "feedback": {
+        "0": "n",
+        "1": "e",
+        "2": "u",
+        "3": "t",
+        "4": "r",
+        "5": "a",
+        "6": "l",
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      },
+      "created_cycle": null
+    },
+    {
+      "id": "sci-fi",
+      "content": "Topic: sci-fi",
+      "importance": 0.3,
+      "consolidated": false,
+      "timestamp": 1791689083.131936,
+      "kind": "topic",
+      "topic": "sci-fi",
+      "rawImportance": 0.3,
+      "history": [],
+      "feedback": "neutral"
     },
     {
       "id": "status",
+      "content": "Topic: status",
+      "importance": 0.3,
+      "consolidated": false,
+      "timestamp": 1791689083.1319404,
+      "kind": "topic",
+      "topic": "status",
       "rawImportance": 0.3,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
+    },
+    {
+      "id": "techniques",
+      "content": "Topic: techniques",
+      "importance": 0.3,
+      "consolidated": false,
+      "timestamp": 1791689083.131945,
+      "kind": "topic",
+      "topic": "techniques",
+      "rawImportance": 0.3,
+      "history": [],
+      "feedback": "neutral"
     },
     {
       "id": "tfidf",
+      "content": "Topic: tfidf",
+      "importance": 0.3,
+      "consolidated": false,
+      "timestamp": 1791689083.1319494,
+      "kind": "topic",
+      "topic": "tfidf",
       "rawImportance": 0.3,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "topic-clustering",
+      "content": "Topic: topic-clustering",
+      "importance": 0.3,
+      "consolidated": false,
+      "timestamp": 1791689083.1319544,
+      "kind": "topic",
+      "topic": "topic-clustering",
       "rawImportance": 0.3,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
     },
     {
       "id": "verification",
+      "content": "Topic: verification",
+      "importance": 0.3,
+      "consolidated": false,
+      "timestamp": 1791689083.131959,
+      "kind": "topic",
+      "topic": "verification",
       "rawImportance": 0.3,
       "history": [],
-      "consolidated": false,
-      "created_cycle": null,
       "feedback": {
         "helpful": 0,
         "corrections": 0,
         "weak": 0,
         "recalls": 0
-      }
+      },
+      "created_cycle": null
+    },
+    {
+      "id": "verses",
+      "content": "Topic: verses",
+      "importance": 0.3,
+      "consolidated": false,
+      "timestamp": 1791689083.1319635,
+      "kind": "topic",
+      "topic": "verses",
+      "rawImportance": 0.3,
+      "history": [],
+      "feedback": {
+        "0": "n",
+        "1": "e",
+        "2": "u",
+        "3": "t",
+        "4": "r",
+        "5": "a",
+        "6": "l",
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      },
+      "created_cycle": null
     }
   ],
   "links": [
@@ -3480,6 +5971,1324 @@
       "strength": 0.3961
     },
     {
+      "source": "AI 33",
+      "target": "You 35",
+      "strength": 0.35
+    },
+    {
+      "source": "You 35",
+      "target": "AI 34",
+      "strength": 0.5
+    },
+    {
+      "source": "You 1",
+      "target": "AI 34",
+      "strength": 0.31
+    },
+    {
+      "source": "You 8",
+      "target": "You 35",
+      "strength": 0.4246
+    },
+    {
+      "source": "AI 34",
+      "target": "You 36",
+      "strength": 0.53
+    },
+    {
+      "source": "You 36",
+      "target": "AI 35",
+      "strength": 0.8300000000000001
+    },
+    {
+      "source": "You 35",
+      "target": "AI 35",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 34",
+      "target": "AI 35",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 35",
+      "target": "You 37",
+      "strength": 0.65
+    },
+    {
+      "source": "You 37",
+      "target": "AI 36",
+      "strength": 0.65
+    },
+    {
+      "source": "You 36",
+      "target": "You 37",
+      "strength": 0.8300000000000001
+    },
+    {
+      "source": "You 36",
+      "target": "AI 36",
+      "strength": 0.8300000000000001
+    },
+    {
+      "source": "AI 35",
+      "target": "AI 36",
+      "strength": 0.65
+    },
+    {
+      "source": "AI 36",
+      "target": "You 38",
+      "strength": 0.35
+    },
+    {
+      "source": "You 38",
+      "target": "AI 37",
+      "strength": 0.5
+    },
+    {
+      "source": "You 16",
+      "target": "You 38",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 15",
+      "target": "You 38",
+      "strength": 0.5
+    },
+    {
+      "source": "You 17",
+      "target": "You 38",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 16",
+      "target": "You 38",
+      "strength": 0.5
+    },
+    {
+      "source": "You 18",
+      "target": "You 38",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 17",
+      "target": "You 38",
+      "strength": 0.5
+    },
+    {
+      "source": "You 19",
+      "target": "You 38",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 18",
+      "target": "You 38",
+      "strength": 0.5
+    },
+    {
+      "source": "You 26",
+      "target": "You 38",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 25",
+      "target": "You 38",
+      "strength": 0.5
+    },
+    {
+      "source": "You 16",
+      "target": "AI 37",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 15",
+      "target": "AI 37",
+      "strength": 0.5
+    },
+    {
+      "source": "You 17",
+      "target": "AI 37",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 16",
+      "target": "AI 37",
+      "strength": 0.5
+    },
+    {
+      "source": "You 18",
+      "target": "AI 37",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 17",
+      "target": "AI 37",
+      "strength": 0.5
+    },
+    {
+      "source": "You 19",
+      "target": "AI 37",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 18",
+      "target": "AI 37",
+      "strength": 0.5
+    },
+    {
+      "source": "You 26",
+      "target": "AI 37",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 25",
+      "target": "AI 37",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 37",
+      "target": "You 39",
+      "strength": 0.35
+    },
+    {
+      "source": "You 39",
+      "target": "AI 38",
+      "strength": 0.5
+    },
+    {
+      "source": "You 12",
+      "target": "You 39",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 11",
+      "target": "You 39",
+      "strength": 0.5
+    },
+    {
+      "source": "You 13",
+      "target": "You 39",
+      "strength": 0.5
+    },
+    {
+      "source": "You 15",
+      "target": "You 39",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 14",
+      "target": "You 39",
+      "strength": 0.5
+    },
+    {
+      "source": "You 33",
+      "target": "You 39",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 32",
+      "target": "You 39",
+      "strength": 0.5
+    },
+    {
+      "source": "You 12",
+      "target": "AI 38",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 11",
+      "target": "AI 38",
+      "strength": 0.5
+    },
+    {
+      "source": "You 13",
+      "target": "AI 38",
+      "strength": 0.5
+    },
+    {
+      "source": "You 15",
+      "target": "AI 38",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 14",
+      "target": "AI 38",
+      "strength": 0.5
+    },
+    {
+      "source": "You 33",
+      "target": "AI 38",
+      "strength": 0.65
+    },
+    {
+      "source": "AI 32",
+      "target": "AI 38",
+      "strength": 0.65
+    },
+    {
+      "source": "AI 18",
+      "target": "You 39",
+      "strength": 0.4565
+    },
+    {
+      "source": "AI 38",
+      "target": "You 40",
+      "strength": 0.35
+    },
+    {
+      "source": "You 40",
+      "target": "AI 39",
+      "strength": 0.5
+    },
+    {
+      "source": "You 35",
+      "target": "You 40",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 34",
+      "target": "You 40",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 35",
+      "target": "You 40",
+      "strength": 0.5
+    },
+    {
+      "source": "You 35",
+      "target": "AI 39",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 34",
+      "target": "AI 39",
+      "strength": 0.65
+    },
+    {
+      "source": "AI 35",
+      "target": "AI 39",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 39",
+      "target": "You 41",
+      "strength": 0.5
+    },
+    {
+      "source": "You 41",
+      "target": "AI 40",
+      "strength": 0.65
+    },
+    {
+      "source": "You 11",
+      "target": "You 41",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 10",
+      "target": "You 41",
+      "strength": 0.5
+    },
+    {
+      "source": "You 17",
+      "target": "You 41",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 16",
+      "target": "You 41",
+      "strength": 0.5
+    },
+    {
+      "source": "You 18",
+      "target": "You 41",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 17",
+      "target": "You 41",
+      "strength": 0.5
+    },
+    {
+      "source": "You 23",
+      "target": "You 41",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 22",
+      "target": "You 41",
+      "strength": 0.5
+    },
+    {
+      "source": "You 24",
+      "target": "You 41",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 23",
+      "target": "You 41",
+      "strength": 0.5
+    },
+    {
+      "source": "You 35",
+      "target": "You 41",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 34",
+      "target": "You 41",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 35",
+      "target": "You 41",
+      "strength": 0.5
+    },
+    {
+      "source": "You 40",
+      "target": "You 41",
+      "strength": 0.5
+    },
+    {
+      "source": "You 11",
+      "target": "AI 40",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 10",
+      "target": "AI 40",
+      "strength": 0.5
+    },
+    {
+      "source": "You 17",
+      "target": "AI 40",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 16",
+      "target": "AI 40",
+      "strength": 0.5
+    },
+    {
+      "source": "You 18",
+      "target": "AI 40",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 17",
+      "target": "AI 40",
+      "strength": 0.5
+    },
+    {
+      "source": "You 23",
+      "target": "AI 40",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 22",
+      "target": "AI 40",
+      "strength": 0.5
+    },
+    {
+      "source": "You 24",
+      "target": "AI 40",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 23",
+      "target": "AI 40",
+      "strength": 0.5
+    },
+    {
+      "source": "You 35",
+      "target": "AI 40",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 34",
+      "target": "AI 40",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 35",
+      "target": "AI 40",
+      "strength": 0.5
+    },
+    {
+      "source": "You 40",
+      "target": "AI 40",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 39",
+      "target": "AI 40",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 21",
+      "target": "AI 40",
+      "strength": 0.4498
+    },
+    {
+      "source": "AI 40",
+      "target": "You 42",
+      "strength": 0.35
+    },
+    {
+      "source": "You 42",
+      "target": "AI 41",
+      "strength": 0.65,
+      "created_cycle": 39
+    },
+    {
+      "source": "You 36",
+      "target": "You 42",
+      "strength": 0.65
+    },
+    {
+      "source": "AI 35",
+      "target": "You 42",
+      "strength": 0.65
+    },
+    {
+      "source": "You 37",
+      "target": "You 42",
+      "strength": 0.65
+    },
+    {
+      "source": "AI 36",
+      "target": "You 42",
+      "strength": 0.65
+    },
+    {
+      "source": "You 36",
+      "target": "AI 41",
+      "strength": 0.65,
+      "created_cycle": 39
+    },
+    {
+      "source": "AI 35",
+      "target": "AI 41",
+      "strength": 0.65,
+      "created_cycle": 39
+    },
+    {
+      "source": "You 37",
+      "target": "AI 41",
+      "strength": 0.8,
+      "created_cycle": 39
+    },
+    {
+      "source": "AI 36",
+      "target": "AI 41",
+      "strength": 0.95,
+      "created_cycle": 39
+    },
+    {
+      "source": "AI 41",
+      "target": "You 43",
+      "strength": 0.35
+    },
+    {
+      "source": "You 43",
+      "target": "AI 42",
+      "strength": 0.8,
+      "created_cycle": 40
+    },
+    {
+      "source": "You 22",
+      "target": "You 43",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 21",
+      "target": "You 43",
+      "strength": 0.5
+    },
+    {
+      "source": "You 25",
+      "target": "You 43",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 24",
+      "target": "You 43",
+      "strength": 0.5
+    },
+    {
+      "source": "You 27",
+      "target": "You 43",
+      "strength": 0.65
+    },
+    {
+      "source": "AI 26",
+      "target": "You 43",
+      "strength": 0.65
+    },
+    {
+      "source": "You 28",
+      "target": "You 43",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 27",
+      "target": "You 43",
+      "strength": 0.5
+    },
+    {
+      "source": "You 29",
+      "target": "You 43",
+      "strength": 0.65
+    },
+    {
+      "source": "AI 28",
+      "target": "You 43",
+      "strength": 0.65
+    },
+    {
+      "source": "You 22",
+      "target": "AI 42",
+      "strength": 0.5,
+      "created_cycle": 40
+    },
+    {
+      "source": "AI 21",
+      "target": "AI 42",
+      "strength": 0.5,
+      "created_cycle": 40
+    },
+    {
+      "source": "You 25",
+      "target": "AI 42",
+      "strength": 0.5,
+      "created_cycle": 40
+    },
+    {
+      "source": "AI 24",
+      "target": "AI 42",
+      "strength": 0.5,
+      "created_cycle": 40
+    },
+    {
+      "source": "You 27",
+      "target": "AI 42",
+      "strength": 0.65,
+      "created_cycle": 40
+    },
+    {
+      "source": "AI 26",
+      "target": "AI 42",
+      "strength": 0.65,
+      "created_cycle": 40
+    },
+    {
+      "source": "You 28",
+      "target": "AI 42",
+      "strength": 0.5,
+      "created_cycle": 40
+    },
+    {
+      "source": "AI 27",
+      "target": "AI 42",
+      "strength": 0.5,
+      "created_cycle": 40
+    },
+    {
+      "source": "You 29",
+      "target": "AI 42",
+      "strength": 0.65,
+      "created_cycle": 40
+    },
+    {
+      "source": "AI 28",
+      "target": "AI 42",
+      "strength": 0.65,
+      "created_cycle": 40
+    },
+    {
+      "source": "AI 42",
+      "target": "You 44",
+      "strength": 0.65
+    },
+    {
+      "source": "You 44",
+      "target": "AI 43",
+      "strength": 0.95,
+      "created_cycle": 41
+    },
+    {
+      "source": "You 22",
+      "target": "You 44",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 21",
+      "target": "You 44",
+      "strength": 0.5
+    },
+    {
+      "source": "You 25",
+      "target": "You 44",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 24",
+      "target": "You 44",
+      "strength": 0.5
+    },
+    {
+      "source": "You 27",
+      "target": "You 44",
+      "strength": 0.65
+    },
+    {
+      "source": "AI 26",
+      "target": "You 44",
+      "strength": 0.65
+    },
+    {
+      "source": "You 28",
+      "target": "You 44",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 27",
+      "target": "You 44",
+      "strength": 0.5
+    },
+    {
+      "source": "You 29",
+      "target": "You 44",
+      "strength": 0.65
+    },
+    {
+      "source": "AI 28",
+      "target": "You 44",
+      "strength": 0.65
+    },
+    {
+      "source": "You 43",
+      "target": "You 44",
+      "strength": 0.65
+    },
+    {
+      "source": "You 22",
+      "target": "AI 43",
+      "strength": 0.5,
+      "created_cycle": 41
+    },
+    {
+      "source": "AI 21",
+      "target": "AI 43",
+      "strength": 0.5,
+      "created_cycle": 41
+    },
+    {
+      "source": "You 25",
+      "target": "AI 43",
+      "strength": 0.5,
+      "created_cycle": 41
+    },
+    {
+      "source": "AI 24",
+      "target": "AI 43",
+      "strength": 0.5,
+      "created_cycle": 41
+    },
+    {
+      "source": "You 27",
+      "target": "AI 43",
+      "strength": 0.65,
+      "created_cycle": 41
+    },
+    {
+      "source": "AI 26",
+      "target": "AI 43",
+      "strength": 0.65,
+      "created_cycle": 41
+    },
+    {
+      "source": "You 28",
+      "target": "AI 43",
+      "strength": 0.5,
+      "created_cycle": 41
+    },
+    {
+      "source": "AI 27",
+      "target": "AI 43",
+      "strength": 0.5,
+      "created_cycle": 41
+    },
+    {
+      "source": "You 29",
+      "target": "AI 43",
+      "strength": 0.65,
+      "created_cycle": 41
+    },
+    {
+      "source": "AI 28",
+      "target": "AI 43",
+      "strength": 0.65,
+      "created_cycle": 41
+    },
+    {
+      "source": "You 43",
+      "target": "AI 43",
+      "strength": 0.8,
+      "created_cycle": 41
+    },
+    {
+      "source": "AI 42",
+      "target": "AI 43",
+      "strength": 0.8,
+      "created_cycle": 41
+    },
+    {
+      "source": "You 7",
+      "target": "AI 43",
+      "strength": 0.3094,
+      "created_cycle": 41
+    },
+    {
+      "source": "AI 43",
+      "target": "You 45",
+      "strength": 0.35
+    },
+    {
+      "source": "You 45",
+      "target": "AI 44",
+      "strength": 0.8,
+      "created_cycle": 42
+    },
+    {
+      "source": "You 12",
+      "target": "You 45",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 11",
+      "target": "You 45",
+      "strength": 0.5
+    },
+    {
+      "source": "You 13",
+      "target": "You 45",
+      "strength": 0.5
+    },
+    {
+      "source": "You 15",
+      "target": "You 45",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 14",
+      "target": "You 45",
+      "strength": 0.5
+    },
+    {
+      "source": "You 33",
+      "target": "You 45",
+      "strength": 0.65
+    },
+    {
+      "source": "AI 32",
+      "target": "You 45",
+      "strength": 0.65
+    },
+    {
+      "source": "You 39",
+      "target": "You 45",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 38",
+      "target": "You 45",
+      "strength": 0.5
+    },
+    {
+      "source": "You 12",
+      "target": "AI 44",
+      "strength": 0.5,
+      "created_cycle": 42
+    },
+    {
+      "source": "AI 11",
+      "target": "AI 44",
+      "strength": 0.5,
+      "created_cycle": 42
+    },
+    {
+      "source": "You 13",
+      "target": "AI 44",
+      "strength": 0.5,
+      "created_cycle": 42
+    },
+    {
+      "source": "You 15",
+      "target": "AI 44",
+      "strength": 0.5,
+      "created_cycle": 42
+    },
+    {
+      "source": "AI 14",
+      "target": "AI 44",
+      "strength": 0.5,
+      "created_cycle": 42
+    },
+    {
+      "source": "You 33",
+      "target": "AI 44",
+      "strength": 0.65,
+      "created_cycle": 42
+    },
+    {
+      "source": "AI 32",
+      "target": "AI 44",
+      "strength": 0.65,
+      "created_cycle": 42
+    },
+    {
+      "source": "You 39",
+      "target": "AI 44",
+      "strength": 0.5,
+      "created_cycle": 42
+    },
+    {
+      "source": "AI 38",
+      "target": "AI 44",
+      "strength": 0.5,
+      "created_cycle": 42
+    },
+    {
+      "source": "AI 44",
+      "target": "You 46",
+      "strength": 0.35
+    },
+    {
+      "source": "You 46",
+      "target": "AI 45",
+      "strength": 0.65,
+      "created_cycle": 43
+    },
+    {
+      "source": "AI 36",
+      "target": "You 46",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 41",
+      "target": "You 46",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 36",
+      "target": "AI 45",
+      "strength": 0.5,
+      "created_cycle": 43
+    },
+    {
+      "source": "AI 41",
+      "target": "AI 45",
+      "strength": 0.5,
+      "created_cycle": 43
+    },
+    {
+      "source": "You 1",
+      "target": "AI 45",
+      "strength": 0.3091,
+      "created_cycle": 43
+    },
+    {
+      "source": "AI 3",
+      "target": "You 46",
+      "strength": 0.2834
+    },
+    {
+      "source": "AI 45",
+      "target": "You 47",
+      "strength": 0.8
+    },
+    {
+      "source": "You 47",
+      "target": "AI 46",
+      "strength": 0.8,
+      "created_cycle": 44
+    },
+    {
+      "source": "AI 36",
+      "target": "You 47",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 41",
+      "target": "You 47",
+      "strength": 0.5
+    },
+    {
+      "source": "You 46",
+      "target": "You 47",
+      "strength": 0.65
+    },
+    {
+      "source": "AI 36",
+      "target": "AI 46",
+      "strength": 0.5,
+      "created_cycle": 44
+    },
+    {
+      "source": "AI 41",
+      "target": "AI 46",
+      "strength": 0.5,
+      "created_cycle": 44
+    },
+    {
+      "source": "You 46",
+      "target": "AI 46",
+      "strength": 0.65,
+      "created_cycle": 44
+    },
+    {
+      "source": "AI 45",
+      "target": "AI 46",
+      "strength": 0.95,
+      "created_cycle": 44
+    },
+    {
+      "source": "AI 46",
+      "target": "You 48",
+      "strength": 0.65
+    },
+    {
+      "source": "You 48",
+      "target": "AI 47",
+      "strength": 0.8,
+      "created_cycle": 45
+    },
+    {
+      "source": "AI 36",
+      "target": "You 48",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 41",
+      "target": "You 48",
+      "strength": 0.5
+    },
+    {
+      "source": "You 46",
+      "target": "You 48",
+      "strength": 0.65
+    },
+    {
+      "source": "AI 45",
+      "target": "You 48",
+      "strength": 0.65
+    },
+    {
+      "source": "You 47",
+      "target": "You 48",
+      "strength": 0.65
+    },
+    {
+      "source": "AI 36",
+      "target": "AI 47",
+      "strength": 0.5,
+      "created_cycle": 45
+    },
+    {
+      "source": "AI 41",
+      "target": "AI 47",
+      "strength": 0.5,
+      "created_cycle": 45
+    },
+    {
+      "source": "You 46",
+      "target": "AI 47",
+      "strength": 0.65,
+      "created_cycle": 45
+    },
+    {
+      "source": "AI 45",
+      "target": "AI 47",
+      "strength": 0.65,
+      "created_cycle": 45
+    },
+    {
+      "source": "You 47",
+      "target": "AI 47",
+      "strength": 0.65,
+      "created_cycle": 45
+    },
+    {
+      "source": "AI 46",
+      "target": "AI 47",
+      "strength": 0.65,
+      "created_cycle": 45
+    },
+    {
+      "source": "AI 47",
+      "target": "You 49",
+      "strength": 0.35
+    },
+    {
+      "source": "You 49",
+      "target": "AI 48",
+      "strength": 0.95,
+      "created_cycle": 46
+    },
+    {
+      "source": "You 23",
+      "target": "You 49",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 22",
+      "target": "You 49",
+      "strength": 0.5
+    },
+    {
+      "source": "You 24",
+      "target": "You 49",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 23",
+      "target": "You 49",
+      "strength": 0.5
+    },
+    {
+      "source": "You 35",
+      "target": "You 49",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 34",
+      "target": "You 49",
+      "strength": 0.5
+    },
+    {
+      "source": "You 36",
+      "target": "You 49",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 35",
+      "target": "You 49",
+      "strength": 0.65
+    },
+    {
+      "source": "You 37",
+      "target": "You 49",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 36",
+      "target": "You 49",
+      "strength": 0.5
+    },
+    {
+      "source": "You 40",
+      "target": "You 49",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 39",
+      "target": "You 49",
+      "strength": 0.5
+    },
+    {
+      "source": "You 41",
+      "target": "You 49",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 40",
+      "target": "You 49",
+      "strength": 0.5
+    },
+    {
+      "source": "You 42",
+      "target": "You 49",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 41",
+      "target": "You 49",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 45",
+      "target": "You 49",
+      "strength": 0.5
+    },
+    {
+      "source": "You 47",
+      "target": "You 49",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 46",
+      "target": "You 49",
+      "strength": 0.5
+    },
+    {
+      "source": "You 11",
+      "target": "AI 48",
+      "strength": 0.5,
+      "created_cycle": 46
+    },
+    {
+      "source": "AI 10",
+      "target": "AI 48",
+      "strength": 0.5,
+      "created_cycle": 46
+    },
+    {
+      "source": "You 17",
+      "target": "AI 48",
+      "strength": 0.5,
+      "created_cycle": 46
+    },
+    {
+      "source": "AI 16",
+      "target": "AI 48",
+      "strength": 0.5,
+      "created_cycle": 46
+    },
+    {
+      "source": "You 18",
+      "target": "AI 48",
+      "strength": 0.5,
+      "created_cycle": 46
+    },
+    {
+      "source": "AI 17",
+      "target": "AI 48",
+      "strength": 0.5,
+      "created_cycle": 46
+    },
+    {
+      "source": "You 23",
+      "target": "AI 48",
+      "strength": 0.65,
+      "created_cycle": 46
+    },
+    {
+      "source": "AI 22",
+      "target": "AI 48",
+      "strength": 0.65,
+      "created_cycle": 46
+    },
+    {
+      "source": "You 24",
+      "target": "AI 48",
+      "strength": 0.65,
+      "created_cycle": 46
+    },
+    {
+      "source": "AI 23",
+      "target": "AI 48",
+      "strength": 0.65,
+      "created_cycle": 46
+    },
+    {
+      "source": "You 35",
+      "target": "AI 48",
+      "strength": 0.5,
+      "created_cycle": 46
+    },
+    {
+      "source": "AI 34",
+      "target": "AI 48",
+      "strength": 0.5,
+      "created_cycle": 46
+    },
+    {
+      "source": "You 36",
+      "target": "AI 48",
+      "strength": 0.5,
+      "created_cycle": 46
+    },
+    {
+      "source": "AI 35",
+      "target": "AI 48",
+      "strength": 0.65,
+      "created_cycle": 46
+    },
+    {
+      "source": "You 37",
+      "target": "AI 48",
+      "strength": 0.5,
+      "created_cycle": 46
+    },
+    {
+      "source": "AI 36",
+      "target": "AI 48",
+      "strength": 0.5,
+      "created_cycle": 46
+    },
+    {
+      "source": "You 40",
+      "target": "AI 48",
+      "strength": 0.5,
+      "created_cycle": 46
+    },
+    {
+      "source": "AI 39",
+      "target": "AI 48",
+      "strength": 0.5,
+      "created_cycle": 46
+    },
+    {
+      "source": "You 41",
+      "target": "AI 48",
+      "strength": 0.65,
+      "created_cycle": 46
+    },
+    {
+      "source": "AI 40",
+      "target": "AI 48",
+      "strength": 0.65,
+      "created_cycle": 46
+    },
+    {
+      "source": "You 42",
+      "target": "AI 48",
+      "strength": 0.5,
+      "created_cycle": 46
+    },
+    {
+      "source": "AI 41",
+      "target": "AI 48",
+      "strength": 0.5,
+      "created_cycle": 46
+    },
+    {
+      "source": "AI 45",
+      "target": "AI 48",
+      "strength": 0.5,
+      "created_cycle": 46
+    },
+    {
+      "source": "You 47",
+      "target": "AI 48",
+      "strength": 0.5,
+      "created_cycle": 46
+    },
+    {
+      "source": "AI 46",
+      "target": "AI 48",
+      "strength": 0.5,
+      "created_cycle": 46
+    },
+    {
+      "source": "AI 29",
+      "target": "AI 48",
+      "strength": 0.3679,
+      "created_cycle": 46
+    },
+    {
       "source": "You 11",
       "target": "domain-separation",
       "strength": 1
@@ -3530,6 +7339,22 @@
       "strength": 1
     },
     {
+      "source": "You 41",
+      "target": "domain-separation",
+      "strength": 0.85
+    },
+    {
+      "source": "AI 40",
+      "target": "domain-separation",
+      "strength": 0.85
+    },
+    {
+      "source": "AI 48",
+      "target": "domain-separation",
+      "strength": 0.85,
+      "created_cycle": 46
+    },
+    {
       "source": "You 16",
       "target": "food",
       "strength": 1
@@ -3580,6 +7405,232 @@
       "strength": 1
     },
     {
+      "source": "You 38",
+      "target": "food",
+      "strength": 0.85
+    },
+    {
+      "source": "AI 37",
+      "target": "food",
+      "strength": 0.85
+    },
+    {
+      "source": "You 22",
+      "target": "tv-show",
+      "strength": 1
+    },
+    {
+      "source": "AI 21",
+      "target": "tv-show",
+      "strength": 1
+    },
+    {
+      "source": "You 25",
+      "target": "tv-show",
+      "strength": 1
+    },
+    {
+      "source": "AI 24",
+      "target": "tv-show",
+      "strength": 1
+    },
+    {
+      "source": "You 27",
+      "target": "tv-show",
+      "strength": 1
+    },
+    {
+      "source": "AI 26",
+      "target": "tv-show",
+      "strength": 1
+    },
+    {
+      "source": "You 29",
+      "target": "tv-show",
+      "strength": 1
+    },
+    {
+      "source": "AI 28",
+      "target": "tv-show",
+      "strength": 1
+    },
+    {
+      "source": "You 43",
+      "target": "tv-show",
+      "strength": 0.84
+    },
+    {
+      "source": "AI 42",
+      "target": "tv-show",
+      "strength": 0.84,
+      "created_cycle": 40
+    },
+    {
+      "source": "You 44",
+      "target": "tv-show",
+      "strength": 0.85
+    },
+    {
+      "source": "AI 43",
+      "target": "tv-show",
+      "strength": 0.85,
+      "created_cycle": 41
+    },
+    {
+      "source": "You 12",
+      "target": "scripture",
+      "strength": 0.66
+    },
+    {
+      "source": "AI 11",
+      "target": "scripture",
+      "strength": 0.66
+    },
+    {
+      "source": "You 13",
+      "target": "scripture",
+      "strength": 0.66
+    },
+    {
+      "source": "You 15",
+      "target": "scripture",
+      "strength": 0.66
+    },
+    {
+      "source": "AI 14",
+      "target": "scripture",
+      "strength": 0.66
+    },
+    {
+      "source": "You 33",
+      "target": "scripture",
+      "strength": 0.66
+    },
+    {
+      "source": "AI 32",
+      "target": "scripture",
+      "strength": 0.66
+    },
+    {
+      "source": "You 39",
+      "target": "scripture",
+      "strength": 0.78
+    },
+    {
+      "source": "AI 38",
+      "target": "scripture",
+      "strength": 0.78
+    },
+    {
+      "source": "You 45",
+      "target": "scripture",
+      "strength": 0.85
+    },
+    {
+      "source": "AI 44",
+      "target": "scripture",
+      "strength": 0.85,
+      "created_cycle": 42
+    },
+    {
+      "source": "You 27",
+      "target": "entertainment",
+      "strength": 0.6
+    },
+    {
+      "source": "AI 26",
+      "target": "entertainment",
+      "strength": 0.78
+    },
+    {
+      "source": "You 28",
+      "target": "entertainment",
+      "strength": 0.6
+    },
+    {
+      "source": "AI 27",
+      "target": "entertainment",
+      "strength": 0.6
+    },
+    {
+      "source": "You 29",
+      "target": "entertainment",
+      "strength": 0.6
+    },
+    {
+      "source": "AI 28",
+      "target": "entertainment",
+      "strength": 0.6
+    },
+    {
+      "source": "You 43",
+      "target": "entertainment",
+      "strength": 0.72
+    },
+    {
+      "source": "AI 42",
+      "target": "entertainment",
+      "strength": 0.72,
+      "created_cycle": 40
+    },
+    {
+      "source": "You 44",
+      "target": "entertainment",
+      "strength": 0.84
+    },
+    {
+      "source": "AI 43",
+      "target": "entertainment",
+      "strength": 0.84,
+      "created_cycle": 41
+    },
+    {
+      "source": "You 35",
+      "target": "finance",
+      "strength": 0.36
+    },
+    {
+      "source": "AI 34",
+      "target": "finance",
+      "strength": 0.36
+    },
+    {
+      "source": "AI 35",
+      "target": "finance",
+      "strength": 0.42
+    },
+    {
+      "source": "You 40",
+      "target": "finance",
+      "strength": 0.54
+    },
+    {
+      "source": "AI 39",
+      "target": "finance",
+      "strength": 0.54
+    },
+    {
+      "source": "You 41",
+      "target": "finance",
+      "strength": 0.66
+    },
+    {
+      "source": "AI 40",
+      "target": "finance",
+      "strength": 0.66
+    },
+    {
+      "source": "You 49",
+      "target": "finance",
+      "strength": 0.78
+    },
+    {
+      "source": "AI 48",
+      "target": "finance",
+      "strength": 0.78,
+      "created_cycle": 46
+    },
+    {
       "source": "You 2",
       "target": "persistence",
       "strength": 0.96
@@ -3625,6 +7676,92 @@
       "strength": 0.96
     },
     {
+      "source": "You 36",
+      "target": "crypto",
+      "strength": 0.54
+    },
+    {
+      "source": "AI 35",
+      "target": "crypto",
+      "strength": 0.36
+    },
+    {
+      "source": "You 37",
+      "target": "crypto",
+      "strength": 0.48
+    },
+    {
+      "source": "AI 36",
+      "target": "crypto",
+      "strength": 0.48
+    },
+    {
+      "source": "You 42",
+      "target": "crypto",
+      "strength": 0.6
+    },
+    {
+      "source": "AI 41",
+      "target": "crypto",
+      "strength": 0.6,
+      "created_cycle": 39
+    },
+    {
+      "source": "You 49",
+      "target": "crypto",
+      "strength": 0.72
+    },
+    {
+      "source": "AI 48",
+      "target": "crypto",
+      "strength": 0.72,
+      "created_cycle": 46
+    },
+    {
+      "source": "AI 36",
+      "target": "hardware",
+      "strength": 0.3
+    },
+    {
+      "source": "AI 41",
+      "target": "hardware",
+      "strength": 0.36,
+      "created_cycle": 39
+    },
+    {
+      "source": "You 46",
+      "target": "hardware",
+      "strength": 0.48
+    },
+    {
+      "source": "AI 45",
+      "target": "hardware",
+      "strength": 0.48,
+      "created_cycle": 43
+    },
+    {
+      "source": "You 47",
+      "target": "hardware",
+      "strength": 0.6
+    },
+    {
+      "source": "AI 46",
+      "target": "hardware",
+      "strength": 0.6,
+      "created_cycle": 44
+    },
+    {
+      "source": "You 48",
+      "target": "hardware",
+      "strength": 0.72
+    },
+    {
+      "source": "AI 47",
+      "target": "hardware",
+      "strength": 0.72,
+      "created_cycle": 45
+    },
+    {
       "source": "You 13",
       "target": "memory-ingestion",
       "strength": 0.8999999999999999
@@ -3666,81 +7803,6 @@
     },
     {
       "source": "You 22",
-      "target": "tv-show",
-      "strength": 1
-    },
-    {
-      "source": "AI 21",
-      "target": "tv-show",
-      "strength": 1
-    },
-    {
-      "source": "You 25",
-      "target": "tv-show",
-      "strength": 1
-    },
-    {
-      "source": "AI 24",
-      "target": "tv-show",
-      "strength": 1
-    },
-    {
-      "source": "You 27",
-      "target": "tv-show",
-      "strength": 1
-    },
-    {
-      "source": "AI 26",
-      "target": "tv-show",
-      "strength": 1
-    },
-    {
-      "source": "You 29",
-      "target": "tv-show",
-      "strength": 1
-    },
-    {
-      "source": "AI 28",
-      "target": "tv-show",
-      "strength": 1
-    },
-    {
-      "source": "You 12",
-      "target": "scripture",
-      "strength": 0.66
-    },
-    {
-      "source": "AI 11",
-      "target": "scripture",
-      "strength": 0.66
-    },
-    {
-      "source": "You 13",
-      "target": "scripture",
-      "strength": 0.66
-    },
-    {
-      "source": "You 15",
-      "target": "scripture",
-      "strength": 0.66
-    },
-    {
-      "source": "AI 14",
-      "target": "scripture",
-      "strength": 0.66
-    },
-    {
-      "source": "You 33",
-      "target": "scripture",
-      "strength": 0.66
-    },
-    {
-      "source": "AI 32",
-      "target": "scripture",
-      "strength": 0.66
-    },
-    {
-      "source": "You 22",
       "target": "elementary",
       "strength": 0.6
     },
@@ -3770,34 +7832,127 @@
       "strength": 0.78
     },
     {
-      "source": "You 27",
-      "target": "entertainment",
+      "source": "You 23",
+      "target": "evaluation",
+      "strength": 0.48
+    },
+    {
+      "source": "AI 22",
+      "target": "evaluation",
+      "strength": 0.48
+    },
+    {
+      "source": "You 24",
+      "target": "evaluation",
+      "strength": 0.48
+    },
+    {
+      "source": "AI 23",
+      "target": "evaluation",
+      "strength": 0.48
+    },
+    {
+      "source": "You 49",
+      "target": "evaluation",
       "strength": 0.6
     },
     {
-      "source": "AI 26",
-      "target": "entertainment",
-      "strength": 0.78
+      "source": "AI 48",
+      "target": "evaluation",
+      "strength": 0.6,
+      "created_cycle": 46
     },
     {
-      "source": "You 28",
-      "target": "entertainment",
+      "source": "You 36",
+      "target": "mining",
+      "strength": 0.54
+    },
+    {
+      "source": "AI 35",
+      "target": "mining",
+      "strength": 0.36
+    },
+    {
+      "source": "You 37",
+      "target": "mining",
+      "strength": 0.48
+    },
+    {
+      "source": "AI 36",
+      "target": "mining",
+      "strength": 0.48
+    },
+    {
+      "source": "You 42",
+      "target": "mining",
       "strength": 0.6
     },
     {
-      "source": "AI 27",
-      "target": "entertainment",
+      "source": "AI 41",
+      "target": "mining",
+      "strength": 0.6,
+      "created_cycle": 39
+    },
+    {
+      "source": "You 46",
+      "target": "pcie",
+      "strength": 0.36
+    },
+    {
+      "source": "AI 45",
+      "target": "pcie",
+      "strength": 0.36,
+      "created_cycle": 43
+    },
+    {
+      "source": "You 47",
+      "target": "pcie",
+      "strength": 0.48
+    },
+    {
+      "source": "AI 46",
+      "target": "pcie",
+      "strength": 0.48,
+      "created_cycle": 44
+    },
+    {
+      "source": "You 48",
+      "target": "pcie",
       "strength": 0.6
     },
     {
-      "source": "You 29",
-      "target": "entertainment",
-      "strength": 0.6
+      "source": "AI 47",
+      "target": "pcie",
+      "strength": 0.6,
+      "created_cycle": 45
     },
     {
-      "source": "AI 28",
-      "target": "entertainment",
-      "strength": 0.6
+      "source": "AI 45",
+      "target": "gpu",
+      "strength": 0.3,
+      "created_cycle": 43
+    },
+    {
+      "source": "You 47",
+      "target": "gpu",
+      "strength": 0.42
+    },
+    {
+      "source": "AI 46",
+      "target": "gpu",
+      "strength": 0.42,
+      "created_cycle": 44
+    },
+    {
+      "source": "You 49",
+      "target": "gpu",
+      "strength": 0.54
+    },
+    {
+      "source": "AI 48",
+      "target": "gpu",
+      "strength": 0.54,
+      "created_cycle": 46
     },
     {
       "source": "You 8",
@@ -3870,24 +8025,25 @@
       "strength": 0.48
     },
     {
-      "source": "You 23",
-      "target": "evaluation",
+      "source": "You 33",
+      "target": "armor-of-god",
+      "strength": 0.36
+    },
+    {
+      "source": "AI 32",
+      "target": "armor-of-god",
+      "strength": 0.36
+    },
+    {
+      "source": "You 45",
+      "target": "armor-of-god",
       "strength": 0.48
     },
     {
-      "source": "AI 22",
-      "target": "evaluation",
-      "strength": 0.48
-    },
-    {
-      "source": "You 24",
-      "target": "evaluation",
-      "strength": 0.48
-    },
-    {
-      "source": "AI 23",
-      "target": "evaluation",
-      "strength": 0.48
+      "source": "AI 44",
+      "target": "armor-of-god",
+      "strength": 0.48,
+      "created_cycle": 42
     },
     {
       "source": "You 31",
@@ -3980,6 +8136,21 @@
       "strength": 0.42
     },
     {
+      "source": "You 33",
+      "target": "bible",
+      "strength": 0.36
+    },
+    {
+      "source": "AI 32",
+      "target": "bible",
+      "strength": 0.36
+    },
+    {
+      "source": "AI 38",
+      "target": "bible",
+      "strength": 0.42
+    },
+    {
       "source": "You 2",
       "target": "real-memory",
       "strength": 0.42
@@ -3993,6 +8164,23 @@
       "source": "You 3",
       "target": "real-memory",
       "strength": 0.42
+    },
+    {
+      "source": "You 43",
+      "target": "recommendations",
+      "strength": 0.36
+    },
+    {
+      "source": "AI 42",
+      "target": "recommendations",
+      "strength": 0.36,
+      "created_cycle": 40
+    },
+    {
+      "source": "AI 43",
+      "target": "recommendations",
+      "strength": 0.42,
+      "created_cycle": 41
     },
     {
       "source": "You 6",
@@ -4025,16 +8213,6 @@
       "strength": 0.42
     },
     {
-      "source": "You 33",
-      "target": "armor-of-god",
-      "strength": 0.36
-    },
-    {
-      "source": "AI 32",
-      "target": "armor-of-god",
-      "strength": 0.36
-    },
-    {
       "source": "You 9",
       "target": "autopilot",
       "strength": 0.36
@@ -4042,16 +8220,6 @@
     {
       "source": "AI 8",
       "target": "autopilot",
-      "strength": 0.36
-    },
-    {
-      "source": "You 33",
-      "target": "bible",
-      "strength": 0.36
-    },
-    {
-      "source": "AI 32",
-      "target": "bible",
       "strength": 0.36
     },
     {
@@ -4105,6 +8273,17 @@
       "strength": 0.36
     },
     {
+      "source": "AI 36",
+      "target": "electricity",
+      "strength": 0.3
+    },
+    {
+      "source": "AI 41",
+      "target": "electricity",
+      "strength": 0.36,
+      "created_cycle": 39
+    },
+    {
       "source": "You 30",
       "target": "evolution",
       "strength": 0.36
@@ -4145,6 +8324,17 @@
       "strength": 0.36
     },
     {
+      "source": "You 45",
+      "target": "imagery",
+      "strength": 0.36
+    },
+    {
+      "source": "AI 44",
+      "target": "imagery",
+      "strength": 0.36,
+      "created_cycle": 42
+    },
+    {
       "source": "AI 2",
       "target": "ingestion",
       "strength": 0.36
@@ -4162,6 +8352,16 @@
     {
       "source": "AI 1",
       "target": "interactivity",
+      "strength": 0.36
+    },
+    {
+      "source": "AI 34",
+      "target": "investing",
+      "strength": 0.3
+    },
+    {
+      "source": "AI 39",
+      "target": "investing",
       "strength": 0.36
     },
     {
@@ -4183,6 +8383,17 @@
       "source": "AI 4",
       "target": "learning-model",
       "strength": 0.36
+    },
+    {
+      "source": "You 44",
+      "target": "leverage",
+      "strength": 0.36
+    },
+    {
+      "source": "AI 43",
+      "target": "leverage",
+      "strength": 0.36,
+      "created_cycle": 41
     },
     {
       "source": "You 27",
@@ -4295,6 +8506,39 @@
       "strength": 0.36
     },
     {
+      "source": "You 37",
+      "target": "profitability",
+      "strength": 0.3
+    },
+    {
+      "source": "AI 41",
+      "target": "profitability",
+      "strength": 0.36,
+      "created_cycle": 39
+    },
+    {
+      "source": "You 44",
+      "target": "psych",
+      "strength": 0.36
+    },
+    {
+      "source": "AI 43",
+      "target": "psych",
+      "strength": 0.36,
+      "created_cycle": 41
+    },
+    {
+      "source": "You 44",
+      "target": "quantum-leap",
+      "strength": 0.36
+    },
+    {
+      "source": "AI 43",
+      "target": "quantum-leap",
+      "strength": 0.36,
+      "created_cycle": 41
+    },
+    {
       "source": "You 31",
       "target": "querying",
       "strength": 0.36
@@ -4333,6 +8577,18 @@
       "source": "AI 9",
       "target": "semantic-retrieval",
       "strength": 0.36
+    },
+    {
+      "source": "AI 45",
+      "target": "server",
+      "strength": 0.3,
+      "created_cycle": 43
+    },
+    {
+      "source": "AI 46",
+      "target": "server",
+      "strength": 0.36,
+      "created_cycle": 44
     },
     {
       "source": "You 26",
@@ -4375,13 +8631,57 @@
       "strength": 0.36
     },
     {
+      "source": "AI 45",
+      "target": "workstation",
+      "strength": 0.3,
+      "created_cycle": 43
+    },
+    {
+      "source": "AI 46",
+      "target": "workstation",
+      "strength": 0.36,
+      "created_cycle": 44
+    },
+    {
+      "source": "You 48",
+      "target": "wrx90",
+      "strength": 0.36
+    },
+    {
+      "source": "AI 47",
+      "target": "wrx90",
+      "strength": 0.36,
+      "created_cycle": 45
+    },
+    {
+      "source": "AI 42",
+      "target": "adventure",
+      "strength": 0.3,
+      "created_cycle": 40
+    },
+    {
       "source": "AI 21",
       "target": "ai-memory",
       "strength": 0.3
     },
     {
+      "source": "AI 39",
+      "target": "budgeting",
+      "strength": 0.3
+    },
+    {
       "source": "You 3",
       "target": "chat-transcript",
+      "strength": 0.3
+    },
+    {
+      "source": "AI 40",
+      "target": "cluster",
+      "strength": 0.3
+    },
+    {
+      "source": "AI 34",
+      "target": "compound-growth",
       "strength": 0.3
     },
     {
@@ -4395,9 +8695,25 @@
       "strength": 0.3
     },
     {
+      "source": "AI 39",
+      "target": "debt",
+      "strength": 0.3
+    },
+    {
       "source": "AI 1",
       "target": "decay",
       "strength": 0.3
+    },
+    {
+      "source": "You 46",
+      "target": "enterprise",
+      "strength": 0.3
+    },
+    {
+      "source": "AI 44",
+      "target": "ephesians",
+      "strength": 0.3,
+      "created_cycle": 42
     },
     {
       "source": "AI 14",
@@ -4420,6 +8736,11 @@
       "strength": 0.3
     },
     {
+      "source": "You 47",
+      "target": "lane-sharing",
+      "strength": 0.3
+    },
+    {
       "source": "AI 9",
       "target": "learning-layer",
       "strength": 0.3
@@ -4435,8 +8756,18 @@
       "strength": 0.3
     },
     {
+      "source": "AI 37",
+      "target": "meals",
+      "strength": 0.3
+    },
+    {
       "source": "You 17",
       "target": "memory-clustering",
+      "strength": 0.3
+    },
+    {
+      "source": "You 35",
+      "target": "memory-updates",
       "strength": 0.3
     },
     {
@@ -4450,6 +8781,12 @@
       "strength": 0.3
     },
     {
+      "source": "AI 42",
+      "target": "mystery",
+      "strength": 0.3,
+      "created_cycle": 40
+    },
+    {
       "source": "You 11",
       "target": "namespaces",
       "strength": 0.3
@@ -4460,9 +8797,20 @@
       "strength": 0.3
     },
     {
+      "source": "You 40",
+      "target": "options",
+      "strength": 0.3
+    },
+    {
       "source": "You 16",
       "target": "pizza",
       "strength": 0.3
+    },
+    {
+      "source": "AI 47",
+      "target": "pricing",
+      "strength": 0.3,
+      "created_cycle": 45
     },
     {
       "source": "AI 1",
@@ -4470,8 +8818,24 @@
       "strength": 0.3
     },
     {
+      "source": "AI 37",
+      "target": "recipes",
+      "strength": 0.3
+    },
+    {
+      "source": "AI 42",
+      "target": "sci-fi",
+      "strength": 0.3,
+      "created_cycle": 40
+    },
+    {
       "source": "You 10",
       "target": "status",
+      "strength": 0.3
+    },
+    {
+      "source": "You 42",
+      "target": "techniques",
       "strength": 0.3
     },
     {
@@ -4488,9 +8852,24 @@
       "source": "AI 8",
       "target": "verification",
       "strength": 0.3
+    },
+    {
+      "source": "AI 38",
+      "target": "verses",
+      "strength": 0.3
     }
   ],
-  "cycles": 31,
+  "stats": {
+    "node_count": 208,
+    "link_count": 867,
+    "avg_importance": 0.26875000000000004,
+    "max_importance": 0.95,
+    "avg_link_strength": 0.35583756710649234,
+    "consolidated_count": 0,
+    "forgotten_count": 86
+  },
+  "seed_id": "You 1",
+  "cycles": 46,
   "sidebarCollapsed": false,
   "query": ""
 }
