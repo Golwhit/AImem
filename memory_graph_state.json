@@ -1,0 +1,4496 @@
+{
+  "nodes": [
+    {
+      "id": "You 1",
+      "rawImportance": 0,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "AI 1",
+      "rawImportance": 0,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "You 2",
+      "rawImportance": 0,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "AI 2",
+      "rawImportance": 0,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "You 3",
+      "rawImportance": 0,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "You 4",
+      "rawImportance": 0,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "AI 3",
+      "rawImportance": 0,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "You 5",
+      "rawImportance": 0,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "AI 4",
+      "rawImportance": 0,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "You 6",
+      "rawImportance": 0,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "AI 5",
+      "rawImportance": 0,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "You 7",
+      "rawImportance": 0,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "AI 6",
+      "rawImportance": 0,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "You 8",
+      "rawImportance": 0,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "AI 7",
+      "rawImportance": 0,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "You 9",
+      "rawImportance": 0,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "AI 8",
+      "rawImportance": 0,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "You 10",
+      "rawImportance": 0,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "AI 9",
+      "rawImportance": 0,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "You 11",
+      "rawImportance": 0,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "AI 10",
+      "rawImportance": 0,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "You 12",
+      "rawImportance": 0,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "AI 11",
+      "rawImportance": 0,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "You 13",
+      "rawImportance": 0,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "AI 12",
+      "rawImportance": 0,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "You 14",
+      "rawImportance": 0,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "AI 13",
+      "rawImportance": 0,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "You 15",
+      "rawImportance": 0,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "AI 14",
+      "rawImportance": 0,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "You 16",
+      "rawImportance": 0,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "AI 15",
+      "rawImportance": 0,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "You 17",
+      "rawImportance": 0,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "AI 16",
+      "rawImportance": 0,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "You 18",
+      "rawImportance": 0,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "AI 17",
+      "rawImportance": 0,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "You 19",
+      "rawImportance": 0,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "AI 18",
+      "rawImportance": 0,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "You 20",
+      "rawImportance": 0,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "AI 19",
+      "rawImportance": 0,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "You 21",
+      "rawImportance": 0,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "AI 20",
+      "rawImportance": 0,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "You 22",
+      "rawImportance": 0,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "AI 21",
+      "rawImportance": 0,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "You 23",
+      "rawImportance": 0,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "AI 22",
+      "rawImportance": 0,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "You 24",
+      "rawImportance": 0,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "AI 23",
+      "rawImportance": 0,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "You 25",
+      "rawImportance": 0,
+      "history": [
+        1
+      ],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 1
+      }
+    },
+    {
+      "id": "AI 24",
+      "rawImportance": 0,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "You 26",
+      "rawImportance": 0,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "AI 25",
+      "rawImportance": 0,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "You 27",
+      "rawImportance": 0,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "AI 26",
+      "rawImportance": 0,
+      "history": [
+        1
+      ],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 1
+      }
+    },
+    {
+      "id": "You 28",
+      "rawImportance": 0.15,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "AI 27",
+      "rawImportance": 0.05,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "You 29",
+      "rawImportance": 0.3,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "AI 28",
+      "rawImportance": 0.2,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "You 30",
+      "rawImportance": 0.45,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "AI 29",
+      "rawImportance": 0.35,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "You 31",
+      "rawImportance": 0.6,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "AI 30",
+      "rawImportance": 0.5,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "You 32",
+      "rawImportance": 0.75,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "AI 31",
+      "rawImportance": 0.65,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "You 33",
+      "rawImportance": 0.9,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "AI 32",
+      "rawImportance": 0.8,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": 30,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "You 34",
+      "rawImportance": 0.9,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "0": "n",
+        "1": "e",
+        "2": "u",
+        "3": "t",
+        "4": "r",
+        "5": "a",
+        "6": "l",
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "AI 33",
+      "rawImportance": 0.8,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": 31,
+      "feedback": {
+        "0": "n",
+        "1": "e",
+        "2": "u",
+        "3": "t",
+        "4": "r",
+        "5": "a",
+        "6": "l",
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "domain-separation",
+      "rawImportance": 0.95,
+      "history": [
+        1,
+        1
+      ],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 2
+      }
+    },
+    {
+      "id": "food",
+      "rawImportance": 0.95,
+      "history": [
+        1
+      ],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 1
+      }
+    },
+    {
+      "id": "persistence",
+      "rawImportance": 0.95,
+      "history": [
+        1
+      ],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 1
+      }
+    },
+    {
+      "id": "memory-ingestion",
+      "rawImportance": 0.95,
+      "history": [
+        1
+      ],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 1
+      }
+    },
+    {
+      "id": "tv-show",
+      "rawImportance": 0.95,
+      "history": [
+        1,
+        1
+      ],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 2
+      }
+    },
+    {
+      "id": "scripture",
+      "rawImportance": 0.9,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "elementary",
+      "rawImportance": 0.8,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "entertainment",
+      "rawImportance": 0.8,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "live-updates",
+      "rawImportance": 0.7,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "visual-layout",
+      "rawImportance": 0.7,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "agents",
+      "rawImportance": 0.6,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "evaluation",
+      "rawImportance": 0.6,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "memory-architecture",
+      "rawImportance": 0.6,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "meta",
+      "rawImportance": 0.6,
+      "history": [
+        1
+      ],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 1
+      }
+    },
+    {
+      "id": "star-trek",
+      "rawImportance": 0.6,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "auto-ingest",
+      "rawImportance": 0.5,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "automation",
+      "rawImportance": 0.5,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "real-memory",
+      "rawImportance": 0.5,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "retrieval",
+      "rawImportance": 0.5,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "workflow",
+      "rawImportance": 0.5,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "armor-of-god",
+      "rawImportance": 0.4,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "autopilot",
+      "rawImportance": 0.4,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "bible",
+      "rawImportance": 0.4,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "captain-picard",
+      "rawImportance": 0.4,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "cast",
+      "rawImportance": 0.4,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "christianity",
+      "rawImportance": 0.4,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "count",
+      "rawImportance": 0.4,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "domains",
+      "rawImportance": 0.4,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "evolution",
+      "rawImportance": 0.4,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "explanation",
+      "rawImportance": 0.4,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "favorite-foods",
+      "rawImportance": 0.4,
+      "history": [
+        1,
+        1
+      ],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 2
+      }
+    },
+    {
+      "id": "graph-quality",
+      "rawImportance": 0.4,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "ingestion",
+      "rawImportance": 0.4,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "interactivity",
+      "rawImportance": 0.4,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "john-3-16",
+      "rawImportance": 0.4,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "learning-model",
+      "rawImportance": 0.4,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "mcgyver",
+      "rawImportance": 0.4,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "meat-sauce",
+      "rawImportance": 0.4,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "memory-design",
+      "rawImportance": 0.4,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "memory-links",
+      "rawImportance": 0.4,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "memory-model",
+      "rawImportance": 0.4,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "next-generation",
+      "rawImportance": 0.4,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "overlap",
+      "rawImportance": 0.4,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "pasta",
+      "rawImportance": 0.4,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "persistent-memory",
+      "rawImportance": 0.4,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "policy",
+      "rawImportance": 0.4,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "practical-use",
+      "rawImportance": 0.4,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "querying",
+      "rawImportance": 0.4,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "refresh",
+      "rawImportance": 0.4,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "romans-3-23",
+      "rawImportance": 0.4,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "semantic-retrieval",
+      "rawImportance": 0.4,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "spaghetti",
+      "rawImportance": 0.4,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "storage",
+      "rawImportance": 0.4,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "task-completion",
+      "rawImportance": 0.4,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "visualization",
+      "rawImportance": 0.4,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "ai-memory",
+      "rawImportance": 0.3,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "chat-transcript",
+      "rawImportance": 0.3,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "consolidation",
+      "rawImportance": 0.3,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "correction",
+      "rawImportance": 0.3,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "decay",
+      "rawImportance": 0.3,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "grace",
+      "rawImportance": 0.3,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "graph-retrieval",
+      "rawImportance": 0.3,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "graph-search",
+      "rawImportance": 0.3,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "graph-status",
+      "rawImportance": 0.3,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "learning-layer",
+      "rawImportance": 0.3,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "lexical-retrieval",
+      "rawImportance": 0.3,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "limitations",
+      "rawImportance": 0.3,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "memory-clustering",
+      "rawImportance": 0.3,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "memory-system",
+      "rawImportance": 0.3,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "namespaces",
+      "rawImportance": 0.3,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "off-topic",
+      "rawImportance": 0.3,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "pizza",
+      "rawImportance": 0.3,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "recall",
+      "rawImportance": 0.3,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "status",
+      "rawImportance": 0.3,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "tfidf",
+      "rawImportance": 0.3,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "topic-clustering",
+      "rawImportance": 0.3,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    },
+    {
+      "id": "verification",
+      "rawImportance": 0.3,
+      "history": [],
+      "consolidated": false,
+      "created_cycle": null,
+      "feedback": {
+        "helpful": 0,
+        "corrections": 0,
+        "weak": 0,
+        "recalls": 0
+      }
+    }
+  ],
+  "links": [
+    {
+      "source": "You 1",
+      "target": "AI 1",
+      "strength": 0.1395
+    },
+    {
+      "source": "AI 1",
+      "target": "You 2",
+      "strength": 0.0751
+    },
+    {
+      "source": "You 2",
+      "target": "AI 2",
+      "strength": 0.1395
+    },
+    {
+      "source": "AI 2",
+      "target": "You 3",
+      "strength": 0.1717
+    },
+    {
+      "source": "You 2",
+      "target": "You 3",
+      "strength": 0.1395
+    },
+    {
+      "source": "You 3",
+      "target": "You 4",
+      "strength": 0.0791
+    },
+    {
+      "source": "You 4",
+      "target": "AI 3",
+      "strength": 0.1469
+    },
+    {
+      "source": "AI 3",
+      "target": "You 5",
+      "strength": 0.0832
+    },
+    {
+      "source": "You 5",
+      "target": "AI 4",
+      "strength": 0.1546
+    },
+    {
+      "source": "AI 4",
+      "target": "You 6",
+      "strength": 0.0876
+    },
+    {
+      "source": "You 6",
+      "target": "AI 5",
+      "strength": 0.1627
+    },
+    {
+      "source": "AI 5",
+      "target": "You 7",
+      "strength": 0.0922
+    },
+    {
+      "source": "You 7",
+      "target": "AI 6",
+      "strength": 0.1713
+    },
+    {
+      "source": "You 1",
+      "target": "You 2",
+      "strength": 0.0817
+    },
+    {
+      "source": "AI 1",
+      "target": "AI 2",
+      "strength": 0.1107
+    },
+    {
+      "source": "AI 1",
+      "target": "AI 5",
+      "strength": 0.0984
+    },
+    {
+      "source": "AI 2",
+      "target": "You 6",
+      "strength": 0.0806
+    },
+    {
+      "source": "You 3",
+      "target": "AI 3",
+      "strength": 0.0846
+    },
+    {
+      "source": "You 3",
+      "target": "AI 5",
+      "strength": 0.0937
+    },
+    {
+      "source": "You 4",
+      "target": "You 5",
+      "strength": 0.1106
+    },
+    {
+      "source": "You 4",
+      "target": "AI 4",
+      "strength": 0.0839
+    },
+    {
+      "source": "AI 3",
+      "target": "AI 5",
+      "strength": 0.1226
+    },
+    {
+      "source": "AI 3",
+      "target": "AI 6",
+      "strength": 0.1032
+    },
+    {
+      "source": "AI 4",
+      "target": "AI 5",
+      "strength": 0.1059
+    },
+    {
+      "source": "AI 5",
+      "target": "AI 6",
+      "strength": 0.1047
+    },
+    {
+      "source": "You 1",
+      "target": "You 3",
+      "strength": 0.0748
+    },
+    {
+      "source": "You 2",
+      "target": "You 7",
+      "strength": 0.0762
+    },
+    {
+      "source": "AI 2",
+      "target": "You 7",
+      "strength": 0.0756
+    },
+    {
+      "source": "AI 6",
+      "target": "You 8",
+      "strength": 0.0971
+    },
+    {
+      "source": "You 8",
+      "target": "AI 7",
+      "strength": 0.1803
+    },
+    {
+      "source": "You 4",
+      "target": "AI 7",
+      "strength": 0.1173
+    },
+    {
+      "source": "AI 7",
+      "target": "You 9",
+      "strength": 0.1022
+    },
+    {
+      "source": "You 9",
+      "target": "AI 8",
+      "strength": 0.1898
+    },
+    {
+      "source": "AI 2",
+      "target": "AI 8",
+      "strength": 0.0903
+    },
+    {
+      "source": "You 4",
+      "target": "You 9",
+      "strength": 0.0839
+    },
+    {
+      "source": "AI 8",
+      "target": "You 10",
+      "strength": 0.1076
+    },
+    {
+      "source": "You 10",
+      "target": "AI 9",
+      "strength": 0.1537
+    },
+    {
+      "source": "AI 2",
+      "target": "AI 9",
+      "strength": 0.1285
+    },
+    {
+      "source": "You 5",
+      "target": "AI 9",
+      "strength": 0.1173
+    },
+    {
+      "source": "You 6",
+      "target": "AI 9",
+      "strength": 0.1121
+    },
+    {
+      "source": "AI 6",
+      "target": "You 10",
+      "strength": 0.1089
+    },
+    {
+      "source": "AI 8",
+      "target": "AI 9",
+      "strength": 0.101
+    },
+    {
+      "source": "AI 9",
+      "target": "You 11",
+      "strength": 0.1132
+    },
+    {
+      "source": "You 11",
+      "target": "AI 10",
+      "strength": 0.1618
+    },
+    {
+      "source": "You 6",
+      "target": "AI 10",
+      "strength": 0.1618
+    },
+    {
+      "source": "AI 5",
+      "target": "AI 10",
+      "strength": 0.1618
+    },
+    {
+      "source": "AI 6",
+      "target": "You 11",
+      "strength": 0.1098
+    },
+    {
+      "source": "AI 10",
+      "target": "You 12",
+      "strength": 0.1192
+    },
+    {
+      "source": "You 12",
+      "target": "AI 11",
+      "strength": 0.2214
+    },
+    {
+      "source": "AI 6",
+      "target": "AI 11",
+      "strength": 0.0927
+    },
+    {
+      "source": "AI 11",
+      "target": "You 13",
+      "strength": 0.1792
+    },
+    {
+      "source": "You 13",
+      "target": "AI 12",
+      "strength": 0.233
+    },
+    {
+      "source": "You 2",
+      "target": "You 13",
+      "strength": 0.1792
+    },
+    {
+      "source": "AI 2",
+      "target": "You 13",
+      "strength": 0.1792
+    },
+    {
+      "source": "You 3",
+      "target": "You 13",
+      "strength": 0.1792
+    },
+    {
+      "source": "You 12",
+      "target": "You 13",
+      "strength": 0.1792
+    },
+    {
+      "source": "You 2",
+      "target": "AI 12",
+      "strength": 0.1792
+    },
+    {
+      "source": "AI 2",
+      "target": "AI 12",
+      "strength": 0.1792
+    },
+    {
+      "source": "You 3",
+      "target": "AI 12",
+      "strength": 0.1792
+    },
+    {
+      "source": "AI 5",
+      "target": "You 13",
+      "strength": 0.1084
+    },
+    {
+      "source": "You 10",
+      "target": "AI 12",
+      "strength": 0.1654
+    },
+    {
+      "source": "AI 12",
+      "target": "You 14",
+      "strength": 0.1887
+    },
+    {
+      "source": "You 14",
+      "target": "AI 13",
+      "strength": 0.2453
+    },
+    {
+      "source": "You 8",
+      "target": "You 14",
+      "strength": 0.1887
+    },
+    {
+      "source": "AI 7",
+      "target": "You 14",
+      "strength": 0.1887
+    },
+    {
+      "source": "You 10",
+      "target": "You 14",
+      "strength": 0.1887
+    },
+    {
+      "source": "You 10",
+      "target": "AI 13",
+      "strength": 0.1887
+    },
+    {
+      "source": "AI 12",
+      "target": "AI 13",
+      "strength": 0.1887
+    },
+    {
+      "source": "AI 7",
+      "target": "AI 13",
+      "strength": 0.1962
+    },
+    {
+      "source": "AI 13",
+      "target": "You 15",
+      "strength": 0.139
+    },
+    {
+      "source": "You 15",
+      "target": "AI 14",
+      "strength": 0.2582
+    },
+    {
+      "source": "You 12",
+      "target": "You 15",
+      "strength": 0.2582
+    },
+    {
+      "source": "AI 11",
+      "target": "You 15",
+      "strength": 0.1986
+    },
+    {
+      "source": "You 13",
+      "target": "You 15",
+      "strength": 0.1986
+    },
+    {
+      "source": "You 12",
+      "target": "AI 14",
+      "strength": 0.1986
+    },
+    {
+      "source": "AI 11",
+      "target": "AI 14",
+      "strength": 0.2582
+    },
+    {
+      "source": "You 13",
+      "target": "AI 14",
+      "strength": 0.1986
+    },
+    {
+      "source": "You 11",
+      "target": "AI 14",
+      "strength": 0.1383
+    },
+    {
+      "source": "AI 14",
+      "target": "You 16",
+      "strength": 0.1463
+    },
+    {
+      "source": "You 16",
+      "target": "AI 15",
+      "strength": 0.2718
+    },
+    {
+      "source": "You 13",
+      "target": "AI 15",
+      "strength": 0.2091
+    },
+    {
+      "source": "AI 12",
+      "target": "AI 15",
+      "strength": 0.2091
+    },
+    {
+      "source": "You 1",
+      "target": "AI 15",
+      "strength": 0.1235
+    },
+    {
+      "source": "AI 10",
+      "target": "AI 15",
+      "strength": 0.182
+    },
+    {
+      "source": "AI 15",
+      "target": "You 17",
+      "strength": 0.2201
+    },
+    {
+      "source": "You 17",
+      "target": "AI 16",
+      "strength": 0.2861
+    },
+    {
+      "source": "You 11",
+      "target": "You 17",
+      "strength": 0.2201
+    },
+    {
+      "source": "AI 10",
+      "target": "You 17",
+      "strength": 0.2201
+    },
+    {
+      "source": "You 16",
+      "target": "You 17",
+      "strength": 0.2201
+    },
+    {
+      "source": "You 11",
+      "target": "AI 16",
+      "strength": 0.2201
+    },
+    {
+      "source": "AI 10",
+      "target": "AI 16",
+      "strength": 0.2201
+    },
+    {
+      "source": "You 16",
+      "target": "AI 16",
+      "strength": 0.2201
+    },
+    {
+      "source": "AI 15",
+      "target": "AI 16",
+      "strength": 0.2201
+    },
+    {
+      "source": "AI 16",
+      "target": "You 18",
+      "strength": 0.3706
+    },
+    {
+      "source": "You 18",
+      "target": "AI 17",
+      "strength": 0.3706
+    },
+    {
+      "source": "You 11",
+      "target": "You 18",
+      "strength": 0.2316
+    },
+    {
+      "source": "AI 10",
+      "target": "You 18",
+      "strength": 0.2316
+    },
+    {
+      "source": "You 16",
+      "target": "You 18",
+      "strength": 0.2316
+    },
+    {
+      "source": "AI 15",
+      "target": "You 18",
+      "strength": 0.2316
+    },
+    {
+      "source": "You 17",
+      "target": "You 18",
+      "strength": 0.3011
+    },
+    {
+      "source": "You 11",
+      "target": "AI 17",
+      "strength": 0.2316
+    },
+    {
+      "source": "AI 10",
+      "target": "AI 17",
+      "strength": 0.2316
+    },
+    {
+      "source": "You 16",
+      "target": "AI 17",
+      "strength": 0.2316
+    },
+    {
+      "source": "AI 15",
+      "target": "AI 17",
+      "strength": 0.2316
+    },
+    {
+      "source": "You 17",
+      "target": "AI 17",
+      "strength": 0.3011
+    },
+    {
+      "source": "AI 16",
+      "target": "AI 17",
+      "strength": 0.3706
+    },
+    {
+      "source": "You 1",
+      "target": "You 18",
+      "strength": 0.1904
+    },
+    {
+      "source": "You 10",
+      "target": "AI 17",
+      "strength": 0.2393
+    },
+    {
+      "source": "AI 17",
+      "target": "You 19",
+      "strength": 0.317
+    },
+    {
+      "source": "You 19",
+      "target": "AI 18",
+      "strength": 0.3901
+    },
+    {
+      "source": "You 16",
+      "target": "You 19",
+      "strength": 0.2438
+    },
+    {
+      "source": "AI 15",
+      "target": "You 19",
+      "strength": 0.2438
+    },
+    {
+      "source": "You 17",
+      "target": "You 19",
+      "strength": 0.2438
+    },
+    {
+      "source": "AI 16",
+      "target": "You 19",
+      "strength": 0.317
+    },
+    {
+      "source": "You 18",
+      "target": "You 19",
+      "strength": 0.317
+    },
+    {
+      "source": "You 16",
+      "target": "AI 18",
+      "strength": 0.2438
+    },
+    {
+      "source": "AI 15",
+      "target": "AI 18",
+      "strength": 0.2438
+    },
+    {
+      "source": "You 17",
+      "target": "AI 18",
+      "strength": 0.2438
+    },
+    {
+      "source": "AI 16",
+      "target": "AI 18",
+      "strength": 0.317
+    },
+    {
+      "source": "You 18",
+      "target": "AI 18",
+      "strength": 0.317
+    },
+    {
+      "source": "AI 17",
+      "target": "AI 18",
+      "strength": 0.317
+    },
+    {
+      "source": "You 13",
+      "target": "AI 18",
+      "strength": 0.1657
+    },
+    {
+      "source": "AI 18",
+      "target": "You 20",
+      "strength": 0.1797
+    },
+    {
+      "source": "You 20",
+      "target": "AI 19",
+      "strength": 0.4107
+    },
+    {
+      "source": "You 2",
+      "target": "You 20",
+      "strength": 0.2567
+    },
+    {
+      "source": "AI 2",
+      "target": "You 20",
+      "strength": 0.2567
+    },
+    {
+      "source": "You 3",
+      "target": "You 20",
+      "strength": 0.2567
+    },
+    {
+      "source": "You 8",
+      "target": "You 20",
+      "strength": 0.2567
+    },
+    {
+      "source": "AI 7",
+      "target": "You 20",
+      "strength": 0.2567
+    },
+    {
+      "source": "You 13",
+      "target": "You 20",
+      "strength": 0.3337
+    },
+    {
+      "source": "AI 12",
+      "target": "You 20",
+      "strength": 0.3337
+    },
+    {
+      "source": "You 14",
+      "target": "You 20",
+      "strength": 0.2567
+    },
+    {
+      "source": "AI 15",
+      "target": "You 20",
+      "strength": 0.2567
+    },
+    {
+      "source": "You 2",
+      "target": "AI 19",
+      "strength": 0.2567
+    },
+    {
+      "source": "AI 2",
+      "target": "AI 19",
+      "strength": 0.2567
+    },
+    {
+      "source": "You 3",
+      "target": "AI 19",
+      "strength": 0.2567
+    },
+    {
+      "source": "You 8",
+      "target": "AI 19",
+      "strength": 0.2567
+    },
+    {
+      "source": "AI 7",
+      "target": "AI 19",
+      "strength": 0.2567
+    },
+    {
+      "source": "You 13",
+      "target": "AI 19",
+      "strength": 0.3337
+    },
+    {
+      "source": "AI 12",
+      "target": "AI 19",
+      "strength": 0.3337
+    },
+    {
+      "source": "You 14",
+      "target": "AI 19",
+      "strength": 0.2567
+    },
+    {
+      "source": "AI 15",
+      "target": "AI 19",
+      "strength": 0.2567
+    },
+    {
+      "source": "You 1",
+      "target": "You 20",
+      "strength": 0.1948
+    },
+    {
+      "source": "You 7",
+      "target": "You 20",
+      "strength": 0.164
+    },
+    {
+      "source": "You 9",
+      "target": "You 20",
+      "strength": 0.1531
+    },
+    {
+      "source": "AI 13",
+      "target": "AI 19",
+      "strength": 0.2858
+    },
+    {
+      "source": "You 17",
+      "target": "You 20",
+      "strength": 0.1794
+    },
+    {
+      "source": "AI 19",
+      "target": "You 21",
+      "strength": 0.3512
+    },
+    {
+      "source": "You 21",
+      "target": "AI 20",
+      "strength": 0.4323
+    },
+    {
+      "source": "You 2",
+      "target": "You 21",
+      "strength": 0.2702
+    },
+    {
+      "source": "AI 2",
+      "target": "You 21",
+      "strength": 0.2702
+    },
+    {
+      "source": "You 3",
+      "target": "You 21",
+      "strength": 0.2702
+    },
+    {
+      "source": "AI 7",
+      "target": "You 21",
+      "strength": 0.2702
+    },
+    {
+      "source": "You 13",
+      "target": "You 21",
+      "strength": 0.3512
+    },
+    {
+      "source": "AI 12",
+      "target": "You 21",
+      "strength": 0.3512
+    },
+    {
+      "source": "AI 15",
+      "target": "You 21",
+      "strength": 0.2702
+    },
+    {
+      "source": "You 20",
+      "target": "You 21",
+      "strength": 0.3512
+    },
+    {
+      "source": "You 2",
+      "target": "AI 20",
+      "strength": 0.2702
+    },
+    {
+      "source": "AI 2",
+      "target": "AI 20",
+      "strength": 0.2702
+    },
+    {
+      "source": "You 3",
+      "target": "AI 20",
+      "strength": 0.2702
+    },
+    {
+      "source": "AI 7",
+      "target": "AI 20",
+      "strength": 0.2702
+    },
+    {
+      "source": "You 13",
+      "target": "AI 20",
+      "strength": 0.3512
+    },
+    {
+      "source": "AI 12",
+      "target": "AI 20",
+      "strength": 0.3512
+    },
+    {
+      "source": "AI 15",
+      "target": "AI 20",
+      "strength": 0.2702
+    },
+    {
+      "source": "You 20",
+      "target": "AI 20",
+      "strength": 0.3512
+    },
+    {
+      "source": "AI 19",
+      "target": "AI 20",
+      "strength": 0.3512
+    },
+    {
+      "source": "AI 3",
+      "target": "AI 20",
+      "strength": 0.2047
+    },
+    {
+      "source": "You 8",
+      "target": "You 21",
+      "strength": 0.3512
+    },
+    {
+      "source": "You 10",
+      "target": "You 21",
+      "strength": 0.2414
+    },
+    {
+      "source": "You 14",
+      "target": "You 21",
+      "strength": 0.2888
+    },
+    {
+      "source": "AI 20",
+      "target": "You 22",
+      "strength": 0.2844
+    },
+    {
+      "source": "You 22",
+      "target": "AI 21",
+      "strength": 0.3697
+    },
+    {
+      "source": "You 13",
+      "target": "You 22",
+      "strength": 0.2844
+    },
+    {
+      "source": "AI 12",
+      "target": "You 22",
+      "strength": 0.2844
+    },
+    {
+      "source": "AI 15",
+      "target": "You 22",
+      "strength": 0.2844
+    },
+    {
+      "source": "You 20",
+      "target": "You 22",
+      "strength": 0.2844
+    },
+    {
+      "source": "AI 19",
+      "target": "You 22",
+      "strength": 0.2844
+    },
+    {
+      "source": "You 21",
+      "target": "You 22",
+      "strength": 0.2844
+    },
+    {
+      "source": "AI 1",
+      "target": "You 22",
+      "strength": 0.1882
+    },
+    {
+      "source": "AI 15",
+      "target": "AI 21",
+      "strength": 0.2445
+    },
+    {
+      "source": "AI 21",
+      "target": "You 23",
+      "strength": 0.2096
+    },
+    {
+      "source": "You 23",
+      "target": "AI 22",
+      "strength": 0.479
+    },
+    {
+      "source": "You 11",
+      "target": "You 23",
+      "strength": 0.2994
+    },
+    {
+      "source": "AI 10",
+      "target": "You 23",
+      "strength": 0.2994
+    },
+    {
+      "source": "You 17",
+      "target": "You 23",
+      "strength": 0.2994
+    },
+    {
+      "source": "AI 16",
+      "target": "You 23",
+      "strength": 0.2994
+    },
+    {
+      "source": "You 18",
+      "target": "You 23",
+      "strength": 0.2994
+    },
+    {
+      "source": "AI 17",
+      "target": "You 23",
+      "strength": 0.2994
+    },
+    {
+      "source": "You 11",
+      "target": "AI 22",
+      "strength": 0.2994
+    },
+    {
+      "source": "AI 10",
+      "target": "AI 22",
+      "strength": 0.2994
+    },
+    {
+      "source": "You 17",
+      "target": "AI 22",
+      "strength": 0.2994
+    },
+    {
+      "source": "AI 16",
+      "target": "AI 22",
+      "strength": 0.2994
+    },
+    {
+      "source": "You 18",
+      "target": "AI 22",
+      "strength": 0.2994
+    },
+    {
+      "source": "AI 17",
+      "target": "AI 22",
+      "strength": 0.2994
+    },
+    {
+      "source": "You 7",
+      "target": "AI 22",
+      "strength": 0.1927
+    },
+    {
+      "source": "AI 15",
+      "target": "AI 22",
+      "strength": 0.2179
+    },
+    {
+      "source": "AI 22",
+      "target": "You 24",
+      "strength": 0.5042
+    },
+    {
+      "source": "You 24",
+      "target": "AI 23",
+      "strength": 0.5042
+    },
+    {
+      "source": "You 11",
+      "target": "You 24",
+      "strength": 0.3151
+    },
+    {
+      "source": "AI 10",
+      "target": "You 24",
+      "strength": 0.3151
+    },
+    {
+      "source": "You 17",
+      "target": "You 24",
+      "strength": 0.3151
+    },
+    {
+      "source": "AI 16",
+      "target": "You 24",
+      "strength": 0.3151
+    },
+    {
+      "source": "You 18",
+      "target": "You 24",
+      "strength": 0.3151
+    },
+    {
+      "source": "AI 17",
+      "target": "You 24",
+      "strength": 0.3151
+    },
+    {
+      "source": "You 23",
+      "target": "You 24",
+      "strength": 0.5042
+    },
+    {
+      "source": "You 11",
+      "target": "AI 23",
+      "strength": 0.3151
+    },
+    {
+      "source": "AI 10",
+      "target": "AI 23",
+      "strength": 0.3151
+    },
+    {
+      "source": "You 17",
+      "target": "AI 23",
+      "strength": 0.3151
+    },
+    {
+      "source": "AI 16",
+      "target": "AI 23",
+      "strength": 0.3151
+    },
+    {
+      "source": "You 18",
+      "target": "AI 23",
+      "strength": 0.3151
+    },
+    {
+      "source": "AI 17",
+      "target": "AI 23",
+      "strength": 0.3151
+    },
+    {
+      "source": "You 23",
+      "target": "AI 23",
+      "strength": 0.5042
+    },
+    {
+      "source": "AI 22",
+      "target": "AI 23",
+      "strength": 0.5042
+    },
+    {
+      "source": "You 2",
+      "target": "AI 23",
+      "strength": 0.2647
+    },
+    {
+      "source": "AI 23",
+      "target": "You 25",
+      "strength": 0.4122
+    },
+    {
+      "source": "You 25",
+      "target": "AI 24",
+      "strength": 0.7106999999999999
+    },
+    {
+      "source": "You 22",
+      "target": "You 25",
+      "strength": 0.6112
+    },
+    {
+      "source": "AI 21",
+      "target": "You 25",
+      "strength": 0.6112
+    },
+    {
+      "source": "You 22",
+      "target": "AI 24",
+      "strength": 0.4312
+    },
+    {
+      "source": "AI 21",
+      "target": "AI 24",
+      "strength": 0.4312
+    },
+    {
+      "source": "AI 16",
+      "target": "You 25",
+      "strength": 0.4405
+    },
+    {
+      "source": "AI 24",
+      "target": "You 26",
+      "strength": 0.2444
+    },
+    {
+      "source": "You 26",
+      "target": "AI 25",
+      "strength": 0.6634
+    },
+    {
+      "source": "You 16",
+      "target": "You 26",
+      "strength": 0.3492
+    },
+    {
+      "source": "AI 15",
+      "target": "You 26",
+      "strength": 0.3492
+    },
+    {
+      "source": "You 17",
+      "target": "You 26",
+      "strength": 0.3492
+    },
+    {
+      "source": "AI 16",
+      "target": "You 26",
+      "strength": 0.3492
+    },
+    {
+      "source": "You 18",
+      "target": "You 26",
+      "strength": 0.3492
+    },
+    {
+      "source": "AI 17",
+      "target": "You 26",
+      "strength": 0.3492
+    },
+    {
+      "source": "You 19",
+      "target": "You 26",
+      "strength": 0.3492
+    },
+    {
+      "source": "AI 18",
+      "target": "You 26",
+      "strength": 0.3492
+    },
+    {
+      "source": "You 16",
+      "target": "AI 25",
+      "strength": 0.3492
+    },
+    {
+      "source": "AI 15",
+      "target": "AI 25",
+      "strength": 0.3492
+    },
+    {
+      "source": "You 17",
+      "target": "AI 25",
+      "strength": 0.3492
+    },
+    {
+      "source": "AI 16",
+      "target": "AI 25",
+      "strength": 0.3492
+    },
+    {
+      "source": "You 18",
+      "target": "AI 25",
+      "strength": 0.3492
+    },
+    {
+      "source": "AI 17",
+      "target": "AI 25",
+      "strength": 0.3492
+    },
+    {
+      "source": "You 19",
+      "target": "AI 25",
+      "strength": 0.3492
+    },
+    {
+      "source": "AI 18",
+      "target": "AI 25",
+      "strength": 0.3492
+    },
+    {
+      "source": "You 7",
+      "target": "You 26",
+      "strength": 0.2381
+    },
+    {
+      "source": "You 11",
+      "target": "AI 25",
+      "strength": 0.2971
+    },
+    {
+      "source": "You 20",
+      "target": "You 26",
+      "strength": 0.2502
+    },
+    {
+      "source": "AI 25",
+      "target": "You 27",
+      "strength": 0.2573
+    },
+    {
+      "source": "You 27",
+      "target": "AI 26",
+      "strength": 0.8783000000000001
+    },
+    {
+      "source": "You 22",
+      "target": "You 27",
+      "strength": 0.4778
+    },
+    {
+      "source": "AI 21",
+      "target": "You 27",
+      "strength": 0.4778
+    },
+    {
+      "source": "You 25",
+      "target": "You 27",
+      "strength": 0.6577999999999999
+    },
+    {
+      "source": "AI 24",
+      "target": "You 27",
+      "strength": 0.4778
+    },
+    {
+      "source": "You 22",
+      "target": "AI 26",
+      "strength": 0.6577999999999999
+    },
+    {
+      "source": "AI 21",
+      "target": "AI 26",
+      "strength": 0.6577999999999999
+    },
+    {
+      "source": "You 25",
+      "target": "AI 26",
+      "strength": 0.8377999999999999
+    },
+    {
+      "source": "AI 24",
+      "target": "AI 26",
+      "strength": 0.6577999999999999
+    },
+    {
+      "source": "You 16",
+      "target": "You 27",
+      "strength": 0.2987
+    },
+    {
+      "source": "AI 26",
+      "target": "You 28",
+      "strength": 0.683
+    },
+    {
+      "source": "You 28",
+      "target": "AI 27",
+      "strength": 0.619
+    },
+    {
+      "source": "You 27",
+      "target": "You 28",
+      "strength": 0.503
+    },
+    {
+      "source": "You 27",
+      "target": "AI 27",
+      "strength": 0.503
+    },
+    {
+      "source": "AI 26",
+      "target": "AI 27",
+      "strength": 0.683
+    },
+    {
+      "source": "AI 24",
+      "target": "You 28",
+      "strength": 0.2441
+    },
+    {
+      "source": "AI 24",
+      "target": "AI 27",
+      "strength": 0.2249
+    },
+    {
+      "source": "AI 27",
+      "target": "You 29",
+      "strength": 0.4073
+    },
+    {
+      "source": "You 29",
+      "target": "AI 28",
+      "strength": 0.6516
+    },
+    {
+      "source": "You 22",
+      "target": "You 29",
+      "strength": 0.4073
+    },
+    {
+      "source": "AI 21",
+      "target": "You 29",
+      "strength": 0.4073
+    },
+    {
+      "source": "You 25",
+      "target": "You 29",
+      "strength": 0.5872999999999999
+    },
+    {
+      "source": "AI 24",
+      "target": "You 29",
+      "strength": 0.4073
+    },
+    {
+      "source": "You 27",
+      "target": "You 29",
+      "strength": 0.5294
+    },
+    {
+      "source": "AI 26",
+      "target": "You 29",
+      "strength": 0.7094
+    },
+    {
+      "source": "You 28",
+      "target": "You 29",
+      "strength": 0.4073
+    },
+    {
+      "source": "You 22",
+      "target": "AI 28",
+      "strength": 0.4073
+    },
+    {
+      "source": "AI 21",
+      "target": "AI 28",
+      "strength": 0.4073
+    },
+    {
+      "source": "You 25",
+      "target": "AI 28",
+      "strength": 0.5872999999999999
+    },
+    {
+      "source": "AI 24",
+      "target": "AI 28",
+      "strength": 0.4073
+    },
+    {
+      "source": "You 27",
+      "target": "AI 28",
+      "strength": 0.5294
+    },
+    {
+      "source": "AI 26",
+      "target": "AI 28",
+      "strength": 0.7094
+    },
+    {
+      "source": "You 28",
+      "target": "AI 28",
+      "strength": 0.4073
+    },
+    {
+      "source": "AI 27",
+      "target": "AI 28",
+      "strength": 0.4073
+    },
+    {
+      "source": "AI 28",
+      "target": "You 30",
+      "strength": 0.3001
+    },
+    {
+      "source": "You 30",
+      "target": "AI 29",
+      "strength": 0.6859
+    },
+    {
+      "source": "You 23",
+      "target": "You 30",
+      "strength": 0.2648
+    },
+    {
+      "source": "You 24",
+      "target": "AI 29",
+      "strength": 0.3411
+    },
+    {
+      "source": "AI 23",
+      "target": "AI 29",
+      "strength": 0.3002
+    },
+    {
+      "source": "AI 29",
+      "target": "You 31",
+      "strength": 0.3159
+    },
+    {
+      "source": "You 31",
+      "target": "AI 30",
+      "strength": 0.722
+    },
+    {
+      "source": "You 3",
+      "target": "AI 30",
+      "strength": 0.342
+    },
+    {
+      "source": "AI 3",
+      "target": "AI 30",
+      "strength": 0.3497
+    },
+    {
+      "source": "You 9",
+      "target": "You 31",
+      "strength": 0.2733
+    },
+    {
+      "source": "You 10",
+      "target": "You 31",
+      "strength": 0.3199
+    },
+    {
+      "source": "You 30",
+      "target": "AI 30",
+      "strength": 0.28
+    },
+    {
+      "source": "AI 30",
+      "target": "You 32",
+      "strength": 0.6175
+    },
+    {
+      "source": "You 32",
+      "target": "AI 31",
+      "strength": 0.76
+    },
+    {
+      "source": "You 31",
+      "target": "You 32",
+      "strength": 0.6175
+    },
+    {
+      "source": "You 31",
+      "target": "AI 31",
+      "strength": 0.6175
+    },
+    {
+      "source": "AI 30",
+      "target": "AI 31",
+      "strength": 0.6175
+    },
+    {
+      "source": "AI 22",
+      "target": "AI 31",
+      "strength": 0.382
+    },
+    {
+      "source": "AI 29",
+      "target": "AI 31",
+      "strength": 0.3307
+    },
+    {
+      "source": "AI 31",
+      "target": "You 33",
+      "strength": 0.35
+    },
+    {
+      "source": "You 33",
+      "target": "AI 32",
+      "strength": 0.8
+    },
+    {
+      "source": "You 12",
+      "target": "You 33",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 11",
+      "target": "You 33",
+      "strength": 0.5
+    },
+    {
+      "source": "You 13",
+      "target": "You 33",
+      "strength": 0.5
+    },
+    {
+      "source": "You 15",
+      "target": "You 33",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 14",
+      "target": "You 33",
+      "strength": 0.5
+    },
+    {
+      "source": "You 12",
+      "target": "AI 32",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 11",
+      "target": "AI 32",
+      "strength": 0.5
+    },
+    {
+      "source": "You 13",
+      "target": "AI 32",
+      "strength": 0.5
+    },
+    {
+      "source": "You 15",
+      "target": "AI 32",
+      "strength": 0.5
+    },
+    {
+      "source": "AI 14",
+      "target": "AI 32",
+      "strength": 0.5
+    },
+    {
+      "source": "You 11",
+      "target": "You 33",
+      "strength": 0.4662
+    },
+    {
+      "source": "AI 32",
+      "target": "You 34",
+      "strength": 0.35
+    },
+    {
+      "source": "You 34",
+      "target": "AI 33",
+      "strength": 0.35
+    },
+    {
+      "source": "AI 2",
+      "target": "AI 33",
+      "strength": 0.3579
+    },
+    {
+      "source": "You 4",
+      "target": "AI 19",
+      "strength": 0.3952
+    },
+    {
+      "source": "AI 19",
+      "target": "AI 33",
+      "strength": 0.3961
+    },
+    {
+      "source": "You 11",
+      "target": "domain-separation",
+      "strength": 1
+    },
+    {
+      "source": "AI 10",
+      "target": "domain-separation",
+      "strength": 1
+    },
+    {
+      "source": "You 17",
+      "target": "domain-separation",
+      "strength": 1
+    },
+    {
+      "source": "AI 16",
+      "target": "domain-separation",
+      "strength": 1
+    },
+    {
+      "source": "You 18",
+      "target": "domain-separation",
+      "strength": 1
+    },
+    {
+      "source": "AI 17",
+      "target": "domain-separation",
+      "strength": 1
+    },
+    {
+      "source": "You 23",
+      "target": "domain-separation",
+      "strength": 1
+    },
+    {
+      "source": "AI 22",
+      "target": "domain-separation",
+      "strength": 1
+    },
+    {
+      "source": "You 24",
+      "target": "domain-separation",
+      "strength": 1
+    },
+    {
+      "source": "AI 23",
+      "target": "domain-separation",
+      "strength": 1
+    },
+    {
+      "source": "You 16",
+      "target": "food",
+      "strength": 1
+    },
+    {
+      "source": "AI 15",
+      "target": "food",
+      "strength": 1
+    },
+    {
+      "source": "You 17",
+      "target": "food",
+      "strength": 1
+    },
+    {
+      "source": "AI 16",
+      "target": "food",
+      "strength": 1
+    },
+    {
+      "source": "You 18",
+      "target": "food",
+      "strength": 1
+    },
+    {
+      "source": "AI 17",
+      "target": "food",
+      "strength": 1
+    },
+    {
+      "source": "You 19",
+      "target": "food",
+      "strength": 1
+    },
+    {
+      "source": "AI 18",
+      "target": "food",
+      "strength": 1
+    },
+    {
+      "source": "You 26",
+      "target": "food",
+      "strength": 1
+    },
+    {
+      "source": "AI 25",
+      "target": "food",
+      "strength": 1
+    },
+    {
+      "source": "You 2",
+      "target": "persistence",
+      "strength": 0.96
+    },
+    {
+      "source": "AI 2",
+      "target": "persistence",
+      "strength": 0.96
+    },
+    {
+      "source": "You 3",
+      "target": "persistence",
+      "strength": 0.96
+    },
+    {
+      "source": "You 13",
+      "target": "persistence",
+      "strength": 0.96
+    },
+    {
+      "source": "AI 12",
+      "target": "persistence",
+      "strength": 0.96
+    },
+    {
+      "source": "You 20",
+      "target": "persistence",
+      "strength": 0.96
+    },
+    {
+      "source": "AI 19",
+      "target": "persistence",
+      "strength": 0.96
+    },
+    {
+      "source": "You 21",
+      "target": "persistence",
+      "strength": 0.96
+    },
+    {
+      "source": "AI 20",
+      "target": "persistence",
+      "strength": 0.96
+    },
+    {
+      "source": "You 13",
+      "target": "memory-ingestion",
+      "strength": 0.8999999999999999
+    },
+    {
+      "source": "AI 12",
+      "target": "memory-ingestion",
+      "strength": 0.8999999999999999
+    },
+    {
+      "source": "AI 15",
+      "target": "memory-ingestion",
+      "strength": 0.8999999999999999
+    },
+    {
+      "source": "You 20",
+      "target": "memory-ingestion",
+      "strength": 0.8999999999999999
+    },
+    {
+      "source": "AI 19",
+      "target": "memory-ingestion",
+      "strength": 0.8999999999999999
+    },
+    {
+      "source": "You 21",
+      "target": "memory-ingestion",
+      "strength": 0.8999999999999999
+    },
+    {
+      "source": "AI 20",
+      "target": "memory-ingestion",
+      "strength": 0.8999999999999999
+    },
+    {
+      "source": "You 22",
+      "target": "memory-ingestion",
+      "strength": 0.8999999999999999
+    },
+    {
+      "source": "You 22",
+      "target": "tv-show",
+      "strength": 1
+    },
+    {
+      "source": "AI 21",
+      "target": "tv-show",
+      "strength": 1
+    },
+    {
+      "source": "You 25",
+      "target": "tv-show",
+      "strength": 1
+    },
+    {
+      "source": "AI 24",
+      "target": "tv-show",
+      "strength": 1
+    },
+    {
+      "source": "You 27",
+      "target": "tv-show",
+      "strength": 1
+    },
+    {
+      "source": "AI 26",
+      "target": "tv-show",
+      "strength": 1
+    },
+    {
+      "source": "You 29",
+      "target": "tv-show",
+      "strength": 1
+    },
+    {
+      "source": "AI 28",
+      "target": "tv-show",
+      "strength": 1
+    },
+    {
+      "source": "You 12",
+      "target": "scripture",
+      "strength": 0.66
+    },
+    {
+      "source": "AI 11",
+      "target": "scripture",
+      "strength": 0.66
+    },
+    {
+      "source": "You 13",
+      "target": "scripture",
+      "strength": 0.66
+    },
+    {
+      "source": "You 15",
+      "target": "scripture",
+      "strength": 0.66
+    },
+    {
+      "source": "AI 14",
+      "target": "scripture",
+      "strength": 0.66
+    },
+    {
+      "source": "You 33",
+      "target": "scripture",
+      "strength": 0.66
+    },
+    {
+      "source": "AI 32",
+      "target": "scripture",
+      "strength": 0.66
+    },
+    {
+      "source": "You 22",
+      "target": "elementary",
+      "strength": 0.6
+    },
+    {
+      "source": "AI 21",
+      "target": "elementary",
+      "strength": 0.6
+    },
+    {
+      "source": "You 25",
+      "target": "elementary",
+      "strength": 0.78
+    },
+    {
+      "source": "AI 24",
+      "target": "elementary",
+      "strength": 0.6
+    },
+    {
+      "source": "You 27",
+      "target": "elementary",
+      "strength": 0.6
+    },
+    {
+      "source": "AI 26",
+      "target": "elementary",
+      "strength": 0.78
+    },
+    {
+      "source": "You 27",
+      "target": "entertainment",
+      "strength": 0.6
+    },
+    {
+      "source": "AI 26",
+      "target": "entertainment",
+      "strength": 0.78
+    },
+    {
+      "source": "You 28",
+      "target": "entertainment",
+      "strength": 0.6
+    },
+    {
+      "source": "AI 27",
+      "target": "entertainment",
+      "strength": 0.6
+    },
+    {
+      "source": "You 29",
+      "target": "entertainment",
+      "strength": 0.6
+    },
+    {
+      "source": "AI 28",
+      "target": "entertainment",
+      "strength": 0.6
+    },
+    {
+      "source": "You 8",
+      "target": "live-updates",
+      "strength": 0.54
+    },
+    {
+      "source": "AI 7",
+      "target": "live-updates",
+      "strength": 0.54
+    },
+    {
+      "source": "You 14",
+      "target": "live-updates",
+      "strength": 0.54
+    },
+    {
+      "source": "You 20",
+      "target": "live-updates",
+      "strength": 0.54
+    },
+    {
+      "source": "AI 19",
+      "target": "live-updates",
+      "strength": 0.54
+    },
+    {
+      "source": "AI 16",
+      "target": "visual-layout",
+      "strength": 0.54
+    },
+    {
+      "source": "You 18",
+      "target": "visual-layout",
+      "strength": 0.54
+    },
+    {
+      "source": "AI 17",
+      "target": "visual-layout",
+      "strength": 0.54
+    },
+    {
+      "source": "You 19",
+      "target": "visual-layout",
+      "strength": 0.54
+    },
+    {
+      "source": "AI 18",
+      "target": "visual-layout",
+      "strength": 0.54
+    },
+    {
+      "source": "You 31",
+      "target": "agents",
+      "strength": 0.48
+    },
+    {
+      "source": "AI 30",
+      "target": "agents",
+      "strength": 0.48
+    },
+    {
+      "source": "You 32",
+      "target": "agents",
+      "strength": 0.48
+    },
+    {
+      "source": "AI 31",
+      "target": "agents",
+      "strength": 0.48
+    },
+    {
+      "source": "You 23",
+      "target": "evaluation",
+      "strength": 0.48
+    },
+    {
+      "source": "AI 22",
+      "target": "evaluation",
+      "strength": 0.48
+    },
+    {
+      "source": "You 24",
+      "target": "evaluation",
+      "strength": 0.48
+    },
+    {
+      "source": "AI 23",
+      "target": "evaluation",
+      "strength": 0.48
+    },
+    {
+      "source": "You 31",
+      "target": "memory-architecture",
+      "strength": 0.48
+    },
+    {
+      "source": "AI 30",
+      "target": "memory-architecture",
+      "strength": 0.48
+    },
+    {
+      "source": "You 32",
+      "target": "memory-architecture",
+      "strength": 0.48
+    },
+    {
+      "source": "AI 31",
+      "target": "memory-architecture",
+      "strength": 0.48
+    },
+    {
+      "source": "You 23",
+      "target": "meta",
+      "strength": 0.6599999999999999
+    },
+    {
+      "source": "AI 22",
+      "target": "meta",
+      "strength": 0.6599999999999999
+    },
+    {
+      "source": "You 24",
+      "target": "meta",
+      "strength": 0.6599999999999999
+    },
+    {
+      "source": "AI 23",
+      "target": "meta",
+      "strength": 0.6599999999999999
+    },
+    {
+      "source": "You 27",
+      "target": "star-trek",
+      "strength": 0.48
+    },
+    {
+      "source": "AI 26",
+      "target": "star-trek",
+      "strength": 0.6599999999999999
+    },
+    {
+      "source": "You 28",
+      "target": "star-trek",
+      "strength": 0.48
+    },
+    {
+      "source": "AI 27",
+      "target": "star-trek",
+      "strength": 0.48
+    },
+    {
+      "source": "AI 12",
+      "target": "auto-ingest",
+      "strength": 0.42
+    },
+    {
+      "source": "You 14",
+      "target": "auto-ingest",
+      "strength": 0.42
+    },
+    {
+      "source": "AI 13",
+      "target": "auto-ingest",
+      "strength": 0.42
+    },
+    {
+      "source": "AI 7",
+      "target": "automation",
+      "strength": 0.42
+    },
+    {
+      "source": "You 21",
+      "target": "automation",
+      "strength": 0.42
+    },
+    {
+      "source": "AI 20",
+      "target": "automation",
+      "strength": 0.42
+    },
+    {
+      "source": "You 2",
+      "target": "real-memory",
+      "strength": 0.42
+    },
+    {
+      "source": "AI 2",
+      "target": "real-memory",
+      "strength": 0.42
+    },
+    {
+      "source": "You 3",
+      "target": "real-memory",
+      "strength": 0.42
+    },
+    {
+      "source": "You 6",
+      "target": "retrieval",
+      "strength": 0.42
+    },
+    {
+      "source": "AI 5",
+      "target": "retrieval",
+      "strength": 0.42
+    },
+    {
+      "source": "AI 10",
+      "target": "retrieval",
+      "strength": 0.42
+    },
+    {
+      "source": "You 10",
+      "target": "workflow",
+      "strength": 0.42
+    },
+    {
+      "source": "You 14",
+      "target": "workflow",
+      "strength": 0.42
+    },
+    {
+      "source": "AI 13",
+      "target": "workflow",
+      "strength": 0.42
+    },
+    {
+      "source": "You 33",
+      "target": "armor-of-god",
+      "strength": 0.36
+    },
+    {
+      "source": "AI 32",
+      "target": "armor-of-god",
+      "strength": 0.36
+    },
+    {
+      "source": "You 9",
+      "target": "autopilot",
+      "strength": 0.36
+    },
+    {
+      "source": "AI 8",
+      "target": "autopilot",
+      "strength": 0.36
+    },
+    {
+      "source": "You 33",
+      "target": "bible",
+      "strength": 0.36
+    },
+    {
+      "source": "AI 32",
+      "target": "bible",
+      "strength": 0.36
+    },
+    {
+      "source": "You 28",
+      "target": "captain-picard",
+      "strength": 0.36
+    },
+    {
+      "source": "AI 27",
+      "target": "captain-picard",
+      "strength": 0.36
+    },
+    {
+      "source": "You 25",
+      "target": "cast",
+      "strength": 0.54
+    },
+    {
+      "source": "AI 24",
+      "target": "cast",
+      "strength": 0.36
+    },
+    {
+      "source": "You 12",
+      "target": "christianity",
+      "strength": 0.36
+    },
+    {
+      "source": "You 15",
+      "target": "christianity",
+      "strength": 0.36
+    },
+    {
+      "source": "You 29",
+      "target": "count",
+      "strength": 0.36
+    },
+    {
+      "source": "AI 28",
+      "target": "count",
+      "strength": 0.36
+    },
+    {
+      "source": "You 30",
+      "target": "domains",
+      "strength": 0.36
+    },
+    {
+      "source": "AI 29",
+      "target": "domains",
+      "strength": 0.36
+    },
+    {
+      "source": "You 30",
+      "target": "evolution",
+      "strength": 0.36
+    },
+    {
+      "source": "AI 29",
+      "target": "evolution",
+      "strength": 0.36
+    },
+    {
+      "source": "AI 11",
+      "target": "explanation",
+      "strength": 0.36
+    },
+    {
+      "source": "AI 14",
+      "target": "explanation",
+      "strength": 0.36
+    },
+    {
+      "source": "You 16",
+      "target": "favorite-foods",
+      "strength": 0.72
+    },
+    {
+      "source": "AI 15",
+      "target": "favorite-foods",
+      "strength": 0.72
+    },
+    {
+      "source": "You 7",
+      "target": "graph-quality",
+      "strength": 0.36
+    },
+    {
+      "source": "AI 6",
+      "target": "graph-quality",
+      "strength": 0.36
+    },
+    {
+      "source": "AI 2",
+      "target": "ingestion",
+      "strength": 0.36
+    },
+    {
+      "source": "You 3",
+      "target": "ingestion",
+      "strength": 0.36
+    },
+    {
+      "source": "You 1",
+      "target": "interactivity",
+      "strength": 0.36
+    },
+    {
+      "source": "AI 1",
+      "target": "interactivity",
+      "strength": 0.36
+    },
+    {
+      "source": "You 12",
+      "target": "john-3-16",
+      "strength": 0.36
+    },
+    {
+      "source": "AI 11",
+      "target": "john-3-16",
+      "strength": 0.36
+    },
+    {
+      "source": "You 5",
+      "target": "learning-model",
+      "strength": 0.36
+    },
+    {
+      "source": "AI 4",
+      "target": "learning-model",
+      "strength": 0.36
+    },
+    {
+      "source": "You 27",
+      "target": "mcgyver",
+      "strength": 0.36
+    },
+    {
+      "source": "AI 26",
+      "target": "mcgyver",
+      "strength": 0.54
+    },
+    {
+      "source": "You 26",
+      "target": "meat-sauce",
+      "strength": 0.36
+    },
+    {
+      "source": "AI 25",
+      "target": "meat-sauce",
+      "strength": 0.36
+    },
+    {
+      "source": "You 30",
+      "target": "memory-design",
+      "strength": 0.36
+    },
+    {
+      "source": "AI 29",
+      "target": "memory-design",
+      "strength": 0.36
+    },
+    {
+      "source": "You 7",
+      "target": "memory-links",
+      "strength": 0.36
+    },
+    {
+      "source": "AI 6",
+      "target": "memory-links",
+      "strength": 0.36
+    },
+    {
+      "source": "You 5",
+      "target": "memory-model",
+      "strength": 0.36
+    },
+    {
+      "source": "AI 4",
+      "target": "memory-model",
+      "strength": 0.36
+    },
+    {
+      "source": "You 27",
+      "target": "next-generation",
+      "strength": 0.36
+    },
+    {
+      "source": "AI 26",
+      "target": "next-generation",
+      "strength": 0.54
+    },
+    {
+      "source": "You 19",
+      "target": "overlap",
+      "strength": 0.36
+    },
+    {
+      "source": "AI 18",
+      "target": "overlap",
+      "strength": 0.36
+    },
+    {
+      "source": "You 26",
+      "target": "pasta",
+      "strength": 0.36
+    },
+    {
+      "source": "AI 25",
+      "target": "pasta",
+      "strength": 0.36
+    },
+    {
+      "source": "You 4",
+      "target": "persistent-memory",
+      "strength": 0.36
+    },
+    {
+      "source": "AI 3",
+      "target": "persistent-memory",
+      "strength": 0.36
+    },
+    {
+      "source": "You 32",
+      "target": "policy",
+      "strength": 0.36
+    },
+    {
+      "source": "AI 31",
+      "target": "policy",
+      "strength": 0.36
+    },
+    {
+      "source": "You 4",
+      "target": "practical-use",
+      "strength": 0.36
+    },
+    {
+      "source": "AI 3",
+      "target": "practical-use",
+      "strength": 0.36
+    },
+    {
+      "source": "You 31",
+      "target": "querying",
+      "strength": 0.36
+    },
+    {
+      "source": "AI 30",
+      "target": "querying",
+      "strength": 0.36
+    },
+    {
+      "source": "You 8",
+      "target": "refresh",
+      "strength": 0.36
+    },
+    {
+      "source": "AI 7",
+      "target": "refresh",
+      "strength": 0.36
+    },
+    {
+      "source": "You 15",
+      "target": "romans-3-23",
+      "strength": 0.36
+    },
+    {
+      "source": "AI 14",
+      "target": "romans-3-23",
+      "strength": 0.36
+    },
+    {
+      "source": "You 10",
+      "target": "semantic-retrieval",
+      "strength": 0.36
+    },
+    {
+      "source": "AI 9",
+      "target": "semantic-retrieval",
+      "strength": 0.36
+    },
+    {
+      "source": "You 26",
+      "target": "spaghetti",
+      "strength": 0.36
+    },
+    {
+      "source": "AI 25",
+      "target": "spaghetti",
+      "strength": 0.36
+    },
+    {
+      "source": "You 6",
+      "target": "storage",
+      "strength": 0.36
+    },
+    {
+      "source": "AI 5",
+      "target": "storage",
+      "strength": 0.36
+    },
+    {
+      "source": "You 9",
+      "target": "task-completion",
+      "strength": 0.36
+    },
+    {
+      "source": "AI 8",
+      "target": "task-completion",
+      "strength": 0.36
+    },
+    {
+      "source": "You 1",
+      "target": "visualization",
+      "strength": 0.36
+    },
+    {
+      "source": "AI 1",
+      "target": "visualization",
+      "strength": 0.36
+    },
+    {
+      "source": "AI 21",
+      "target": "ai-memory",
+      "strength": 0.3
+    },
+    {
+      "source": "You 3",
+      "target": "chat-transcript",
+      "strength": 0.3
+    },
+    {
+      "source": "AI 1",
+      "target": "consolidation",
+      "strength": 0.3
+    },
+    {
+      "source": "AI 13",
+      "target": "correction",
+      "strength": 0.3
+    },
+    {
+      "source": "AI 1",
+      "target": "decay",
+      "strength": 0.3
+    },
+    {
+      "source": "AI 14",
+      "target": "grace",
+      "strength": 0.3
+    },
+    {
+      "source": "AI 3",
+      "target": "graph-retrieval",
+      "strength": 0.3
+    },
+    {
+      "source": "AI 5",
+      "target": "graph-search",
+      "strength": 0.3
+    },
+    {
+      "source": "AI 9",
+      "target": "graph-status",
+      "strength": 0.3
+    },
+    {
+      "source": "AI 9",
+      "target": "learning-layer",
+      "strength": 0.3
+    },
+    {
+      "source": "AI 6",
+      "target": "lexical-retrieval",
+      "strength": 0.3
+    },
+    {
+      "source": "AI 4",
+      "target": "limitations",
+      "strength": 0.3
+    },
+    {
+      "source": "You 17",
+      "target": "memory-clustering",
+      "strength": 0.3
+    },
+    {
+      "source": "AI 1",
+      "target": "memory-model",
+      "strength": 0.3
+    },
+    {
+      "source": "AI 2",
+      "target": "memory-system",
+      "strength": 0.3
+    },
+    {
+      "source": "You 11",
+      "target": "namespaces",
+      "strength": 0.3
+    },
+    {
+      "source": "You 11",
+      "target": "off-topic",
+      "strength": 0.3
+    },
+    {
+      "source": "You 16",
+      "target": "pizza",
+      "strength": 0.3
+    },
+    {
+      "source": "AI 1",
+      "target": "recall",
+      "strength": 0.3
+    },
+    {
+      "source": "You 10",
+      "target": "status",
+      "strength": 0.3
+    },
+    {
+      "source": "AI 6",
+      "target": "tfidf",
+      "strength": 0.3
+    },
+    {
+      "source": "AI 10",
+      "target": "topic-clustering",
+      "strength": 0.3
+    },
+    {
+      "source": "AI 8",
+      "target": "verification",
+      "strength": 0.3
+    }
+  ],
+  "cycles": 31,
+  "sidebarCollapsed": false,
+  "query": ""
+}

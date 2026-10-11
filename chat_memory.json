@@ -1,0 +1,2710 @@
+{
+  "seed_id": "You 1",
+  "messages": [
+    {
+      "id": "You 1",
+      "role": "You",
+      "text": "look this over and see what we can do with it. I want to see the visual of the memory in action",
+      "topics": [
+        "visualization",
+        "interactivity"
+      ],
+      "importance": 0.0
+    },
+    {
+      "id": "AI 1",
+      "role": "Assistant",
+      "text": "Replaced the broken Plotly placeholder with a self-contained interactive SVG memory graph generated from the actual MemoryGraph demo data. The browser preview is open and verified: recalling from Python lights up related memories and strengthens links; decay lowers importance/connection strengths; consolidation marks strong memories and boosts importance. Updated generate_html_graph.py, regenerated memory_graph.html, and confirmed the interactive controls work in the browser.",
+      "topics": [
+        "visualization",
+        "interactivity",
+        "recall",
+        "decay",
+        "consolidation",
+        "memory_model"
+      ],
+      "importance": 0.0
+    },
+    {
+      "id": "You 2",
+      "role": "You",
+      "text": "is there real memory that can be used and not demo?",
+      "topics": [
+        "real_memory",
+        "persistence"
+      ],
+      "importance": 0.0
+    },
+    {
+      "id": "AI 2",
+      "role": "Assistant",
+      "text": "Yes, but not in the current implementation. The visualization is built from a hard-coded six-node sample in generate_html_graph.py, and its recall/decay changes exist only in browser memory and reset when the page reloads. memory_system.py provides the graph behavior but no persistence or real-memory ingestion. The separate push server stores only temporary push-demo state in server/index.js. To use actual memories, the next step would be to connect a real source\u2014such as your notes or memories you enter\u2014to persistent storage, then render that stored graph instead of the sample.",
+      "topics": [
+        "real_memory",
+        "persistence",
+        "memory_system",
+        "ingestion"
+      ],
+      "importance": 0.0
+    },
+    {
+      "id": "You 3",
+      "role": "You",
+      "text": "can we take everything in this chat and put into memory and see what comes out of it?",
+      "topics": [
+        "real_memory",
+        "persistence",
+        "chat_transcript",
+        "ingestion"
+      ],
+      "importance": 0.0
+    },
+    {
+      "id": "You 4",
+      "role": "You",
+      "text": "keep adding to the memory and update each cycle. what is the practical use of this model?",
+      "topics": [
+        "persistent-memory",
+        "practical-use"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "AI 3",
+      "role": "Assistant",
+      "text": "Yes. I added a persistent exchange updater: each saved exchange decays older memories and links once, adds the user and assistant turns, saves updated graph weights to chat_memory.json, and regenerates the visualization. I will need the conversation text supplied to the updater; this workspace cannot automatically read future Copilot chat turns. Practically, a memory graph can organize notes or support history, spread a query to related context, rank stronger/recently-used items, and fade stale associations. This prototype's links are heuristic and topic-tagged, so real semantic retrieval would need an embedding/search layer and a trusted source of memories.",
+      "topics": [
+        "persistent-memory",
+        "practical-use",
+        "graph-retrieval"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "You 5",
+      "role": "You",
+      "text": "is this a learning model?",
+      "topics": [
+        "learning-model",
+        "memory-model"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "AI 4",
+      "role": "Assistant",
+      "text": "Not in the usual machine-learning sense. It is a hand-coded memory graph with Hebbian-inspired link strengthening on activation, importance and link decay per cycle, and a consolidation threshold. Those are learning-like state updates, but it does not train a predictive model, infer topics automatically, learn from examples, or optimize parameters. Topic links are supplied manually, and recall spreads using existing weighted edges.",
+      "topics": [
+        "learning-model",
+        "memory-model",
+        "limitations"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "You 6",
+      "role": "You",
+      "text": "storage and retrieval?",
+      "topics": [
+        "storage",
+        "retrieval"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "AI 5",
+      "role": "Assistant",
+      "text": "Storage is currently the local chat_memory.json file: it keeps the saved messages, topic tags, importance scores, cycle count, and weighted links across runs. Retrieval is the graph's spreading activation: starting from a selected memory, it follows connected links and ranks reachable memories by their link strength and importance. Clicking a node or Recall this chat demonstrates that behavior. It is not yet semantic search: it cannot take a new natural-language question and find matching memories unless the relevant topic links were manually supplied. A practical next step would be add embeddings or full-text search to identify candidate memories, then use this graph to spread/rank associated context.",
+      "topics": [
+        "storage",
+        "retrieval",
+        "graph-search"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "You 7",
+      "role": "You",
+      "text": "some of these things should likely connect at least partially with other things to make this a good memory",
+      "topics": [
+        "graph-quality",
+        "memory-links"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "AI 6",
+      "role": "Assistant",
+      "text": "You're right: chronology-only links are too weak, and indiscriminately connecting everything makes recall noisy. I added sparse TF-IDF word-similarity links alongside chronology and topic links, selecting up to two strong text matches per message. This can connect related wording even when topic tags differ, but it is lexical matching rather than deep semantic understanding. This exchange is saved as cycle 4; the updated graph now includes the inferred associations.",
+      "topics": [
+        "graph-quality",
+        "memory-links",
+        "tfidf",
+        "lexical-retrieval"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "You 8",
+      "role": "You",
+      "text": "should be updating on every prompt and response",
+      "topics": [
+        "refresh",
+        "live-updates"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "AI 7",
+      "role": "Assistant",
+      "text": "Yes \u2014 I updated the graph so it auto-refreshes, and I\u2019ll keep capturing each prompt and response as we go.",
+      "topics": [
+        "refresh",
+        "automation",
+        "live-updates"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "You 9",
+      "role": "You",
+      "text": "You have not yet marked the task as complete using the task_complete tool. If you were planning, stop planning and start implementing. You aren't done until you have fully completed the task. IMPORTANT: Do NOT call task_complete if: You have open questions or ambiguities - make good decisions and keep working. You encountered an error - try to resolve it or find an alternative approach. There are remaining steps - complete them first. Keep working autonomously until the task is truly finished, then call task_complete.",
+      "topics": [
+        "task-completion",
+        "autopilot"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "AI 8",
+      "role": "Assistant",
+      "text": "Understood \u2014 I\u2019ll keep working instead of stopping, and I\u2019ll only mark the task complete once the remaining work is actually finished and verified.",
+      "topics": [
+        "task-completion",
+        "autopilot",
+        "verification"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "You 10",
+      "role": "You",
+      "text": "what are we doing right now?",
+      "topics": [
+        "status",
+        "semantic-retrieval",
+        "workflow"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "AI 9",
+      "role": "Assistant",
+      "text": "We\u2019re in the middle of upgrading the memory graph into semantic retrieval with persistent learning, so the page can rank memories by meaning and feedback instead of only word overlap.",
+      "topics": [
+        "semantic-retrieval",
+        "learning-layer",
+        "graph-status"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "You 11",
+      "role": "You",
+      "text": "this is all related to ai memory what happens if we have a topic that is way off topic i.e. bible verses?",
+      "topics": [
+        "off-topic",
+        "namespaces",
+        "domain-separation"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "AI 10",
+      "role": "Assistant",
+      "text": "Off-topic material should become its own cluster or namespace so it doesn\u2019t pollute the AI-memory graph unless you intentionally link it across domains.",
+      "topics": [
+        "domain-separation",
+        "retrieval",
+        "topic-clustering"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "You 12",
+      "role": "You",
+      "text": "tell me about John 3:16",
+      "topics": [
+        "scripture",
+        "john-3-16",
+        "christianity"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "AI 11",
+      "role": "Assistant",
+      "text": "John 3:16 says that God loved the world, gave his Son, and offers eternal life to whoever believes; it\u2019s often treated as a compact summary of the Christian message.",
+      "topics": [
+        "scripture",
+        "john-3-16",
+        "explanation"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "You 13",
+      "role": "You",
+      "text": "I don't see that scripture added a new node or anything?",
+      "topics": [
+        "memory-ingestion",
+        "scripture",
+        "persistence"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "AI 12",
+      "role": "Assistant",
+      "text": "Right \u2014 it was only answered in chat, not written into the memory file, so no new node or embedding entry appeared yet.",
+      "topics": [
+        "memory-ingestion",
+        "persistence",
+        "auto-ingest"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "You 14",
+      "role": "You",
+      "text": "I thought I was clear about that earlier. We should be adding to and updating the graph with every prompt and response",
+      "topics": [
+        "auto-ingest",
+        "workflow",
+        "live-updates"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "AI 13",
+      "role": "Assistant",
+      "text": "You\u2019re right. I should be capturing each prompt-response pair into memory, and I\u2019m backfilling the missing turns now so the graph stays in sync with the conversation.",
+      "topics": [
+        "auto-ingest",
+        "workflow",
+        "correction"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "You 15",
+      "role": "You",
+      "text": "let's talk a bit about Romans 3:23 and see what that does",
+      "topics": [
+        "scripture",
+        "romans-3-23",
+        "christianity"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "AI 14",
+      "role": "Assistant",
+      "text": "Romans 3:23 says that all people have sinned and fall short of God\u2019s glory. In Christian teaching, it highlights the universal need for grace rather than self-righteousness, and it pairs naturally with verses about redemption and forgiveness.",
+      "topics": [
+        "scripture",
+        "romans-3-23",
+        "explanation",
+        "grace"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "You 16",
+      "role": "You",
+      "text": "Pizza is a favorite food",
+      "topics": [
+        "food",
+        "favorite-foods",
+        "pizza"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "AI 15",
+      "role": "Assistant",
+      "text": "Logged \u2014 this will currently behave like a general memory unless we add a food namespace, so it will land in the main AI-memory cluster for now.",
+      "topics": [
+        "food",
+        "favorite-foods",
+        "memory-ingestion"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "You 17",
+      "role": "You",
+      "text": "I think it's so different that it doesn't connect well or loosely connects with others so maybe it sits outside until it grows in importances, but doesn't sit in with the others",
+      "topics": [
+        "food",
+        "domain-separation",
+        "memory-clustering"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "AI 16",
+      "role": "Assistant",
+      "text": "Implemented: food now gets its own peripheral domain, placed outside the main AI-memory cluster by default and only promoted to a stronger side cluster if it accumulates enough weight. It no longer sits inside the main cluster with unrelated memories.",
+      "topics": [
+        "food",
+        "domain-separation",
+        "visual-layout"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "You 18",
+      "role": "You",
+      "text": "Food is siting outside of the visual area",
+      "topics": [
+        "food",
+        "visual-layout",
+        "domain-separation"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "AI 17",
+      "role": "Assistant",
+      "text": "I pulled the food cluster back into the visible canvas while keeping it separate from the core AI-memory cluster. It should now sit to the right/lower-right as a peripheral domain instead of disappearing off-screen.",
+      "topics": [
+        "food",
+        "visual-layout",
+        "domain-separation"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "You 19",
+      "role": "You",
+      "text": "now it overlaps and looks odd",
+      "topics": [
+        "food",
+        "visual-layout",
+        "overlap"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "AI 18",
+      "role": "Assistant",
+      "text": "I moved Food below Scripture so it stays separated without colliding with the main cluster or the verse cluster.",
+      "topics": [
+        "food",
+        "visual-layout",
+        "overlap"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "You 20",
+      "role": "You",
+      "text": "this is good for now.  but it doesn't look like new memories are being created which should be done for every prompt and response",
+      "topics": [
+        "memory-ingestion",
+        "live-updates",
+        "persistence"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "AI 19",
+      "role": "Assistant",
+      "text": "You're right \u2014 I should be appending each prompt/response pair as a new memory. I\u2019m adding this exchange now, and the graph should refresh with a new node pair for it.",
+      "topics": [
+        "memory-ingestion",
+        "live-updates",
+        "persistence"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "You 21",
+      "role": "You",
+      "text": "should be saving and updating the graph and memory for every prompt question and response right now. what can we do so that I can stop reminding you and you can just do this automatically",
+      "topics": [
+        "memory-ingestion",
+        "automation",
+        "persistence"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "AI 20",
+      "role": "Assistant",
+      "text": "The reliable fix is to move turn logging out of the chat and into the app flow: either I treat every incoming message as a memory update before answering, or we add a host-side hook/wrapper that appends each turn to chat_memory.json and regenerates memory_graph.html automatically on every exchange.",
+      "topics": [
+        "memory-ingestion",
+        "automation",
+        "persistence"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "You 22",
+      "role": "You",
+      "text": "so now where is Elementary in the graph",
+      "topics": [
+        "elementary",
+        "tv-show",
+        "memory-ingestion"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "AI 21",
+      "role": "Assistant",
+      "text": "Elementary now appears as a new general memory in the AI-memory cluster unless we choose to split TV shows into their own domain. It should sit near this discussion as part of the chat history.",
+      "topics": [
+        "elementary",
+        "tv-show",
+        "ai-memory"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "You 23",
+      "role": "You",
+      "text": "should this be in the ai memory or outside in a general or under evaluation area. doens't seem to related to ai memory to me",
+      "topics": [
+        "evaluation",
+        "meta",
+        "domain-separation"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "AI 22",
+      "role": "Assistant",
+      "text": "I agree \u2014 this should live outside the core AI-memory cluster, likely in a general or evaluation/meta area. It\u2019s about classifying the memory system itself rather than discussing AI memory content, so it fits better as an outboard policy or evaluation node.",
+      "topics": [
+        "evaluation",
+        "meta",
+        "domain-separation"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "You 24",
+      "role": "You",
+      "text": "not seeing this under evaluation space",
+      "topics": [
+        "evaluation",
+        "meta",
+        "domain-separation"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "AI 23",
+      "role": "Assistant",
+      "text": "I\u2019ve added a real Under evaluation cluster so meta and classification turns can sit outside the main AI-memory area instead of blending in with it.",
+      "topics": [
+        "evaluation",
+        "meta",
+        "domain-separation"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "You 25",
+      "role": "You",
+      "text": "who are the main cast",
+      "topics": [
+        "elementary",
+        "cast",
+        "tv-show"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "AI 24",
+      "role": "Assistant",
+      "text": "The main cast of Elementary includes Jonny Lee Miller as Sherlock Holmes, Lucy Liu as Joan Watson, Aidan Quinn as Captain Thomas Gregson, Jon Michael Hill as Detective Marcus Bell, and Natalie Dormer in a recurring role as Irene Adler/Moriarty.",
+      "topics": [
+        "elementary",
+        "cast",
+        "tv-show"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "You 26",
+      "role": "You",
+      "text": "I like a good spagetti and meat sauce",
+      "topics": [
+        "food",
+        "pasta",
+        "spaghetti",
+        "meat-sauce"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "AI 25",
+      "role": "Assistant",
+      "text": "Logged as a food memory: spaghetti and meat sauce fits the Food cluster, alongside the other off-topic food-related turns.",
+      "topics": [
+        "food",
+        "pasta",
+        "spaghetti",
+        "meat-sauce"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "You 27",
+      "role": "You",
+      "text": "Elemenatry is one of my favorite tv shows. I also like star trek the next generation and Mcg",
+      "topics": [
+        "entertainment",
+        "tv-show",
+        "elementary",
+        "star-trek",
+        "next-generation",
+        "mcgyver"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "AI 26",
+      "role": "Assistant",
+      "text": "Logged as Entertainment rather than core AI memory. Elementary, Star Trek: The Next Generation, and McGyver now belong in the TV-show cluster so they stay separate from the AI-memory discussion.",
+      "topics": [
+        "entertainment",
+        "tv-show",
+        "elementary",
+        "star-trek",
+        "next-generation",
+        "mcgyver"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "You 28",
+      "role": "You",
+      "text": "who plays captain picard?",
+      "topics": [
+        "entertainment",
+        "star-trek",
+        "captain-picard"
+      ],
+      "importance": 1.1657341758564152e-16,
+      "consolidated": false
+    },
+    {
+      "id": "AI 27",
+      "role": "Assistant",
+      "text": "Captain Jean-Luc Picard is played by Patrick Stewart.",
+      "topics": [
+        "entertainment",
+        "star-trek",
+        "captain-picard"
+      ],
+      "importance": 0.0,
+      "consolidated": false
+    },
+    {
+      "id": "You 29",
+      "role": "You",
+      "text": "how many tv shows are we tracking now",
+      "topics": [
+        "entertainment",
+        "tv-show",
+        "count"
+      ],
+      "importance": 0.1500000000000001,
+      "consolidated": false
+    },
+    {
+      "id": "AI 28",
+      "role": "Assistant",
+      "text": "We\u2019re tracking three TV shows right now: Elementary, Star Trek: The Next Generation, and McGyver. Captain Picard is a character reference inside Star Trek, not a separate show.",
+      "topics": [
+        "entertainment",
+        "tv-show",
+        "count"
+      ],
+      "importance": 0.049999999999999996,
+      "consolidated": false
+    },
+    {
+      "id": "You 30",
+      "role": "You",
+      "text": "what memory concepts should we be considering for evolving",
+      "topics": [
+        "memory-design",
+        "evolution",
+        "domains"
+      ],
+      "importance": 0.3000000000000001,
+      "consolidated": false
+    },
+    {
+      "id": "AI 29",
+      "role": "Assistant",
+      "text": "Key memory concepts to evolve next include: domains/namespaces, cluster promotion thresholds, salience and importance, recency vs. permanence, retrieval modes, consolidation vs. transient notes, cross-domain bridges, evaluation/meta space, and decay or pruning policies.",
+      "topics": [
+        "memory-design",
+        "evolution",
+        "domains"
+      ],
+      "importance": 0.19999999999999998,
+      "consolidated": false
+    },
+    {
+      "id": "You 31",
+      "role": "You",
+      "text": "that's good and may build that into the memory somehow. maybe a reference. Eventually the memory is going to have agents and begin working separately from this chat so we need to keep that in mind for architecture and instruction. Right now we're building it as the source, but soon we will be querying it and then later it will be querying you.",
+      "topics": [
+        "memory-architecture",
+        "agents",
+        "querying"
+      ],
+      "importance": 0.45000000000000007,
+      "consolidated": false
+    },
+    {
+      "id": "AI 30",
+      "role": "Assistant",
+      "text": "Logged as a memory reference for future architecture: the system should evolve from chat-source memory into a queryable memory layer, and later into a multi-agent system that can query and act from memory independently of this chat.",
+      "topics": [
+        "memory-architecture",
+        "agents",
+        "querying"
+      ],
+      "importance": 0.35,
+      "consolidated": false
+    },
+    {
+      "id": "You 32",
+      "role": "You",
+      "text": "go for it",
+      "topics": [
+        "memory-architecture",
+        "policy",
+        "agents"
+      ],
+      "importance": 0.6000000000000001,
+      "consolidated": false
+    },
+    {
+      "id": "AI 31",
+      "role": "Assistant",
+      "text": "Added a memory architecture policy to the project docs: preserve provenance, separate domains, keep evaluation/meta distinct, promote clusters only when they earn weight, and make the system retrieval-friendly for future agents.",
+      "topics": [
+        "memory-architecture",
+        "policy",
+        "agents"
+      ],
+      "importance": 0.5,
+      "consolidated": false
+    },
+    {
+      "id": "You 33",
+      "role": "You",
+      "text": "what bible verses discuss the armor of god?",
+      "topics": [
+        "scripture",
+        "bible",
+        "armor-of-god"
+      ],
+      "importance": 0.75,
+      "consolidated": false
+    },
+    {
+      "id": "AI 32",
+      "role": "Assistant",
+      "text": "The main passage is Ephesians 6:10-18 \u2014 that\u2019s the classic armor of God section. Other related verses include Isaiah 59:17, 1 Thessalonians 5:8, Romans 13:12, 2 Corinthians 6:7, and 1 Peter 5:8-9. If you want, I can also give you a short summary of each piece of the armor in Ephesians 6.",
+      "topics": [
+        "scripture",
+        "bible",
+        "armor-of-god"
+      ],
+      "importance": 0.65,
+      "consolidated": false,
+      "created_cycle": 30
+    },
+    {
+      "id": "You 34",
+      "role": "You",
+      "text": "go for it",
+      "topics": [],
+      "importance": 0.9,
+      "consolidated": false
+    },
+    {
+      "id": "AI 33",
+      "role": "Assistant",
+      "text": "Added backend graph-state timestamps, automatic polling refresh, and a server endpoint for appending exchanges.",
+      "topics": [],
+      "importance": 0.8,
+      "consolidated": false,
+      "created_cycle": 31
+    }
+  ],
+  "cycles": 31,
+  "links": [
+    {
+      "source": "You 1",
+      "target": "AI 1",
+      "strength": 0.13253943673476376,
+      "kind": "sequence"
+    },
+    {
+      "source": "AI 1",
+      "target": "You 2",
+      "strength": 0.07136738901102661,
+      "kind": "sequence"
+    },
+    {
+      "source": "You 2",
+      "target": "AI 2",
+      "strength": 0.13253943673476376,
+      "kind": "sequence"
+    },
+    {
+      "source": "AI 2",
+      "target": "You 3",
+      "strength": 0.16312546059663227,
+      "kind": "sequence"
+    },
+    {
+      "source": "You 2",
+      "target": "You 3",
+      "strength": 0.13253943673476376,
+      "kind": "topic"
+    },
+    {
+      "source": "You 3",
+      "target": "You 4",
+      "strength": 0.07512356738002801,
+      "kind": "sequence"
+    },
+    {
+      "source": "You 4",
+      "target": "AI 3",
+      "strength": 0.13951519656290923,
+      "kind": "sequence"
+    },
+    {
+      "source": "AI 3",
+      "target": "You 5",
+      "strength": 0.07907743934739792,
+      "kind": "sequence"
+    },
+    {
+      "source": "You 5",
+      "target": "AI 4",
+      "strength": 0.1468581016451676,
+      "kind": "sequence"
+    },
+    {
+      "source": "AI 4",
+      "target": "You 6",
+      "strength": 0.08323940983936623,
+      "kind": "sequence"
+    },
+    {
+      "source": "You 6",
+      "target": "AI 5",
+      "strength": 0.1545874754159659,
+      "kind": "sequence"
+    },
+    {
+      "source": "AI 5",
+      "target": "You 7",
+      "strength": 0.08762043140985919,
+      "kind": "sequence"
+    },
+    {
+      "source": "You 7",
+      "target": "AI 6",
+      "strength": 0.1627236583325957,
+      "kind": "sequence"
+    },
+    {
+      "source": "You 1",
+      "target": "You 2",
+      "strength": 0.07758163341118682,
+      "kind": "similarity"
+    },
+    {
+      "source": "AI 1",
+      "target": "AI 2",
+      "strength": 0.10514451769183106,
+      "kind": "similarity"
+    },
+    {
+      "source": "AI 1",
+      "target": "AI 5",
+      "strength": 0.09350351751880694,
+      "kind": "similarity"
+    },
+    {
+      "source": "AI 2",
+      "target": "You 6",
+      "strength": 0.0766052914611912,
+      "kind": "similarity"
+    },
+    {
+      "source": "You 3",
+      "target": "AI 3",
+      "strength": 0.08041052162527652,
+      "kind": "similarity"
+    },
+    {
+      "source": "You 3",
+      "target": "AI 5",
+      "strength": 0.08902235831241696,
+      "kind": "similarity"
+    },
+    {
+      "source": "You 4",
+      "target": "You 5",
+      "strength": 0.10504438005593411,
+      "kind": "similarity"
+    },
+    {
+      "source": "You 4",
+      "target": "AI 4",
+      "strength": 0.07970955817399765,
+      "kind": "similarity"
+    },
+    {
+      "source": "AI 3",
+      "target": "AI 5",
+      "strength": 0.1164851049571643,
+      "kind": "similarity"
+    },
+    {
+      "source": "AI 3",
+      "target": "AI 6",
+      "strength": 0.09805977995211962,
+      "kind": "similarity"
+    },
+    {
+      "source": "AI 4",
+      "target": "AI 5",
+      "strength": 0.10058825525851837,
+      "kind": "similarity"
+    },
+    {
+      "source": "AI 5",
+      "target": "AI 6",
+      "strength": 0.09946170685467737,
+      "kind": "similarity"
+    },
+    {
+      "source": "You 1",
+      "target": "You 3",
+      "strength": 0.07102261825993449,
+      "kind": "similarity"
+    },
+    {
+      "source": "You 2",
+      "target": "You 7",
+      "strength": 0.07239951075351797,
+      "kind": "similarity"
+    },
+    {
+      "source": "AI 2",
+      "target": "You 7",
+      "strength": 0.07184875375608456,
+      "kind": "similarity"
+    },
+    {
+      "source": "AI 6",
+      "target": "You 8",
+      "strength": 0.09223203306300967,
+      "kind": "sequence"
+    },
+    {
+      "source": "You 8",
+      "target": "AI 7",
+      "strength": 0.1712880614027323,
+      "kind": "topic"
+    },
+    {
+      "source": "You 4",
+      "target": "AI 7",
+      "strength": 0.11146899995900891,
+      "kind": "similarity"
+    },
+    {
+      "source": "AI 7",
+      "target": "You 9",
+      "strength": 0.09708635059264177,
+      "kind": "sequence"
+    },
+    {
+      "source": "You 9",
+      "target": "AI 8",
+      "strength": 0.18030322252919193,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 2",
+      "target": "AI 8",
+      "strength": 0.08582433392389535,
+      "kind": "similarity"
+    },
+    {
+      "source": "You 4",
+      "target": "You 9",
+      "strength": 0.07969402435790283,
+      "kind": "similarity"
+    },
+    {
+      "source": "AI 8",
+      "target": "You 10",
+      "strength": 0.1021961585185703,
+      "kind": "sequence"
+    },
+    {
+      "source": "You 10",
+      "target": "AI 9",
+      "strength": 0.14599451216938614,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 2",
+      "target": "AI 9",
+      "strength": 0.12210980997847456,
+      "kind": "similarity"
+    },
+    {
+      "source": "You 5",
+      "target": "AI 9",
+      "strength": 0.1113938127852417,
+      "kind": "similarity"
+    },
+    {
+      "source": "You 6",
+      "target": "AI 9",
+      "strength": 0.10651759607878417,
+      "kind": "similarity"
+    },
+    {
+      "source": "AI 6",
+      "target": "You 10",
+      "strength": 0.1034809102256609,
+      "kind": "similarity"
+    },
+    {
+      "source": "AI 8",
+      "target": "AI 9",
+      "strength": 0.09591839449528672,
+      "kind": "similarity"
+    },
+    {
+      "source": "AI 9",
+      "target": "You 11",
+      "strength": 0.1075749037037582,
+      "kind": "sequence"
+    },
+    {
+      "source": "You 11",
+      "target": "AI 10",
+      "strength": 0.15367843386251173,
+      "kind": "topic"
+    },
+    {
+      "source": "You 6",
+      "target": "AI 10",
+      "strength": 0.15367843386251173,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 5",
+      "target": "AI 10",
+      "strength": 0.15367843386251173,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 6",
+      "target": "You 11",
+      "strength": 0.10431692090587297,
+      "kind": "similarity"
+    },
+    {
+      "source": "AI 10",
+      "target": "You 12",
+      "strength": 0.11323674074079812,
+      "kind": "sequence"
+    },
+    {
+      "source": "You 12",
+      "target": "AI 11",
+      "strength": 0.2102968042329109,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 6",
+      "target": "AI 11",
+      "strength": 0.08806583094184363,
+      "kind": "similarity"
+    },
+    {
+      "source": "AI 11",
+      "target": "You 13",
+      "strength": 0.17028081314405732,
+      "kind": "topic"
+    },
+    {
+      "source": "You 13",
+      "target": "AI 12",
+      "strength": 0.22136505708727464,
+      "kind": "topic"
+    },
+    {
+      "source": "You 2",
+      "target": "You 13",
+      "strength": 0.17028081314405732,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 2",
+      "target": "You 13",
+      "strength": 0.17028081314405732,
+      "kind": "topic"
+    },
+    {
+      "source": "You 3",
+      "target": "You 13",
+      "strength": 0.17028081314405732,
+      "kind": "topic"
+    },
+    {
+      "source": "You 12",
+      "target": "You 13",
+      "strength": 0.17028081314405732,
+      "kind": "topic"
+    },
+    {
+      "source": "You 2",
+      "target": "AI 12",
+      "strength": 0.17028081314405732,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 2",
+      "target": "AI 12",
+      "strength": 0.17028081314405732,
+      "kind": "topic"
+    },
+    {
+      "source": "You 3",
+      "target": "AI 12",
+      "strength": 0.17028081314405732,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 5",
+      "target": "You 13",
+      "strength": 0.10298583578952594,
+      "kind": "similarity"
+    },
+    {
+      "source": "You 10",
+      "target": "AI 12",
+      "strength": 0.15713513436933613,
+      "kind": "similarity"
+    },
+    {
+      "source": "AI 12",
+      "target": "You 14",
+      "strength": 0.17924296120427088,
+      "kind": "topic"
+    },
+    {
+      "source": "You 14",
+      "target": "AI 13",
+      "strength": 0.23301584956555227,
+      "kind": "topic"
+    },
+    {
+      "source": "You 8",
+      "target": "You 14",
+      "strength": 0.17924296120427088,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 7",
+      "target": "You 14",
+      "strength": 0.17924296120427088,
+      "kind": "topic"
+    },
+    {
+      "source": "You 10",
+      "target": "You 14",
+      "strength": 0.17924296120427088,
+      "kind": "topic"
+    },
+    {
+      "source": "You 10",
+      "target": "AI 13",
+      "strength": 0.17924296120427088,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 12",
+      "target": "AI 13",
+      "strength": 0.17924296120427088,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 7",
+      "target": "AI 13",
+      "strength": 0.18637683106020098,
+      "kind": "similarity"
+    },
+    {
+      "source": "AI 13",
+      "target": "You 15",
+      "strength": 0.1320737608873575,
+      "kind": "sequence"
+    },
+    {
+      "source": "You 15",
+      "target": "AI 14",
+      "strength": 0.24527984164794978,
+      "kind": "topic"
+    },
+    {
+      "source": "You 12",
+      "target": "You 15",
+      "strength": 0.24527984164794978,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 11",
+      "target": "You 15",
+      "strength": 0.18867680126765357,
+      "kind": "topic"
+    },
+    {
+      "source": "You 13",
+      "target": "You 15",
+      "strength": 0.18867680126765357,
+      "kind": "topic"
+    },
+    {
+      "source": "You 12",
+      "target": "AI 14",
+      "strength": 0.18867680126765357,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 11",
+      "target": "AI 14",
+      "strength": 0.24527984164794978,
+      "kind": "topic"
+    },
+    {
+      "source": "You 13",
+      "target": "AI 14",
+      "strength": 0.18867680126765357,
+      "kind": "topic"
+    },
+    {
+      "source": "You 11",
+      "target": "AI 14",
+      "strength": 0.1314322597630475,
+      "kind": "similarity"
+    },
+    {
+      "source": "AI 14",
+      "target": "You 16",
+      "strength": 0.13902501146037632,
+      "kind": "sequence"
+    },
+    {
+      "source": "You 16",
+      "target": "AI 15",
+      "strength": 0.25818930699784187,
+      "kind": "topic"
+    },
+    {
+      "source": "You 13",
+      "target": "AI 15",
+      "strength": 0.19860715922910904,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 12",
+      "target": "AI 15",
+      "strength": 0.19860715922910904,
+      "kind": "topic"
+    },
+    {
+      "source": "You 1",
+      "target": "AI 15",
+      "strength": 0.11733710967255766,
+      "kind": "similarity"
+    },
+    {
+      "source": "AI 10",
+      "target": "AI 15",
+      "strength": 0.17294711425670825,
+      "kind": "similarity"
+    },
+    {
+      "source": "AI 15",
+      "target": "You 17",
+      "strength": 0.20906016760958848,
+      "kind": "topic"
+    },
+    {
+      "source": "You 17",
+      "target": "AI 16",
+      "strength": 0.27177821789246515,
+      "kind": "topic"
+    },
+    {
+      "source": "You 11",
+      "target": "You 17",
+      "strength": 0.20906016760958848,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 10",
+      "target": "You 17",
+      "strength": 0.20906016760958848,
+      "kind": "topic"
+    },
+    {
+      "source": "You 16",
+      "target": "You 17",
+      "strength": 0.20906016760958848,
+      "kind": "topic"
+    },
+    {
+      "source": "You 11",
+      "target": "AI 16",
+      "strength": 0.20906016760958848,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 10",
+      "target": "AI 16",
+      "strength": 0.20906016760958848,
+      "kind": "topic"
+    },
+    {
+      "source": "You 16",
+      "target": "AI 16",
+      "strength": 0.20906016760958848,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 15",
+      "target": "AI 16",
+      "strength": 0.20906016760958848,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 16",
+      "target": "You 18",
+      "strength": 0.35210133492141227,
+      "kind": "topic"
+    },
+    {
+      "source": "You 18",
+      "target": "AI 17",
+      "strength": 0.35210133492141227,
+      "kind": "topic"
+    },
+    {
+      "source": "You 11",
+      "target": "You 18",
+      "strength": 0.22006333432588263,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 10",
+      "target": "You 18",
+      "strength": 0.22006333432588263,
+      "kind": "topic"
+    },
+    {
+      "source": "You 16",
+      "target": "You 18",
+      "strength": 0.22006333432588263,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 15",
+      "target": "You 18",
+      "strength": 0.22006333432588263,
+      "kind": "topic"
+    },
+    {
+      "source": "You 17",
+      "target": "You 18",
+      "strength": 0.2860823346236475,
+      "kind": "topic"
+    },
+    {
+      "source": "You 11",
+      "target": "AI 17",
+      "strength": 0.22006333432588263,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 10",
+      "target": "AI 17",
+      "strength": 0.22006333432588263,
+      "kind": "topic"
+    },
+    {
+      "source": "You 16",
+      "target": "AI 17",
+      "strength": 0.22006333432588263,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 15",
+      "target": "AI 17",
+      "strength": 0.22006333432588263,
+      "kind": "topic"
+    },
+    {
+      "source": "You 17",
+      "target": "AI 17",
+      "strength": 0.2860823346236475,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 16",
+      "target": "AI 17",
+      "strength": 0.35210133492141227,
+      "kind": "topic"
+    },
+    {
+      "source": "You 1",
+      "target": "You 18",
+      "strength": 0.18089206081587555,
+      "kind": "similarity"
+    },
+    {
+      "source": "You 10",
+      "target": "AI 17",
+      "strength": 0.22732542435863676,
+      "kind": "similarity"
+    },
+    {
+      "source": "AI 17",
+      "target": "You 19",
+      "strength": 0.3011392996038395,
+      "kind": "topic"
+    },
+    {
+      "source": "You 19",
+      "target": "AI 18",
+      "strength": 0.3706329841278024,
+      "kind": "topic"
+    },
+    {
+      "source": "You 16",
+      "target": "You 19",
+      "strength": 0.23164561507987647,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 15",
+      "target": "You 19",
+      "strength": 0.23164561507987647,
+      "kind": "topic"
+    },
+    {
+      "source": "You 17",
+      "target": "You 19",
+      "strength": 0.23164561507987647,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 16",
+      "target": "You 19",
+      "strength": 0.3011392996038395,
+      "kind": "topic"
+    },
+    {
+      "source": "You 18",
+      "target": "You 19",
+      "strength": 0.3011392996038395,
+      "kind": "topic"
+    },
+    {
+      "source": "You 16",
+      "target": "AI 18",
+      "strength": 0.23164561507987647,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 15",
+      "target": "AI 18",
+      "strength": 0.23164561507987647,
+      "kind": "topic"
+    },
+    {
+      "source": "You 17",
+      "target": "AI 18",
+      "strength": 0.23164561507987647,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 16",
+      "target": "AI 18",
+      "strength": 0.3011392996038395,
+      "kind": "topic"
+    },
+    {
+      "source": "You 18",
+      "target": "AI 18",
+      "strength": 0.3011392996038395,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 17",
+      "target": "AI 18",
+      "strength": 0.3011392996038395,
+      "kind": "topic"
+    },
+    {
+      "source": "You 13",
+      "target": "AI 18",
+      "strength": 0.15738003088526809,
+      "kind": "similarity"
+    },
+    {
+      "source": "AI 18",
+      "target": "You 20",
+      "strength": 0.17068624269043528,
+      "kind": "sequence"
+    },
+    {
+      "source": "You 20",
+      "target": "AI 19",
+      "strength": 0.39013998329242355,
+      "kind": "topic"
+    },
+    {
+      "source": "You 2",
+      "target": "You 20",
+      "strength": 0.24383748955776471,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 2",
+      "target": "You 20",
+      "strength": 0.24383748955776471,
+      "kind": "topic"
+    },
+    {
+      "source": "You 3",
+      "target": "You 20",
+      "strength": 0.24383748955776471,
+      "kind": "topic"
+    },
+    {
+      "source": "You 8",
+      "target": "You 20",
+      "strength": 0.24383748955776471,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 7",
+      "target": "You 20",
+      "strength": 0.24383748955776471,
+      "kind": "topic"
+    },
+    {
+      "source": "You 13",
+      "target": "You 20",
+      "strength": 0.31698873642509423,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 12",
+      "target": "You 20",
+      "strength": 0.31698873642509423,
+      "kind": "topic"
+    },
+    {
+      "source": "You 14",
+      "target": "You 20",
+      "strength": 0.24383748955776471,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 15",
+      "target": "You 20",
+      "strength": 0.24383748955776471,
+      "kind": "topic"
+    },
+    {
+      "source": "You 2",
+      "target": "AI 19",
+      "strength": 0.24383748955776471,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 2",
+      "target": "AI 19",
+      "strength": 0.24383748955776471,
+      "kind": "topic"
+    },
+    {
+      "source": "You 3",
+      "target": "AI 19",
+      "strength": 0.24383748955776471,
+      "kind": "topic"
+    },
+    {
+      "source": "You 8",
+      "target": "AI 19",
+      "strength": 0.24383748955776471,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 7",
+      "target": "AI 19",
+      "strength": 0.24383748955776471,
+      "kind": "topic"
+    },
+    {
+      "source": "You 13",
+      "target": "AI 19",
+      "strength": 0.31698873642509423,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 12",
+      "target": "AI 19",
+      "strength": 0.31698873642509423,
+      "kind": "topic"
+    },
+    {
+      "source": "You 14",
+      "target": "AI 19",
+      "strength": 0.24383748955776471,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 15",
+      "target": "AI 19",
+      "strength": 0.24383748955776471,
+      "kind": "topic"
+    },
+    {
+      "source": "You 1",
+      "target": "You 20",
+      "strength": 0.1850726545743434,
+      "kind": "similarity"
+    },
+    {
+      "source": "You 7",
+      "target": "You 20",
+      "strength": 0.15576338832950015,
+      "kind": "similarity"
+    },
+    {
+      "source": "You 9",
+      "target": "You 20",
+      "strength": 0.14542467877225085,
+      "kind": "similarity"
+    },
+    {
+      "source": "AI 13",
+      "target": "AI 19",
+      "strength": 0.27148866087361523,
+      "kind": "similarity"
+    },
+    {
+      "source": "You 17",
+      "target": "You 20",
+      "strength": 0.17039363770296598,
+      "kind": "similarity"
+    },
+    {
+      "source": "AI 19",
+      "target": "You 21",
+      "strength": 0.3336723541316782,
+      "kind": "topic"
+    },
+    {
+      "source": "You 21",
+      "target": "AI 20",
+      "strength": 0.4106736666236038,
+      "kind": "topic"
+    },
+    {
+      "source": "You 2",
+      "target": "You 21",
+      "strength": 0.25667104163975235,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 2",
+      "target": "You 21",
+      "strength": 0.25667104163975235,
+      "kind": "topic"
+    },
+    {
+      "source": "You 3",
+      "target": "You 21",
+      "strength": 0.25667104163975235,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 7",
+      "target": "You 21",
+      "strength": 0.25667104163975235,
+      "kind": "topic"
+    },
+    {
+      "source": "You 13",
+      "target": "You 21",
+      "strength": 0.3336723541316782,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 12",
+      "target": "You 21",
+      "strength": 0.3336723541316782,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 15",
+      "target": "You 21",
+      "strength": 0.25667104163975235,
+      "kind": "topic"
+    },
+    {
+      "source": "You 20",
+      "target": "You 21",
+      "strength": 0.3336723541316782,
+      "kind": "topic"
+    },
+    {
+      "source": "You 2",
+      "target": "AI 20",
+      "strength": 0.25667104163975235,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 2",
+      "target": "AI 20",
+      "strength": 0.25667104163975235,
+      "kind": "topic"
+    },
+    {
+      "source": "You 3",
+      "target": "AI 20",
+      "strength": 0.25667104163975235,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 7",
+      "target": "AI 20",
+      "strength": 0.25667104163975235,
+      "kind": "topic"
+    },
+    {
+      "source": "You 13",
+      "target": "AI 20",
+      "strength": 0.3336723541316782,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 12",
+      "target": "AI 20",
+      "strength": 0.3336723541316782,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 15",
+      "target": "AI 20",
+      "strength": 0.25667104163975235,
+      "kind": "topic"
+    },
+    {
+      "source": "You 20",
+      "target": "AI 20",
+      "strength": 0.3336723541316782,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 19",
+      "target": "AI 20",
+      "strength": 0.3336723541316782,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 3",
+      "target": "AI 20",
+      "strength": 0.19445398114627643,
+      "kind": "similarity"
+    },
+    {
+      "source": "You 8",
+      "target": "You 21",
+      "strength": 0.3336723541316782,
+      "kind": "similarity"
+    },
+    {
+      "source": "You 10",
+      "target": "You 21",
+      "strength": 0.22930990860095485,
+      "kind": "similarity"
+    },
+    {
+      "source": "You 14",
+      "target": "You 21",
+      "strength": 0.27438134351289534,
+      "kind": "similarity"
+    },
+    {
+      "source": "AI 20",
+      "target": "You 22",
+      "strength": 0.2701800438313183,
+      "kind": "topic"
+    },
+    {
+      "source": "You 22",
+      "target": "AI 21",
+      "strength": 0.35123405698071386,
+      "kind": "topic"
+    },
+    {
+      "source": "You 13",
+      "target": "You 22",
+      "strength": 0.2701800438313183,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 12",
+      "target": "You 22",
+      "strength": 0.2701800438313183,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 15",
+      "target": "You 22",
+      "strength": 0.2701800438313183,
+      "kind": "topic"
+    },
+    {
+      "source": "You 20",
+      "target": "You 22",
+      "strength": 0.2701800438313183,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 19",
+      "target": "You 22",
+      "strength": 0.2701800438313183,
+      "kind": "topic"
+    },
+    {
+      "source": "You 21",
+      "target": "You 22",
+      "strength": 0.2701800438313183,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 1",
+      "target": "You 22",
+      "strength": 0.1787511169988002,
+      "kind": "similarity"
+    },
+    {
+      "source": "AI 15",
+      "target": "AI 21",
+      "strength": 0.23224676567740132,
+      "kind": "similarity"
+    },
+    {
+      "source": "AI 21",
+      "target": "You 23",
+      "strength": 0.19908003229676083,
+      "kind": "sequence"
+    },
+    {
+      "source": "You 23",
+      "target": "AI 22",
+      "strength": 0.4550400738211676,
+      "kind": "topic"
+    },
+    {
+      "source": "You 11",
+      "target": "You 23",
+      "strength": 0.2844000461382298,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 10",
+      "target": "You 23",
+      "strength": 0.2844000461382298,
+      "kind": "topic"
+    },
+    {
+      "source": "You 17",
+      "target": "You 23",
+      "strength": 0.2844000461382298,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 16",
+      "target": "You 23",
+      "strength": 0.2844000461382298,
+      "kind": "topic"
+    },
+    {
+      "source": "You 18",
+      "target": "You 23",
+      "strength": 0.2844000461382298,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 17",
+      "target": "You 23",
+      "strength": 0.2844000461382298,
+      "kind": "topic"
+    },
+    {
+      "source": "You 11",
+      "target": "AI 22",
+      "strength": 0.2844000461382298,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 10",
+      "target": "AI 22",
+      "strength": 0.2844000461382298,
+      "kind": "topic"
+    },
+    {
+      "source": "You 17",
+      "target": "AI 22",
+      "strength": 0.2844000461382298,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 16",
+      "target": "AI 22",
+      "strength": 0.2844000461382298,
+      "kind": "topic"
+    },
+    {
+      "source": "You 18",
+      "target": "AI 22",
+      "strength": 0.2844000461382298,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 17",
+      "target": "AI 22",
+      "strength": 0.2844000461382298,
+      "kind": "topic"
+    },
+    {
+      "source": "You 7",
+      "target": "AI 22",
+      "strength": 0.18309674970379236,
+      "kind": "similarity"
+    },
+    {
+      "source": "AI 15",
+      "target": "AI 22",
+      "strength": 0.20704323358863125,
+      "kind": "similarity"
+    },
+    {
+      "source": "AI 22",
+      "target": "You 24",
+      "strength": 0.47898955139070276,
+      "kind": "topic"
+    },
+    {
+      "source": "You 24",
+      "target": "AI 23",
+      "strength": 0.47898955139070276,
+      "kind": "topic"
+    },
+    {
+      "source": "You 11",
+      "target": "You 24",
+      "strength": 0.2993684696191893,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 10",
+      "target": "You 24",
+      "strength": 0.2993684696191893,
+      "kind": "topic"
+    },
+    {
+      "source": "You 17",
+      "target": "You 24",
+      "strength": 0.2993684696191893,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 16",
+      "target": "You 24",
+      "strength": 0.2993684696191893,
+      "kind": "topic"
+    },
+    {
+      "source": "You 18",
+      "target": "You 24",
+      "strength": 0.2993684696191893,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 17",
+      "target": "You 24",
+      "strength": 0.2993684696191893,
+      "kind": "topic"
+    },
+    {
+      "source": "You 23",
+      "target": "You 24",
+      "strength": 0.47898955139070276,
+      "kind": "topic"
+    },
+    {
+      "source": "You 11",
+      "target": "AI 23",
+      "strength": 0.2993684696191893,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 10",
+      "target": "AI 23",
+      "strength": 0.2993684696191893,
+      "kind": "topic"
+    },
+    {
+      "source": "You 17",
+      "target": "AI 23",
+      "strength": 0.2993684696191893,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 16",
+      "target": "AI 23",
+      "strength": 0.2993684696191893,
+      "kind": "topic"
+    },
+    {
+      "source": "You 18",
+      "target": "AI 23",
+      "strength": 0.2993684696191893,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 17",
+      "target": "AI 23",
+      "strength": 0.2993684696191893,
+      "kind": "topic"
+    },
+    {
+      "source": "You 23",
+      "target": "AI 23",
+      "strength": 0.47898955139070276,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 22",
+      "target": "AI 23",
+      "strength": 0.47898955139070276,
+      "kind": "topic"
+    },
+    {
+      "source": "You 2",
+      "target": "AI 23",
+      "strength": 0.251469514480119,
+      "kind": "similarity"
+    },
+    {
+      "source": "AI 23",
+      "target": "You 25",
+      "strength": 0.22058729340361313,
+      "kind": "sequence"
+    },
+    {
+      "source": "You 25",
+      "target": "AI 24",
+      "strength": 0.5041995277796871,
+      "kind": "topic"
+    },
+    {
+      "source": "You 22",
+      "target": "You 25",
+      "strength": 0.409662116320996,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 21",
+      "target": "You 25",
+      "strength": 0.409662116320996,
+      "kind": "topic"
+    },
+    {
+      "source": "You 22",
+      "target": "AI 24",
+      "strength": 0.409662116320996,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 21",
+      "target": "AI 24",
+      "strength": 0.409662116320996,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 16",
+      "target": "You 25",
+      "strength": 0.24743591825788155,
+      "kind": "similarity"
+    },
+    {
+      "source": "AI 24",
+      "target": "You 26",
+      "strength": 0.23219715095117174,
+      "kind": "sequence"
+    },
+    {
+      "source": "You 26",
+      "target": "AI 25",
+      "strength": 0.6302494097246091,
+      "kind": "topic"
+    },
+    {
+      "source": "You 16",
+      "target": "You 26",
+      "strength": 0.3317102156445311,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 15",
+      "target": "You 26",
+      "strength": 0.3317102156445311,
+      "kind": "topic"
+    },
+    {
+      "source": "You 17",
+      "target": "You 26",
+      "strength": 0.3317102156445311,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 16",
+      "target": "You 26",
+      "strength": 0.3317102156445311,
+      "kind": "topic"
+    },
+    {
+      "source": "You 18",
+      "target": "You 26",
+      "strength": 0.3317102156445311,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 17",
+      "target": "You 26",
+      "strength": 0.3317102156445311,
+      "kind": "topic"
+    },
+    {
+      "source": "You 19",
+      "target": "You 26",
+      "strength": 0.3317102156445311,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 18",
+      "target": "You 26",
+      "strength": 0.3317102156445311,
+      "kind": "topic"
+    },
+    {
+      "source": "You 16",
+      "target": "AI 25",
+      "strength": 0.3317102156445311,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 15",
+      "target": "AI 25",
+      "strength": 0.3317102156445311,
+      "kind": "topic"
+    },
+    {
+      "source": "You 17",
+      "target": "AI 25",
+      "strength": 0.3317102156445311,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 16",
+      "target": "AI 25",
+      "strength": 0.3317102156445311,
+      "kind": "topic"
+    },
+    {
+      "source": "You 18",
+      "target": "AI 25",
+      "strength": 0.3317102156445311,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 17",
+      "target": "AI 25",
+      "strength": 0.3317102156445311,
+      "kind": "topic"
+    },
+    {
+      "source": "You 19",
+      "target": "AI 25",
+      "strength": 0.3317102156445311,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 18",
+      "target": "AI 25",
+      "strength": 0.3317102156445311,
+      "kind": "topic"
+    },
+    {
+      "source": "You 7",
+      "target": "You 26",
+      "strength": 0.22622636706957022,
+      "kind": "similarity"
+    },
+    {
+      "source": "You 11",
+      "target": "AI 25",
+      "strength": 0.28228539351349596,
+      "kind": "similarity"
+    },
+    {
+      "source": "You 20",
+      "target": "You 26",
+      "strength": 0.237703540530871,
+      "kind": "similarity"
+    },
+    {
+      "source": "AI 25",
+      "target": "You 27",
+      "strength": 0.24441805363281238,
+      "kind": "sequence"
+    },
+    {
+      "source": "You 27",
+      "target": "AI 26",
+      "strength": 0.6634204312890623,
+      "kind": "topic"
+    },
+    {
+      "source": "You 22",
+      "target": "You 27",
+      "strength": 0.4539192424609374,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 21",
+      "target": "You 27",
+      "strength": 0.4539192424609374,
+      "kind": "topic"
+    },
+    {
+      "source": "You 25",
+      "target": "You 27",
+      "strength": 0.4539192424609374,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 24",
+      "target": "You 27",
+      "strength": 0.4539192424609374,
+      "kind": "topic"
+    },
+    {
+      "source": "You 22",
+      "target": "AI 26",
+      "strength": 0.4539192424609374,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 21",
+      "target": "AI 26",
+      "strength": 0.4539192424609374,
+      "kind": "topic"
+    },
+    {
+      "source": "You 25",
+      "target": "AI 26",
+      "strength": 0.4539192424609374,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 24",
+      "target": "AI 26",
+      "strength": 0.4539192424609374,
+      "kind": "topic"
+    },
+    {
+      "source": "You 16",
+      "target": "You 27",
+      "strength": 0.2838042771324999,
+      "kind": "similarity"
+    },
+    {
+      "source": "AI 26",
+      "target": "You 28",
+      "strength": 0.4778097289062499,
+      "kind": "topic"
+    },
+    {
+      "source": "You 28",
+      "target": "AI 27",
+      "strength": 0.5880735124999997,
+      "kind": "topic"
+    },
+    {
+      "source": "You 27",
+      "target": "You 28",
+      "strength": 0.4778097289062499,
+      "kind": "topic"
+    },
+    {
+      "source": "You 27",
+      "target": "AI 27",
+      "strength": 0.4778097289062499,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 26",
+      "target": "AI 27",
+      "strength": 0.4778097289062499,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 24",
+      "target": "You 28",
+      "strength": 0.23184798230312495,
+      "kind": "similarity"
+    },
+    {
+      "source": "AI 24",
+      "target": "AI 27",
+      "strength": 0.21369121260468746,
+      "kind": "similarity"
+    },
+    {
+      "source": "AI 27",
+      "target": "You 29",
+      "strength": 0.38689046874999994,
+      "kind": "topic"
+    },
+    {
+      "source": "You 29",
+      "target": "AI 28",
+      "strength": 0.6190247499999998,
+      "kind": "topic"
+    },
+    {
+      "source": "You 22",
+      "target": "You 29",
+      "strength": 0.38689046874999994,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 21",
+      "target": "You 29",
+      "strength": 0.38689046874999994,
+      "kind": "topic"
+    },
+    {
+      "source": "You 25",
+      "target": "You 29",
+      "strength": 0.38689046874999994,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 24",
+      "target": "You 29",
+      "strength": 0.38689046874999994,
+      "kind": "topic"
+    },
+    {
+      "source": "You 27",
+      "target": "You 29",
+      "strength": 0.5029576093749999,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 26",
+      "target": "You 29",
+      "strength": 0.5029576093749999,
+      "kind": "topic"
+    },
+    {
+      "source": "You 28",
+      "target": "You 29",
+      "strength": 0.38689046874999994,
+      "kind": "topic"
+    },
+    {
+      "source": "You 22",
+      "target": "AI 28",
+      "strength": 0.38689046874999994,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 21",
+      "target": "AI 28",
+      "strength": 0.38689046874999994,
+      "kind": "topic"
+    },
+    {
+      "source": "You 25",
+      "target": "AI 28",
+      "strength": 0.38689046874999994,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 24",
+      "target": "AI 28",
+      "strength": 0.38689046874999994,
+      "kind": "topic"
+    },
+    {
+      "source": "You 27",
+      "target": "AI 28",
+      "strength": 0.5029576093749999,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 26",
+      "target": "AI 28",
+      "strength": 0.5029576093749999,
+      "kind": "topic"
+    },
+    {
+      "source": "You 28",
+      "target": "AI 28",
+      "strength": 0.38689046874999994,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 27",
+      "target": "AI 28",
+      "strength": 0.38689046874999994,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 28",
+      "target": "You 30",
+      "strength": 0.28507718749999994,
+      "kind": "sequence"
+    },
+    {
+      "source": "You 30",
+      "target": "AI 29",
+      "strength": 0.6516049999999998,
+      "kind": "topic"
+    },
+    {
+      "source": "You 23",
+      "target": "You 30",
+      "strength": 0.25160098062499997,
+      "kind": "similarity"
+    },
+    {
+      "source": "You 24",
+      "target": "AI 29",
+      "strength": 0.32401058624999995,
+      "kind": "similarity"
+    },
+    {
+      "source": "AI 23",
+      "target": "AI 29",
+      "strength": 0.28515863812500003,
+      "kind": "similarity"
+    },
+    {
+      "source": "AI 29",
+      "target": "You 31",
+      "strength": 0.30008124999999997,
+      "kind": "sequence"
+    },
+    {
+      "source": "You 31",
+      "target": "AI 30",
+      "strength": 0.6858999999999998,
+      "kind": "topic"
+    },
+    {
+      "source": "You 3",
+      "target": "AI 30",
+      "strength": 0.32485938749999993,
+      "kind": "similarity"
+    },
+    {
+      "source": "AI 3",
+      "target": "AI 30",
+      "strength": 0.3322328125,
+      "kind": "similarity"
+    },
+    {
+      "source": "You 9",
+      "target": "You 31",
+      "strength": 0.25961314999999996,
+      "kind": "similarity"
+    },
+    {
+      "source": "You 10",
+      "target": "You 31",
+      "strength": 0.30393943749999996,
+      "kind": "similarity"
+    },
+    {
+      "source": "You 30",
+      "target": "AI 30",
+      "strength": 0.265957725,
+      "kind": "similarity"
+    },
+    {
+      "source": "AI 30",
+      "target": "You 32",
+      "strength": 0.586625,
+      "kind": "topic"
+    },
+    {
+      "source": "You 32",
+      "target": "AI 31",
+      "strength": 0.7219999999999999,
+      "kind": "topic"
+    },
+    {
+      "source": "You 31",
+      "target": "You 32",
+      "strength": 0.586625,
+      "kind": "topic"
+    },
+    {
+      "source": "You 31",
+      "target": "AI 31",
+      "strength": 0.586625,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 30",
+      "target": "AI 31",
+      "strength": 0.586625,
+      "kind": "topic"
+    },
+    {
+      "source": "AI 22",
+      "target": "AI 31",
+      "strength": 0.36289524999999995,
+      "kind": "similarity"
+    },
+    {
+      "source": "AI 29",
+      "target": "AI 31",
+      "strength": 0.31416025,
+      "kind": "similarity"
+    },
+    {
+      "source": "AI 31",
+      "target": "You 33",
+      "strength": 0.33249999999999996,
+      "kind": "sequence",
+      "created_cycle": 30
+    },
+    {
+      "source": "You 33",
+      "target": "AI 32",
+      "strength": 0.7599999999999999,
+      "kind": "topic",
+      "created_cycle": 30
+    },
+    {
+      "source": "You 12",
+      "target": "You 33",
+      "strength": 0.475,
+      "kind": "topic",
+      "created_cycle": 30
+    },
+    {
+      "source": "AI 11",
+      "target": "You 33",
+      "strength": 0.475,
+      "kind": "topic",
+      "created_cycle": 30
+    },
+    {
+      "source": "You 13",
+      "target": "You 33",
+      "strength": 0.475,
+      "kind": "topic",
+      "created_cycle": 30
+    },
+    {
+      "source": "You 15",
+      "target": "You 33",
+      "strength": 0.475,
+      "kind": "topic",
+      "created_cycle": 30
+    },
+    {
+      "source": "AI 14",
+      "target": "You 33",
+      "strength": 0.475,
+      "kind": "topic",
+      "created_cycle": 30
+    },
+    {
+      "source": "You 12",
+      "target": "AI 32",
+      "strength": 0.475,
+      "kind": "topic",
+      "created_cycle": 30
+    },
+    {
+      "source": "AI 11",
+      "target": "AI 32",
+      "strength": 0.475,
+      "kind": "topic",
+      "created_cycle": 30
+    },
+    {
+      "source": "You 13",
+      "target": "AI 32",
+      "strength": 0.475,
+      "kind": "topic",
+      "created_cycle": 30
+    },
+    {
+      "source": "You 15",
+      "target": "AI 32",
+      "strength": 0.475,
+      "kind": "topic",
+      "created_cycle": 30
+    },
+    {
+      "source": "AI 14",
+      "target": "AI 32",
+      "strength": 0.475,
+      "kind": "topic",
+      "created_cycle": 30
+    },
+    {
+      "source": "You 11",
+      "target": "You 33",
+      "strength": 0.44289,
+      "kind": "similarity",
+      "created_cycle": 30
+    },
+    {
+      "source": "AI 32",
+      "target": "You 34",
+      "strength": 0.35,
+      "kind": "sequence",
+      "created_cycle": 31
+    },
+    {
+      "source": "You 34",
+      "target": "AI 33",
+      "strength": 0.35,
+      "kind": "sequence",
+      "created_cycle": 31
+    },
+    {
+      "source": "AI 2",
+      "target": "AI 33",
+      "strength": 0.3579,
+      "kind": "similarity",
+      "created_cycle": 31
+    },
+    {
+      "source": "You 4",
+      "target": "AI 19",
+      "strength": 0.3952,
+      "kind": "similarity",
+      "created_cycle": 31
+    },
+    {
+      "source": "AI 19",
+      "target": "AI 33",
+      "strength": 0.3961,
+      "kind": "similarity",
+      "created_cycle": 31
+    }
+  ]
+}

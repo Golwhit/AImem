@@ -1,0 +1,884 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b1020">
+  <title>Chat Memory in Motion</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #080d19;
+      color: #e8eefc;
+      font-synthesis: none;
+      --muted: #98a6c4;
+      --line: rgba(158, 177, 218, .13);
+      --panel: rgba(17, 25, 46, .88);
+      --cyan: #67e8f9;
+      --violet: #a78bfa;
+      --green: #6ee7b7;
+      --amber: #fbbf24;
+    }
+    * { box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      margin: 0;
+      padding: 36px 20px;
+      background:
+        radial-gradient(ellipse at 50% -20%, rgba(55, 75, 143, .28), transparent 55%),
+        radial-gradient(ellipse at 90% 80%, rgba(38, 111, 119, .10), transparent 42%),
+        #080d19;
+    }
+    main { max-width: 1180px; margin: 0 auto; }
+    body.sidebar-collapsed main { max-width: 1400px; }
+    header { display: flex; justify-content: space-between; align-items: end; gap: 20px; margin-bottom: 24px; }
+    .eyebrow { color: var(--cyan); text-transform: uppercase; letter-spacing: .16em; font-size: 11px; font-weight: 750; }
+    h1 { font-size: clamp(30px, 5vw, 46px); letter-spacing: -.045em; line-height: 1.05; margin: 8px 0 8px; }
+    header p { color: var(--muted); margin: 0; max-width: 650px; line-height: 1.55; }
+    .live-pill { white-space: nowrap; border: 1px solid rgba(110,231,183,.25); color: var(--green); border-radius: 30px; padding: 9px 13px; font-size: 12px; background: rgba(110,231,183,.07); }
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+    .stat, .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 18px 60px rgba(0,0,0,.18); }
+    .stat { padding: 15px 18px; }
+    .stat-label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .1em; }
+    .stat-value { margin-top: 5px; font-size: 25px; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .workspace { display: grid; grid-template-columns: minmax(0, 1fr) 332px; gap: 16px; align-items: stretch; }
+    body.sidebar-collapsed .workspace { grid-template-columns: minmax(0, 1fr); }
+    .graph-panel { position: relative; min-width: 0; padding: 15px; overflow: hidden; }
+    .graph-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 4px 7px 0; }
+    .graph-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    h2 { font-size: 14px; margin: 0; letter-spacing: .01em; }
+    .hint { font-size: 11px; color: var(--muted); }
+    svg { display: block; width: 100%; height: auto; min-height: 330px; overflow: visible; }
+    .edge { stroke: #64749b; stroke-linecap: round; opacity: .5; transition: stroke .25s, opacity .25s, stroke-width .25s; }
+    .edge.topic { stroke: #2dd4bf; }
+    .edge.hub { stroke: #f59e0b; stroke-dasharray: 2 4; }
+    .edge.similarity { stroke: #c084fc; stroke-dasharray: 5 5; }
+    .edge.created { stroke: #22d3ee; opacity: 1; filter: drop-shadow(0 0 4px rgba(34,211,238,.6)); }
+    .edge.cross-domain { stroke: #fda4af; stroke-dasharray: 2 8; opacity: .07; }
+    .edge.recalled { stroke: #67e8f9; opacity: .98; filter: drop-shadow(0 0 4px rgba(103,232,249,.7)); }
+    .edge-label { fill: #9ba9c6; font-size: 11px; text-anchor: middle; paint-order: stroke; stroke: #11192e; stroke-width: 5px; stroke-linejoin: round; }
+    .node { cursor: pointer; outline: none; }
+    .node circle.core { fill: #24304c; stroke: #9fb4e6; stroke-width: .45; transition: fill .2s, stroke .2s, r .2s; }
+    .node:hover circle.core, .node:focus circle.core { stroke: white; }
+    .node.selected circle.core { fill: #0f5e78; stroke: #67e8f9; stroke-width: .7; }
+    .node.consolidated circle.core { stroke: var(--green); }
+    .node.created circle.core { fill: #0f5e78 !important; stroke: #ecfeff !important; stroke-width: .8 !important; filter: drop-shadow(0 0 6px rgba(34,211,238,.28)); }
+    .node.topic circle.core { fill: #26324f; stroke: #b0c4ff; stroke-width: .35; opacity: .98; }
+    .node.topic.selected circle.core { fill: #0f5e78; stroke: #67e8f9; stroke-width: .7; }
+    .node.dimmed { opacity: .18; }
+    .node.match circle.core { stroke: var(--violet); filter: drop-shadow(0 0 7px rgba(167,139,250,.4)); }
+    .node.related circle.core { stroke: #7be0c4; }
+    .node.memory circle.core { fill: #24304c; stroke: #93c5fd; }
+    .node.scripture circle.core { fill: #5b2143; stroke: #f472b6; }
+    .node.topic.scripture circle.core { fill: #7a2e59; stroke: #f9a8d4; }
+    .node.food circle.core { fill: #23421f; stroke: #4ade80; }
+    .node.topic.food circle.core { fill: #2f5b2a; stroke: #86efac; }
+    .node.evaluation circle.core { fill: #46316d; stroke: #c084fc; }
+    .node.topic.evaluation circle.core { fill: #5b3d8c; stroke: #ddd6fe; }
+    .node.entertainment circle.core { fill: #1f3d62; stroke: #60a5fa; }
+    .node.topic.entertainment circle.core { fill: #26507f; stroke: #bfdbfe; }
+    .node.bridge circle.core { stroke-dasharray: 2 3; }
+    .cluster-bg { fill: rgba(14, 22, 39, .68); stroke: rgba(165,180,220,.16); stroke-width: 1.2; rx: 18; ry: 18; }
+    .cluster-bg.memory { fill: rgba(11, 32, 52, .84); stroke: rgba(103,232,249,.32); }
+    .cluster-bg.scripture { fill: rgba(56, 18, 47, .80); stroke: rgba(244,114,182,.44); stroke-dasharray: 7 6; }
+    .cluster-bg.food { fill: rgba(20, 42, 22, .80); stroke: rgba(134,239,172,.40); stroke-dasharray: 8 7; }
+    .cluster-bg.evaluation { fill: rgba(41, 27, 64, .80); stroke: rgba(196,181,253,.42); stroke-dasharray: 5 8; }
+    .cluster-bg.entertainment { fill: rgba(17, 34, 58, .80); stroke: rgba(147,197,253,.42); stroke-dasharray: 6 8; }
+    .cluster-bg.other { fill: rgba(52, 34, 11, .66); stroke: rgba(251,191,36,.30); }
+    .cluster-title { fill: #eff6ff; font-size: 12px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
+    .cluster-title.scripture { fill: #f9a8d4; }
+    .cluster-title.food { fill: #86efac; }
+    .cluster-title.evaluation { fill: #c4b5fd; }
+    .cluster-title.entertainment { fill: #93c5fd; }
+    .cluster-title.memory { fill: #67e8f9; }
+    .pulse-ring { fill: none; stroke: var(--cyan); stroke-width: 2; opacity: 0; pointer-events: none; }
+    .pulse-ring.animate { animation: ripple 1.15s ease-out infinite; }
+    @keyframes ripple { 0% { r: 22px; opacity: .85; } 100% { r: 58px; opacity: 0; } }
+    aside { padding: 20px; display: flex; flex-direction: column; gap: 20px; }
+    .section-label { color: var(--muted); text-transform: uppercase; letter-spacing: .12em; font-size: 10px; font-weight: 750; margin-bottom: 11px; }
+    .selected-memory-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 11px; }
+    .selected-memory-head .section-label { margin-bottom: 0; }
+    .selected-memory-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .selected-memory-empty { padding: 16px; border: 1px dashed rgba(165,180,220,.18); border-radius: 14px; background: rgba(18, 27, 48, .72); }
+    .selected-memory-empty p { margin: 0 0 12px; color: var(--muted); font-size: 13px; line-height: 1.5; }
+    .selected-name { font-size: 22px; font-weight: 750; margin: 0 0 5px; }
+    .selected-content { color: var(--muted); font-size: 13px; line-height: 1.5; min-height: 38px; }
+    .meter-row { display: flex; justify-content: space-between; color: #bdc8dd; font-size: 11px; margin: 13px 0 7px; }
+    .meter { height: 7px; background: #202b45; border-radius: 10px; overflow: hidden; }
+    .meter > span { display: block; height: 100%; width: 0; border-radius: inherit; background: linear-gradient(90deg, #7c72f6, #67e8f9); transition: width .35s; }
+    .actions { display: grid; gap: 8px; }
+    .query-input { width: 100%; border: 1px solid rgba(165,180,220,.2); color: #e8eefc; border-radius: 10px; padding: 10px 12px; background: #17223a; font: inherit; font-size: 12px; }
+    .query-input:focus { outline: 2px solid rgba(103,232,249,.35); border-color: rgba(103,232,249,.35); }
+    .search-results { display: grid; gap: 8px; margin-top: 10px; }
+    .result { border: 1px solid rgba(165,180,220,.15); background: #121b30; border-radius: 12px; padding: 10px 12px; cursor: pointer; transition: transform .16s, border-color .16s, background .16s; }
+    .result:hover { transform: translateY(-1px); border-color: rgba(165,180,220,.35); background: #17233d; }
+    .result strong { display: block; color: #f2f6ff; margin-bottom: 4px; }
+    .result .meta { color: var(--muted); font-size: 11px; line-height: 1.4; }
+    .signal-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .signal { border: 1px solid rgba(165,180,220,.14); background: #17233d; color: #d9e4fb; border-radius: 999px; padding: 6px 9px; font-size: 10px; line-height: 1; }
+    .signal.good { border-color: rgba(110,231,183,.28); color: #9ff0d0; }
+    .signal.bad { border-color: rgba(248,113,113,.3); color: #ffb7b7; }
+    .signal.neutral { border-color: rgba(251,191,36,.25); color: #ffe39a; }
+    button { border: 1px solid rgba(165,180,220,.18); color: #e8eefc; border-radius: 10px; padding: 10px 12px; background: #202b46; font: inherit; font-size: 12px; font-weight: 650; cursor: pointer; transition: background .16s, border-color .16s, transform .16s; }
+    button:hover { background: #29385b; border-color: rgba(165,180,220,.4); transform: translateY(-1px); }
+    button.primary { background: #15546a; border-color: rgba(103,232,249,.32); }
+    button.primary:hover { background: #17677f; }
+    button:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+    .event { border-top: 1px solid var(--line); padding-top: 15px; min-height: 70px; color: var(--muted); font-size: 11px; line-height: 1.55; }
+    .event strong { color: #e8eefc; }
+    body.sidebar-collapsed aside { display: none; }
+    footer { color: #687896; font-size: 10px; padding: 14px 4px 0; line-height: 1.5; }
+    @media (max-width: 850px) { .workspace { grid-template-columns: 1fr; } aside { display: grid; grid-template-columns: 1fr 1fr; } aside > :last-child { grid-column: 1 / -1; } .graph-head { flex-wrap: wrap; } .graph-actions { margin-left: auto; } }
+    @media (max-width: 560px) { body { padding: 24px 12px; } header { display: block; } .live-pill { display: inline-block; margin-top: 15px; } .stats { grid-template-columns: repeat(2, 1fr); } .stat { padding: 12px 14px; } .stat-value { font-size: 21px; } aside { display: flex; } svg { min-height: 265px; } }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <div>
+      <div class="eyebrow">Interactive memory model</div>
+      <h1>Our chat, in memory</h1>
+      <p>Each message is a memory. Nearby turns and shared topics form connections; recall spreads through them, while unused memories fade.</p>
+    </div>
+    <div class="live-pill">● LEARNING STATE ON</div>
+  </header>
+  <section class="stats" aria-label="Graph statistics">
+    <div class="stat"><div class="stat-label">Memories</div><div class="stat-value" id="node-count">0</div></div>
+    <div class="stat"><div class="stat-label">Connections</div><div class="stat-value" id="link-count">0</div></div>
+    <div class="stat"><div class="stat-label">Avg. importance</div><div class="stat-value" id="avg-importance">0.00</div></div>
+    <div class="stat"><div class="stat-label">Decay cycles</div><div class="stat-value" id="cycle-count">0</div></div>
+    <div class="stat"><div class="stat-label">Topics</div><div class="stat-value" id="topic-count">0</div></div>
+  </section>
+  <section class="workspace">
+    <div class="panel graph-panel">
+      <div class="graph-head">
+        <h2>Conversation memory graph</h2>
+        <div class="graph-actions">
+          <button type="button" id="sidebar-toggle-button">Hide right menu</button>
+        </div>
+      </div>
+      <svg id="graph" viewBox="0 0 1120 760" role="img" aria-label="Interactive graph of connected memories"></svg>
+    </div>
+    <aside class="panel">
+      <section id="selected-memory-panel">
+        <div class="selected-memory-head">
+          <div class="section-label">Selected memory</div>
+          <div class="selected-memory-actions">
+            <button type="button" id="selected-sidebar-toggle-button">Hide right menu</button>
+          </div>
+        </div>
+        <h2 id="selected-name" class="selected-name">Pick a memory</h2>
+        <div id="selected-content" class="selected-content">Select a message in the graph to inspect and activate it.</div>
+        <div class="signal-row" id="selected-signals"></div>
+        <div class="meter-row"><span>Importance</span><span id="importance-value">—</span></div>
+        <div class="meter"><span id="importance-meter"></span></div>
+        <div class="meter-row"><span>Connected ideas</span><span id="connection-value">—</span></div>
+        <div class="meter"><span id="connection-meter"></span></div>
+      </section>
+      <section>
+        <div class="section-label">Search and learn</div>
+        <input id="memory-query" class="query-input" type="search" placeholder="Search memories or topics" aria-label="Search memories">
+        <div id="search-results" class="search-results" aria-live="polite"></div>
+      </section>
+      <section>
+        <div class="section-label">Run the memory</div>
+        <div class="actions">
+          <button class="primary" id="recall-button">Recall this chat</button>
+          <button id="helpful-button">Mark helpful</button>
+          <button id="correction-button">Mark correction</button>
+          <button id="weaken-button">Weaken links</button>
+          <button id="decay-button">Advance 1 decay cycle</button>
+          <button id="consolidate-button">Consolidate strong memories</button>
+          <button id="reset-button">Reset simulation</button>
+        </div>
+      </section>
+      <section>
+        <div class="section-label">What's happening</div>
+        <div class="event" id="event" aria-live="polite">Ready. Click any message, or start with <strong>Recall this chat</strong>.</div>
+      </section>
+    </aside>
+  </section>
+  <footer>Source: this conversation is stored locally in chat_memory.json. Links combine turn order, shared-topic tags, learned feedback stored in a backend graph-state file, and semantic search served from the local embeddings endpoint when available. Recall, reinforcement, correction, decay, and consolidation persist across refreshes through backend storage.</footer>
+</main>
+<script>
+const initialGraph = {"nodes":[{"id":"You 1","content":"You: look this over and see what we can do with it. I want to see the visual of the memory in action","importance":0.0,"consolidated":false,"timestamp":1791687165.4140344,"kind":"message","role":"You","text":"look this over and see what we can do with it. I want to see the visual of the memory in action","topics":["visualization","interactivity"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"AI 1","content":"Assistant: Replaced the broken Plotly placeholder with a self-contained interactive SVG memory graph generated from the actual MemoryGraph demo data. The browser preview is open and verified: recalling from Python lights up related memories and strengthens links; decay lowers importance/connection strengths; consolidation marks strong memories and boosts importance. Updated generate_html_graph.py, regenerated memory_graph.html, and confirmed the interactive controls work in the browser.","importance":0.0,"consolidated":false,"timestamp":1791687165.4140446,"kind":"message","role":"Assistant","text":"Replaced the broken Plotly placeholder with a self-contained interactive SVG memory graph generated from the actual MemoryGraph demo data. The browser preview is open and verified: recalling from Python lights up related memories and strengthens links; decay lowers importance/connection strengths; consolidation marks strong memories and boosts importance. Updated generate_html_graph.py, regenerated memory_graph.html, and confirmed the interactive controls work in the browser.","topics":["visualization","interactivity","recall","decay","consolidation","memory_model"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"You 2","content":"You: is there real memory that can be used and not demo?","importance":0.0,"consolidated":false,"timestamp":1791687165.4140499,"kind":"message","role":"You","text":"is there real memory that can be used and not demo?","topics":["real_memory","persistence"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"AI 2","content":"Assistant: Yes, but not in the current implementation. The visualization is built from a hard-coded six-node sample in generate_html_graph.py, and its recall/decay changes exist only in browser memory and reset when the page reloads. memory_system.py provides the graph behavior but no persistence or real-memory ingestion. The separate push server stores only temporary push-demo state in server/index.js. To use actual memories, the next step would be to connect a real source\u2014such as your notes or memories you enter\u2014to persistent storage, then render that stored graph instead of the sample.","importance":0.0,"consolidated":false,"timestamp":1791687165.414054,"kind":"message","role":"Assistant","text":"Yes, but not in the current implementation. The visualization is built from a hard-coded six-node sample in generate_html_graph.py, and its recall/decay changes exist only in browser memory and reset when the page reloads. memory_system.py provides the graph behavior but no persistence or real-memory ingestion. The separate push server stores only temporary push-demo state in server/index.js. To use actual memories, the next step would be to connect a real source\u2014such as your notes or memories you enter\u2014to persistent storage, then render that stored graph instead of the sample.","topics":["real_memory","persistence","memory_system","ingestion"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"You 3","content":"You: can we take everything in this chat and put into memory and see what comes out of it?","importance":0.0,"consolidated":false,"timestamp":1791687165.4140606,"kind":"message","role":"You","text":"can we take everything in this chat and put into memory and see what comes out of it?","topics":["real_memory","persistence","chat_transcript","ingestion"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"You 4","content":"You: keep adding to the memory and update each cycle. what is the practical use of this model?","importance":0.0,"consolidated":false,"timestamp":1791687165.4140635,"kind":"message","role":"You","text":"keep adding to the memory and update each cycle. what is the practical use of this model?","topics":["persistent-memory","practical-use"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"AI 3","content":"Assistant: Yes. I added a persistent exchange updater: each saved exchange decays older memories and links once, adds the user and assistant turns, saves updated graph weights to chat_memory.json, and regenerates the visualization. I will need the conversation text supplied to the updater; this workspace cannot automatically read future Copilot chat turns. Practically, a memory graph can organize notes or support history, spread a query to related context, rank stronger/recently-used items, and fade stale associations. This prototype's links are heuristic and topic-tagged, so real semantic retrieval would need an embedding/search layer and a trusted source of memories.","importance":0.0,"consolidated":false,"timestamp":1791687165.4140663,"kind":"message","role":"Assistant","text":"Yes. I added a persistent exchange updater: each saved exchange decays older memories and links once, adds the user and assistant turns, saves updated graph weights to chat_memory.json, and regenerates the visualization. I will need the conversation text supplied to the updater; this workspace cannot automatically read future Copilot chat turns. Practically, a memory graph can organize notes or support history, spread a query to related context, rank stronger/recently-used items, and fade stale associations. This prototype's links are heuristic and topic-tagged, so real semantic retrieval would need an embedding/search layer and a trusted source of memories.","topics":["persistent-memory","practical-use","graph-retrieval"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"You 5","content":"You: is this a learning model?","importance":0.0,"consolidated":false,"timestamp":1791687165.4140692,"kind":"message","role":"You","text":"is this a learning model?","topics":["learning-model","memory-model"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"AI 4","content":"Assistant: Not in the usual machine-learning sense. It is a hand-coded memory graph with Hebbian-inspired link strengthening on activation, importance and link decay per cycle, and a consolidation threshold. Those are learning-like state updates, but it does not train a predictive model, infer topics automatically, learn from examples, or optimize parameters. Topic links are supplied manually, and recall spreads using existing weighted edges.","importance":0.0,"consolidated":false,"timestamp":1791687165.4140718,"kind":"message","role":"Assistant","text":"Not in the usual machine-learning sense. It is a hand-coded memory graph with Hebbian-inspired link strengthening on activation, importance and link decay per cycle, and a consolidation threshold. Those are learning-like state updates, but it does not train a predictive model, infer topics automatically, learn from examples, or optimize parameters. Topic links are supplied manually, and recall spreads using existing weighted edges.","topics":["learning-model","memory-model","limitations"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"You 6","content":"You: storage and retrieval?","importance":0.0,"consolidated":false,"timestamp":1791687165.4140732,"kind":"message","role":"You","text":"storage and retrieval?","topics":["storage","retrieval"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"AI 5","content":"Assistant: Storage is currently the local chat_memory.json file: it keeps the saved messages, topic tags, importance scores, cycle count, and weighted links across runs. Retrieval is the graph's spreading activation: starting from a selected memory, it follows connected links and ranks reachable memories by their link strength and importance. Clicking a node or Recall this chat demonstrates that behavior. It is not yet semantic search: it cannot take a new natural-language question and find matching memories unless the relevant topic links were manually supplied. A practical next step would be add embeddings or full-text search to identify candidate memories, then use this graph to spread/rank associated context.","importance":0.0,"consolidated":false,"timestamp":1791687165.4140754,"kind":"message","role":"Assistant","text":"Storage is currently the local chat_memory.json file: it keeps the saved messages, topic tags, importance scores, cycle count, and weighted links across runs. Retrieval is the graph's spreading activation: starting from a selected memory, it follows connected links and ranks reachable memories by their link strength and importance. Clicking a node or Recall this chat demonstrates that behavior. It is not yet semantic search: it cannot take a new natural-language question and find matching memories unless the relevant topic links were manually supplied. A practical next step would be add embeddings or full-text search to identify candidate memories, then use this graph to spread/rank associated context.","topics":["storage","retrieval","graph-search"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"You 7","content":"You: some of these things should likely connect at least partially with other things to make this a good memory","importance":0.0,"consolidated":false,"timestamp":1791687165.4140818,"kind":"message","role":"You","text":"some of these things should likely connect at least partially with other things to make this a good memory","topics":["graph-quality","memory-links"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"AI 6","content":"Assistant: You're right: chronology-only links are too weak, and indiscriminately connecting everything makes recall noisy. I added sparse TF-IDF word-similarity links alongside chronology and topic links, selecting up to two strong text matches per message. This can connect related wording even when topic tags differ, but it is lexical matching rather than deep semantic understanding. This exchange is saved as cycle 4; the updated graph now includes the inferred associations.","importance":0.0,"consolidated":false,"timestamp":1791687165.414088,"kind":"message","role":"Assistant","text":"You're right: chronology-only links are too weak, and indiscriminately connecting everything makes recall noisy. I added sparse TF-IDF word-similarity links alongside chronology and topic links, selecting up to two strong text matches per message. This can connect related wording even when topic tags differ, but it is lexical matching rather than deep semantic understanding. This exchange is saved as cycle 4; the updated graph now includes the inferred associations.","topics":["graph-quality","memory-links","tfidf","lexical-retrieval"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"You 8","content":"You: should be updating on every prompt and response","importance":0.0,"consolidated":false,"timestamp":1791687165.4140904,"kind":"message","role":"You","text":"should be updating on every prompt and response","topics":["refresh","live-updates"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"AI 7","content":"Assistant: Yes \u2014 I updated the graph so it auto-refreshes, and I\u2019ll keep capturing each prompt and response as we go.","importance":0.0,"consolidated":false,"timestamp":1791687165.4140928,"kind":"message","role":"Assistant","text":"Yes \u2014 I updated the graph so it auto-refreshes, and I\u2019ll keep capturing each prompt and response as we go.","topics":["refresh","automation","live-updates"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"You 9","content":"You: You have not yet marked the task as complete using the task_complete tool. If you were planning, stop planning and start implementing. You aren't done until you have fully completed the task. IMPORTANT: Do NOT call task_complete if: You have open questions or ambiguities - make good decisions and keep working. You encountered an error - try to resolve it or find an alternative approach. There are remaining steps - complete them first. Keep working autonomously until the task is truly finished, then call task_complete.","importance":0.0,"consolidated":false,"timestamp":1791687165.4140952,"kind":"message","role":"You","text":"You have not yet marked the task as complete using the task_complete tool. If you were planning, stop planning and start implementing. You aren't done until you have fully completed the task. IMPORTANT: Do NOT call task_complete if: You have open questions or ambiguities - make good decisions and keep working. You encountered an error - try to resolve it or find an alternative approach. There are remaining steps - complete them first. Keep working autonomously until the task is truly finished, then call task_complete.","topics":["task-completion","autopilot"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"AI 8","content":"Assistant: Understood \u2014 I\u2019ll keep working instead of stopping, and I\u2019ll only mark the task complete once the remaining work is actually finished and verified.","importance":0.0,"consolidated":false,"timestamp":1791687165.4140973,"kind":"message","role":"Assistant","text":"Understood \u2014 I\u2019ll keep working instead of stopping, and I\u2019ll only mark the task complete once the remaining work is actually finished and verified.","topics":["task-completion","autopilot","verification"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"You 10","content":"You: what are we doing right now?","importance":0.0,"consolidated":false,"timestamp":1791687165.4140992,"kind":"message","role":"You","text":"what are we doing right now?","topics":["status","semantic-retrieval","workflow"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"AI 9","content":"Assistant: We\u2019re in the middle of upgrading the memory graph into semantic retrieval with persistent learning, so the page can rank memories by meaning and feedback instead of only word overlap.","importance":0.0,"consolidated":false,"timestamp":1791687165.4141014,"kind":"message","role":"Assistant","text":"We\u2019re in the middle of upgrading the memory graph into semantic retrieval with persistent learning, so the page can rank memories by meaning and feedback instead of only word overlap.","topics":["semantic-retrieval","learning-layer","graph-status"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"You 11","content":"You: this is all related to ai memory what happens if we have a topic that is way off topic i.e. bible verses?","importance":0.0,"consolidated":false,"timestamp":1791687165.414103,"kind":"message","role":"You","text":"this is all related to ai memory what happens if we have a topic that is way off topic i.e. bible verses?","topics":["off-topic","namespaces","domain-separation"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"AI 10","content":"Assistant: Off-topic material should become its own cluster or namespace so it doesn\u2019t pollute the AI-memory graph unless you intentionally link it across domains.","importance":0.0,"consolidated":false,"timestamp":1791687165.414105,"kind":"message","role":"Assistant","text":"Off-topic material should become its own cluster or namespace so it doesn\u2019t pollute the AI-memory graph unless you intentionally link it across domains.","topics":["domain-separation","retrieval","topic-clustering"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"You 12","content":"You: tell me about John 3:16","importance":0.0,"consolidated":false,"timestamp":1791687165.4141068,"kind":"message","role":"You","text":"tell me about John 3:16","topics":["scripture","john-3-16","christianity"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"AI 11","content":"Assistant: John 3:16 says that God loved the world, gave his Son, and offers eternal life to whoever believes; it\u2019s often treated as a compact summary of the Christian message.","importance":0.0,"consolidated":false,"timestamp":1791687165.4141104,"kind":"message","role":"Assistant","text":"John 3:16 says that God loved the world, gave his Son, and offers eternal life to whoever believes; it\u2019s often treated as a compact summary of the Christian message.","topics":["scripture","john-3-16","explanation"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"You 13","content":"You: I don't see that scripture added a new node or anything?","importance":0.0,"consolidated":false,"timestamp":1791687165.4141126,"kind":"message","role":"You","text":"I don't see that scripture added a new node or anything?","topics":["memory-ingestion","scripture","persistence"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"AI 12","content":"Assistant: Right \u2014 it was only answered in chat, not written into the memory file, so no new node or embedding entry appeared yet.","importance":0.0,"consolidated":false,"timestamp":1791687165.4141183,"kind":"message","role":"Assistant","text":"Right \u2014 it was only answered in chat, not written into the memory file, so no new node or embedding entry appeared yet.","topics":["memory-ingestion","persistence","auto-ingest"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"You 14","content":"You: I thought I was clear about that earlier. We should be adding to and updating the graph with every prompt and response","importance":0.0,"consolidated":false,"timestamp":1791687165.4141204,"kind":"message","role":"You","text":"I thought I was clear about that earlier. We should be adding to and updating the graph with every prompt and response","topics":["auto-ingest","workflow","live-updates"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"AI 13","content":"Assistant: You\u2019re right. I should be capturing each prompt-response pair into memory, and I\u2019m backfilling the missing turns now so the graph stays in sync with the conversation.","importance":0.0,"consolidated":false,"timestamp":1791687165.4141226,"kind":"message","role":"Assistant","text":"You\u2019re right. I should be capturing each prompt-response pair into memory, and I\u2019m backfilling the missing turns now so the graph stays in sync with the conversation.","topics":["auto-ingest","workflow","correction"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"You 15","content":"You: let's talk a bit about Romans 3:23 and see what that does","importance":0.0,"consolidated":false,"timestamp":1791687165.414125,"kind":"message","role":"You","text":"let's talk a bit about Romans 3:23 and see what that does","topics":["scripture","romans-3-23","christianity"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"AI 14","content":"Assistant: Romans 3:23 says that all people have sinned and fall short of God\u2019s glory. In Christian teaching, it highlights the universal need for grace rather than self-righteousness, and it pairs naturally with verses about redemption and forgiveness.","importance":0.0,"consolidated":false,"timestamp":1791687165.4141269,"kind":"message","role":"Assistant","text":"Romans 3:23 says that all people have sinned and fall short of God\u2019s glory. In Christian teaching, it highlights the universal need for grace rather than self-righteousness, and it pairs naturally with verses about redemption and forgiveness.","topics":["scripture","romans-3-23","explanation","grace"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"You 16","content":"You: Pizza is a favorite food","importance":0.0,"consolidated":false,"timestamp":1791687165.4141285,"kind":"message","role":"You","text":"Pizza is a favorite food","topics":["food","favorite-foods","pizza"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"AI 15","content":"Assistant: Logged \u2014 this will currently behave like a general memory unless we add a food namespace, so it will land in the main AI-memory cluster for now.","importance":0.0,"consolidated":false,"timestamp":1791687165.4141304,"kind":"message","role":"Assistant","text":"Logged \u2014 this will currently behave like a general memory unless we add a food namespace, so it will land in the main AI-memory cluster for now.","topics":["food","favorite-foods","memory-ingestion"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"You 17","content":"You: I think it's so different that it doesn't connect well or loosely connects with others so maybe it sits outside until it grows in importances, but doesn't sit in with the others","importance":0.0,"consolidated":false,"timestamp":1791687165.414132,"kind":"message","role":"You","text":"I think it's so different that it doesn't connect well or loosely connects with others so maybe it sits outside until it grows in importances, but doesn't sit in with the others","topics":["food","domain-separation","memory-clustering"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"AI 16","content":"Assistant: Implemented: food now gets its own peripheral domain, placed outside the main AI-memory cluster by default and only promoted to a stronger side cluster if it accumulates enough weight. It no longer sits inside the main cluster with unrelated memories.","importance":0.0,"consolidated":false,"timestamp":1791687165.414134,"kind":"message","role":"Assistant","text":"Implemented: food now gets its own peripheral domain, placed outside the main AI-memory cluster by default and only promoted to a stronger side cluster if it accumulates enough weight. It no longer sits inside the main cluster with unrelated memories.","topics":["food","domain-separation","visual-layout"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"You 18","content":"You: Food is siting outside of the visual area","importance":0.0,"consolidated":false,"timestamp":1791687165.4141397,"kind":"message","role":"You","text":"Food is siting outside of the visual area","topics":["food","visual-layout","domain-separation"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"AI 17","content":"Assistant: I pulled the food cluster back into the visible canvas while keeping it separate from the core AI-memory cluster. It should now sit to the right/lower-right as a peripheral domain instead of disappearing off-screen.","importance":0.0,"consolidated":false,"timestamp":1791687165.4141414,"kind":"message","role":"Assistant","text":"I pulled the food cluster back into the visible canvas while keeping it separate from the core AI-memory cluster. It should now sit to the right/lower-right as a peripheral domain instead of disappearing off-screen.","topics":["food","visual-layout","domain-separation"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"You 19","content":"You: now it overlaps and looks odd","importance":0.0,"consolidated":false,"timestamp":1791687165.4141471,"kind":"message","role":"You","text":"now it overlaps and looks odd","topics":["food","visual-layout","overlap"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"AI 18","content":"Assistant: I moved Food below Scripture so it stays separated without colliding with the main cluster or the verse cluster.","importance":0.0,"consolidated":false,"timestamp":1791687165.414149,"kind":"message","role":"Assistant","text":"I moved Food below Scripture so it stays separated without colliding with the main cluster or the verse cluster.","topics":["food","visual-layout","overlap"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"You 20","content":"You: this is good for now.  but it doesn't look like new memories are being created which should be done for every prompt and response","importance":0.0,"consolidated":false,"timestamp":1791687165.414151,"kind":"message","role":"You","text":"this is good for now.  but it doesn't look like new memories are being created which should be done for every prompt and response","topics":["memory-ingestion","live-updates","persistence"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"AI 19","content":"Assistant: You're right \u2014 I should be appending each prompt/response pair as a new memory. I\u2019m adding this exchange now, and the graph should refresh with a new node pair for it.","importance":0.0,"consolidated":false,"timestamp":1791687165.4141526,"kind":"message","role":"Assistant","text":"You're right \u2014 I should be appending each prompt/response pair as a new memory. I\u2019m adding this exchange now, and the graph should refresh with a new node pair for it.","topics":["memory-ingestion","live-updates","persistence"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"You 21","content":"You: should be saving and updating the graph and memory for every prompt question and response right now. what can we do so that I can stop reminding you and you can just do this automatically","importance":0.0,"consolidated":false,"timestamp":1791687165.4141548,"kind":"message","role":"You","text":"should be saving and updating the graph and memory for every prompt question and response right now. what can we do so that I can stop reminding you and you can just do this automatically","topics":["memory-ingestion","automation","persistence"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"AI 20","content":"Assistant: The reliable fix is to move turn logging out of the chat and into the app flow: either I treat every incoming message as a memory update before answering, or we add a host-side hook/wrapper that appends each turn to chat_memory.json and regenerates memory_graph.html automatically on every exchange.","importance":0.0,"consolidated":false,"timestamp":1791687165.4141572,"kind":"message","role":"Assistant","text":"The reliable fix is to move turn logging out of the chat and into the app flow: either I treat every incoming message as a memory update before answering, or we add a host-side hook/wrapper that appends each turn to chat_memory.json and regenerates memory_graph.html automatically on every exchange.","topics":["memory-ingestion","automation","persistence"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"You 22","content":"You: so now where is Elementary in the graph","importance":0.0,"consolidated":false,"timestamp":1791687165.4141588,"kind":"message","role":"You","text":"so now where is Elementary in the graph","topics":["elementary","tv-show","memory-ingestion"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"AI 21","content":"Assistant: Elementary now appears as a new general memory in the AI-memory cluster unless we choose to split TV shows into their own domain. It should sit near this discussion as part of the chat history.","importance":0.0,"consolidated":false,"timestamp":1791687165.4141607,"kind":"message","role":"Assistant","text":"Elementary now appears as a new general memory in the AI-memory cluster unless we choose to split TV shows into their own domain. It should sit near this discussion as part of the chat history.","topics":["elementary","tv-show","ai-memory"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"You 23","content":"You: should this be in the ai memory or outside in a general or under evaluation area. doens't seem to related to ai memory to me","importance":0.0,"consolidated":false,"timestamp":1791687165.4141676,"kind":"message","role":"You","text":"should this be in the ai memory or outside in a general or under evaluation area. doens't seem to related to ai memory to me","topics":["evaluation","meta","domain-separation"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"AI 22","content":"Assistant: I agree \u2014 this should live outside the core AI-memory cluster, likely in a general or evaluation/meta area. It\u2019s about classifying the memory system itself rather than discussing AI memory content, so it fits better as an outboard policy or evaluation node.","importance":0.0,"consolidated":false,"timestamp":1791687165.41417,"kind":"message","role":"Assistant","text":"I agree \u2014 this should live outside the core AI-memory cluster, likely in a general or evaluation/meta area. It\u2019s about classifying the memory system itself rather than discussing AI memory content, so it fits better as an outboard policy or evaluation node.","topics":["evaluation","meta","domain-separation"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"You 24","content":"You: not seeing this under evaluation space","importance":0.0,"consolidated":false,"timestamp":1791687165.4141717,"kind":"message","role":"You","text":"not seeing this under evaluation space","topics":["evaluation","meta","domain-separation"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"AI 23","content":"Assistant: I\u2019ve added a real Under evaluation cluster so meta and classification turns can sit outside the main AI-memory area instead of blending in with it.","importance":0.0,"consolidated":false,"timestamp":1791687165.4141736,"kind":"message","role":"Assistant","text":"I\u2019ve added a real Under evaluation cluster so meta and classification turns can sit outside the main AI-memory area instead of blending in with it.","topics":["evaluation","meta","domain-separation"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"You 25","content":"You: who are the main cast","importance":0.0,"consolidated":false,"timestamp":1791687165.4141753,"kind":"message","role":"You","text":"who are the main cast","topics":["elementary","cast","tv-show"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"AI 24","content":"Assistant: The main cast of Elementary includes Jonny Lee Miller as Sherlock Holmes, Lucy Liu as Joan Watson, Aidan Quinn as Captain Thomas Gregson, Jon Michael Hill as Detective Marcus Bell, and Natalie Dormer in a recurring role as Irene Adler/Moriarty.","importance":0.0,"consolidated":false,"timestamp":1791687165.4141805,"kind":"message","role":"Assistant","text":"The main cast of Elementary includes Jonny Lee Miller as Sherlock Holmes, Lucy Liu as Joan Watson, Aidan Quinn as Captain Thomas Gregson, Jon Michael Hill as Detective Marcus Bell, and Natalie Dormer in a recurring role as Irene Adler/Moriarty.","topics":["elementary","cast","tv-show"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"You 26","content":"You: I like a good spagetti and meat sauce","importance":0.0,"consolidated":false,"timestamp":1791687165.4141827,"kind":"message","role":"You","text":"I like a good spagetti and meat sauce","topics":["food","pasta","spaghetti","meat-sauce"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"AI 25","content":"Assistant: Logged as a food memory: spaghetti and meat sauce fits the Food cluster, alongside the other off-topic food-related turns.","importance":0.0,"consolidated":false,"timestamp":1791687165.414184,"kind":"message","role":"Assistant","text":"Logged as a food memory: spaghetti and meat sauce fits the Food cluster, alongside the other off-topic food-related turns.","topics":["food","pasta","spaghetti","meat-sauce"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"You 27","content":"You: Elemenatry is one of my favorite tv shows. I also like star trek the next generation and Mcg","importance":0.0,"consolidated":false,"timestamp":1791687165.41419,"kind":"message","role":"You","text":"Elemenatry is one of my favorite tv shows. I also like star trek the next generation and Mcg","topics":["entertainment","tv-show","elementary","star-trek","next-generation","mcgyver"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"AI 26","content":"Assistant: Logged as Entertainment rather than core AI memory. Elementary, Star Trek: The Next Generation, and McGyver now belong in the TV-show cluster so they stay separate from the AI-memory discussion.","importance":0.0,"consolidated":false,"timestamp":1791687165.414192,"kind":"message","role":"Assistant","text":"Logged as Entertainment rather than core AI memory. Elementary, Star Trek: The Next Generation, and McGyver now belong in the TV-show cluster so they stay separate from the AI-memory discussion.","topics":["entertainment","tv-show","elementary","star-trek","next-generation","mcgyver"],"rawImportance":0,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"You 28","content":"You: who plays captain picard?","importance":0.0,"consolidated":false,"timestamp":1791687165.4141936,"kind":"message","role":"You","text":"who plays captain picard?","topics":["entertainment","star-trek","captain-picard"],"rawImportance":0.15,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"AI 27","content":"Assistant: Captain Jean-Luc Picard is played by Patrick Stewart.","importance":0.0,"consolidated":false,"timestamp":1791687165.4141953,"kind":"message","role":"Assistant","text":"Captain Jean-Luc Picard is played by Patrick Stewart.","topics":["entertainment","star-trek","captain-picard"],"rawImportance":0.05,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"You 29","content":"You: how many tv shows are we tracking now","importance":0.15,"consolidated":false,"timestamp":1791687165.414201,"kind":"message","role":"You","text":"how many tv shows are we tracking now","topics":["entertainment","tv-show","count"],"rawImportance":0.3,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"AI 28","content":"Assistant: We\u2019re tracking three TV shows right now: Elementary, Star Trek: The Next Generation, and McGyver. Captain Picard is a character reference inside Star Trek, not a separate show.","importance":0.05,"consolidated":false,"timestamp":1791687165.4142027,"kind":"message","role":"Assistant","text":"We\u2019re tracking three TV shows right now: Elementary, Star Trek: The Next Generation, and McGyver. Captain Picard is a character reference inside Star Trek, not a separate show.","topics":["entertainment","tv-show","count"],"rawImportance":0.2,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"You 30","content":"You: what memory concepts should we be considering for evolving","importance":0.3,"consolidated":false,"timestamp":1791687165.4142046,"kind":"message","role":"You","text":"what memory concepts should we be considering for evolving","topics":["memory-design","evolution","domains"],"rawImportance":0.45,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"AI 29","content":"Assistant: Key memory concepts to evolve next include: domains/namespaces, cluster promotion thresholds, salience and importance, recency vs. permanence, retrieval modes, consolidation vs. transient notes, cross-domain bridges, evaluation/meta space, and decay or pruning policies.","importance":0.2,"consolidated":false,"timestamp":1791687165.4142065,"kind":"message","role":"Assistant","text":"Key memory concepts to evolve next include: domains/namespaces, cluster promotion thresholds, salience and importance, recency vs. permanence, retrieval modes, consolidation vs. transient notes, cross-domain bridges, evaluation/meta space, and decay or pruning policies.","topics":["memory-design","evolution","domains"],"rawImportance":0.35,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"You 31","content":"You: that's good and may build that into the memory somehow. maybe a reference. Eventually the memory is going to have agents and begin working separately from this chat so we need to keep that in mind for architecture and instruction. Right now we're building it as the source, but soon we will be querying it and then later it will be querying you.","importance":0.45,"consolidated":false,"timestamp":1791687165.4142082,"kind":"message","role":"You","text":"that's good and may build that into the memory somehow. maybe a reference. Eventually the memory is going to have agents and begin working separately from this chat so we need to keep that in mind for architecture and instruction. Right now we're building it as the source, but soon we will be querying it and then later it will be querying you.","topics":["memory-architecture","agents","querying"],"rawImportance":0.6,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"AI 30","content":"Assistant: Logged as a memory reference for future architecture: the system should evolve from chat-source memory into a queryable memory layer, and later into a multi-agent system that can query and act from memory independently of this chat.","importance":0.35,"consolidated":false,"timestamp":1791687165.41421,"kind":"message","role":"Assistant","text":"Logged as a memory reference for future architecture: the system should evolve from chat-source memory into a queryable memory layer, and later into a multi-agent system that can query and act from memory independently of this chat.","topics":["memory-architecture","agents","querying"],"rawImportance":0.5,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"You 32","content":"You: go for it","importance":0.6,"consolidated":false,"timestamp":1791687165.4142118,"kind":"message","role":"You","text":"go for it","topics":["memory-architecture","policy","agents"],"rawImportance":0.75,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"AI 31","content":"Assistant: Added a memory architecture policy to the project docs: preserve provenance, separate domains, keep evaluation/meta distinct, promote clusters only when they earn weight, and make the system retrieval-friendly for future agents.","importance":0.5,"consolidated":false,"timestamp":1791687165.4142137,"kind":"message","role":"Assistant","text":"Added a memory architecture policy to the project docs: preserve provenance, separate domains, keep evaluation/meta distinct, promote clusters only when they earn weight, and make the system retrieval-friendly for future agents.","topics":["memory-architecture","policy","agents"],"rawImportance":0.65,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"You 33","content":"You: what bible verses discuss the armor of god?","importance":0.75,"consolidated":false,"timestamp":1791687165.4142153,"kind":"message","role":"You","text":"what bible verses discuss the armor of god?","topics":["scripture","bible","armor-of-god"],"rawImportance":0.9,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"AI 32","content":"Assistant: The main passage is Ephesians 6:10-18 \u2014 that\u2019s the classic armor of God section. Other related verses include Isaiah 59:17, 1 Thessalonians 5:8, Romans 13:12, 2 Corinthians 6:7, and 1 Peter 5:8-9. If you want, I can also give you a short summary of each piece of the armor in Ephesians 6.","importance":0.65,"consolidated":false,"timestamp":1791687165.4142175,"kind":"message","role":"Assistant","text":"The main passage is Ephesians 6:10-18 \u2014 that\u2019s the classic armor of God section. Other related verses include Isaiah 59:17, 1 Thessalonians 5:8, Romans 13:12, 2 Corinthians 6:7, and 1 Peter 5:8-9. If you want, I can also give you a short summary of each piece of the armor in Ephesians 6.","topics":["scripture","bible","armor-of-god"],"created_cycle":30,"rawImportance":0.8,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0}},{"id":"You 34","content":"You: go for it","importance":0.9,"consolidated":false,"timestamp":1791687165.4142194,"kind":"message","role":"You","text":"go for it","topics":[],"rawImportance":0.9,"history":[],"feedback":{"0":"n","1":"e","2":"u","3":"t","4":"r","5":"a","6":"l","helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"AI 33","content":"Assistant: Added backend graph-state timestamps, automatic polling refresh, and a server endpoint for appending exchanges.","importance":0.8,"consolidated":false,"timestamp":1791687165.4142208,"kind":"message","role":"Assistant","text":"Added backend graph-state timestamps, automatic polling refresh, and a server endpoint for appending exchanges.","topics":[],"created_cycle":31,"rawImportance":0.8,"history":[],"feedback":{"0":"n","1":"e","2":"u","3":"t","4":"r","5":"a","6":"l","helpful":0,"corrections":0,"weak":0,"recalls":0}},{"id":"domain-separation","content":"Topic: domain-separation","importance":0.95,"consolidated":false,"timestamp":1791687165.4229743,"kind":"topic","topic":"domain-separation","rawImportance":0.95,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"food","content":"Topic: food","importance":0.95,"consolidated":false,"timestamp":1791687165.4230015,"kind":"topic","topic":"food","rawImportance":0.95,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"persistence","content":"Topic: persistence","importance":0.95,"consolidated":false,"timestamp":1791687165.4230168,"kind":"topic","topic":"persistence","rawImportance":0.95,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"memory-ingestion","content":"Topic: memory-ingestion","importance":0.95,"consolidated":false,"timestamp":1791687165.4230297,"kind":"topic","topic":"memory-ingestion","rawImportance":0.95,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"tv-show","content":"Topic: tv-show","importance":0.95,"consolidated":false,"timestamp":1791687165.4230416,"kind":"topic","topic":"tv-show","rawImportance":0.95,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"scripture","content":"Topic: scripture","importance":0.9,"consolidated":false,"timestamp":1791687165.4230597,"kind":"topic","topic":"scripture","rawImportance":0.9,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"elementary","content":"Topic: elementary","importance":0.8,"consolidated":false,"timestamp":1791687165.4230697,"kind":"topic","topic":"elementary","rawImportance":0.8,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"entertainment","content":"Topic: entertainment","importance":0.8,"consolidated":false,"timestamp":1791687165.4230793,"kind":"topic","topic":"entertainment","rawImportance":0.8,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"live-updates","content":"Topic: live-updates","importance":0.7,"consolidated":false,"timestamp":1791687165.4230888,"kind":"topic","topic":"live-updates","rawImportance":0.7,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"visual-layout","content":"Topic: visual-layout","importance":0.7,"consolidated":false,"timestamp":1791687165.4231002,"kind":"topic","topic":"visual-layout","rawImportance":0.7,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"agents","content":"Topic: agents","importance":0.6,"consolidated":false,"timestamp":1791687165.4231136,"kind":"topic","topic":"agents","rawImportance":0.6,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"evaluation","content":"Topic: evaluation","importance":0.6,"consolidated":false,"timestamp":1791687165.4231236,"kind":"topic","topic":"evaluation","rawImportance":0.6,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"memory-architecture","content":"Topic: memory-architecture","importance":0.6,"consolidated":false,"timestamp":1791687165.4231334,"kind":"topic","topic":"memory-architecture","rawImportance":0.6,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"meta","content":"Topic: meta","importance":0.6,"consolidated":false,"timestamp":1791687165.4231415,"kind":"topic","topic":"meta","rawImportance":0.6,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"star-trek","content":"Topic: star-trek","importance":0.6,"consolidated":false,"timestamp":1791687165.423149,"kind":"topic","topic":"star-trek","rawImportance":0.6,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"auto-ingest","content":"Topic: auto-ingest","importance":0.5,"consolidated":false,"timestamp":1791687165.4231572,"kind":"topic","topic":"auto-ingest","rawImportance":0.5,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"automation","content":"Topic: automation","importance":0.5,"consolidated":false,"timestamp":1791687165.423164,"kind":"topic","topic":"automation","rawImportance":0.5,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"real-memory","content":"Topic: real_memory","importance":0.5,"consolidated":false,"timestamp":1791687165.4231718,"kind":"topic","topic":"real_memory","rawImportance":0.5,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"retrieval","content":"Topic: retrieval","importance":0.5,"consolidated":false,"timestamp":1791687165.4231784,"kind":"topic","topic":"retrieval","rawImportance":0.5,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"workflow","content":"Topic: workflow","importance":0.5,"consolidated":false,"timestamp":1791687165.4231882,"kind":"topic","topic":"workflow","rawImportance":0.5,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"armor-of-god","content":"Topic: armor-of-god","importance":0.4,"consolidated":false,"timestamp":1791687165.423196,"kind":"topic","topic":"armor-of-god","rawImportance":0.4,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"autopilot","content":"Topic: autopilot","importance":0.4,"consolidated":false,"timestamp":1791687165.4232018,"kind":"topic","topic":"autopilot","rawImportance":0.4,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"bible","content":"Topic: bible","importance":0.4,"consolidated":false,"timestamp":1791687165.4232075,"kind":"topic","topic":"bible","rawImportance":0.4,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"captain-picard","content":"Topic: captain-picard","importance":0.4,"consolidated":false,"timestamp":1791687165.4232132,"kind":"topic","topic":"captain-picard","rawImportance":0.4,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"cast","content":"Topic: cast","importance":0.4,"consolidated":false,"timestamp":1791687165.423219,"kind":"topic","topic":"cast","rawImportance":0.4,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"christianity","content":"Topic: christianity","importance":0.4,"consolidated":false,"timestamp":1791687165.4232247,"kind":"topic","topic":"christianity","rawImportance":0.4,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"count","content":"Topic: count","importance":0.4,"consolidated":false,"timestamp":1791687165.4232304,"kind":"topic","topic":"count","rawImportance":0.4,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"domains","content":"Topic: domains","importance":0.4,"consolidated":false,"timestamp":1791687165.423236,"kind":"topic","topic":"domains","rawImportance":0.4,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"evolution","content":"Topic: evolution","importance":0.4,"consolidated":false,"timestamp":1791687165.423241,"kind":"topic","topic":"evolution","rawImportance":0.4,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"explanation","content":"Topic: explanation","importance":0.4,"consolidated":false,"timestamp":1791687165.4232466,"kind":"topic","topic":"explanation","rawImportance":0.4,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"favorite-foods","content":"Topic: favorite-foods","importance":0.4,"consolidated":false,"timestamp":1791687165.423252,"kind":"topic","topic":"favorite-foods","rawImportance":0.4,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"graph-quality","content":"Topic: graph-quality","importance":0.4,"consolidated":false,"timestamp":1791687165.4232578,"kind":"topic","topic":"graph-quality","rawImportance":0.4,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"ingestion","content":"Topic: ingestion","importance":0.4,"consolidated":false,"timestamp":1791687165.4232635,"kind":"topic","topic":"ingestion","rawImportance":0.4,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"interactivity","content":"Topic: interactivity","importance":0.4,"consolidated":false,"timestamp":1791687165.4232688,"kind":"topic","topic":"interactivity","rawImportance":0.4,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"john-3-16","content":"Topic: john-3-16","importance":0.4,"consolidated":false,"timestamp":1791687165.4232755,"kind":"topic","topic":"john-3-16","rawImportance":0.4,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"learning-model","content":"Topic: learning-model","importance":0.4,"consolidated":false,"timestamp":1791687165.4232817,"kind":"topic","topic":"learning-model","rawImportance":0.4,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"mcgyver","content":"Topic: mcgyver","importance":0.4,"consolidated":false,"timestamp":1791687165.4232872,"kind":"topic","topic":"mcgyver","rawImportance":0.4,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"meat-sauce","content":"Topic: meat-sauce","importance":0.4,"consolidated":false,"timestamp":1791687165.423293,"kind":"topic","topic":"meat-sauce","rawImportance":0.4,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"memory-design","content":"Topic: memory-design","importance":0.4,"consolidated":false,"timestamp":1791687165.4232988,"kind":"topic","topic":"memory-design","rawImportance":0.4,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"memory-links","content":"Topic: memory-links","importance":0.4,"consolidated":false,"timestamp":1791687165.4233048,"kind":"topic","topic":"memory-links","rawImportance":0.4,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"memory-model","content":"Topic: memory-model","importance":0.4,"consolidated":false,"timestamp":1791687165.4233105,"kind":"topic","topic":"memory-model","rawImportance":0.4,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"next-generation","content":"Topic: next-generation","importance":0.4,"consolidated":false,"timestamp":1791687165.4233165,"kind":"topic","topic":"next-generation","rawImportance":0.4,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"overlap","content":"Topic: overlap","importance":0.4,"consolidated":false,"timestamp":1791687165.423322,"kind":"topic","topic":"overlap","rawImportance":0.4,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"pasta","content":"Topic: pasta","importance":0.4,"consolidated":false,"timestamp":1791687165.4233274,"kind":"topic","topic":"pasta","rawImportance":0.4,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"persistent-memory","content":"Topic: persistent-memory","importance":0.4,"consolidated":false,"timestamp":1791687165.4233334,"kind":"topic","topic":"persistent-memory","rawImportance":0.4,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"policy","content":"Topic: policy","importance":0.4,"consolidated":false,"timestamp":1791687165.4233387,"kind":"topic","topic":"policy","rawImportance":0.4,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"practical-use","content":"Topic: practical-use","importance":0.4,"consolidated":false,"timestamp":1791687165.4233449,"kind":"topic","topic":"practical-use","rawImportance":0.4,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"querying","content":"Topic: querying","importance":0.4,"consolidated":false,"timestamp":1791687165.4233503,"kind":"topic","topic":"querying","rawImportance":0.4,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"refresh","content":"Topic: refresh","importance":0.4,"consolidated":false,"timestamp":1791687165.4233556,"kind":"topic","topic":"refresh","rawImportance":0.4,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"romans-3-23","content":"Topic: romans-3-23","importance":0.4,"consolidated":false,"timestamp":1791687165.4233615,"kind":"topic","topic":"romans-3-23","rawImportance":0.4,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"semantic-retrieval","content":"Topic: semantic-retrieval","importance":0.4,"consolidated":false,"timestamp":1791687165.4233675,"kind":"topic","topic":"semantic-retrieval","rawImportance":0.4,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"spaghetti","content":"Topic: spaghetti","importance":0.4,"consolidated":false,"timestamp":1791687165.4233727,"kind":"topic","topic":"spaghetti","rawImportance":0.4,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"storage","content":"Topic: storage","importance":0.4,"consolidated":false,"timestamp":1791687165.4233782,"kind":"topic","topic":"storage","rawImportance":0.4,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"task-completion","content":"Topic: task-completion","importance":0.4,"consolidated":false,"timestamp":1791687165.4233844,"kind":"topic","topic":"task-completion","rawImportance":0.4,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"visualization","content":"Topic: visualization","importance":0.4,"consolidated":false,"timestamp":1791687165.4233952,"kind":"topic","topic":"visualization","rawImportance":0.4,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"ai-memory","content":"Topic: ai-memory","importance":0.3,"consolidated":false,"timestamp":1791687165.4234018,"kind":"topic","topic":"ai-memory","rawImportance":0.3,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"chat-transcript","content":"Topic: chat_transcript","importance":0.3,"consolidated":false,"timestamp":1791687165.423407,"kind":"topic","topic":"chat_transcript","rawImportance":0.3,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"consolidation","content":"Topic: consolidation","importance":0.3,"consolidated":false,"timestamp":1791687165.423412,"kind":"topic","topic":"consolidation","rawImportance":0.3,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"correction","content":"Topic: correction","importance":0.3,"consolidated":false,"timestamp":1791687165.4234166,"kind":"topic","topic":"correction","rawImportance":0.3,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"decay","content":"Topic: decay","importance":0.3,"consolidated":false,"timestamp":1791687165.4234216,"kind":"topic","topic":"decay","rawImportance":0.3,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"grace","content":"Topic: grace","importance":0.3,"consolidated":false,"timestamp":1791687165.4234262,"kind":"topic","topic":"grace","rawImportance":0.3,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"graph-retrieval","content":"Topic: graph-retrieval","importance":0.3,"consolidated":false,"timestamp":1791687165.4234316,"kind":"topic","topic":"graph-retrieval","rawImportance":0.3,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"graph-search","content":"Topic: graph-search","importance":0.3,"consolidated":false,"timestamp":1791687165.423437,"kind":"topic","topic":"graph-search","rawImportance":0.3,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"graph-status","content":"Topic: graph-status","importance":0.3,"consolidated":false,"timestamp":1791687165.4234421,"kind":"topic","topic":"graph-status","rawImportance":0.3,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"learning-layer","content":"Topic: learning-layer","importance":0.3,"consolidated":false,"timestamp":1791687165.4234474,"kind":"topic","topic":"learning-layer","rawImportance":0.3,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"lexical-retrieval","content":"Topic: lexical-retrieval","importance":0.3,"consolidated":false,"timestamp":1791687165.4234524,"kind":"topic","topic":"lexical-retrieval","rawImportance":0.3,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"limitations","content":"Topic: limitations","importance":0.3,"consolidated":false,"timestamp":1791687165.423457,"kind":"topic","topic":"limitations","rawImportance":0.3,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"memory-clustering","content":"Topic: memory-clustering","importance":0.3,"consolidated":false,"timestamp":1791687165.423462,"kind":"topic","topic":"memory-clustering","rawImportance":0.3,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"memory-system","content":"Topic: memory_system","importance":0.3,"consolidated":false,"timestamp":1791687165.4234705,"kind":"topic","topic":"memory_system","rawImportance":0.3,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"namespaces","content":"Topic: namespaces","importance":0.3,"consolidated":false,"timestamp":1791687165.4234755,"kind":"topic","topic":"namespaces","rawImportance":0.3,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"off-topic","content":"Topic: off-topic","importance":0.3,"consolidated":false,"timestamp":1791687165.4234805,"kind":"topic","topic":"off-topic","rawImportance":0.3,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"pizza","content":"Topic: pizza","importance":0.3,"consolidated":false,"timestamp":1791687165.4234853,"kind":"topic","topic":"pizza","rawImportance":0.3,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"recall","content":"Topic: recall","importance":0.3,"consolidated":false,"timestamp":1791687165.4234898,"kind":"topic","topic":"recall","rawImportance":0.3,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"status","content":"Topic: status","importance":0.3,"consolidated":false,"timestamp":1791687165.423494,"kind":"topic","topic":"status","rawImportance":0.3,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"tfidf","content":"Topic: tfidf","importance":0.3,"consolidated":false,"timestamp":1791687165.4234982,"kind":"topic","topic":"tfidf","rawImportance":0.3,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"topic-clustering","content":"Topic: topic-clustering","importance":0.3,"consolidated":false,"timestamp":1791687165.4235034,"kind":"topic","topic":"topic-clustering","rawImportance":0.3,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null},{"id":"verification","content":"Topic: verification","importance":0.3,"consolidated":false,"timestamp":1791687165.423508,"kind":"topic","topic":"verification","rawImportance":0.3,"history":[],"feedback":{"helpful":0,"corrections":0,"weak":0,"recalls":0},"created_cycle":null}],"links":[{"source":"You 1","target":"AI 1","strength":0.1395},{"source":"AI 1","target":"You 2","strength":0.0751},{"source":"You 2","target":"AI 2","strength":0.1395},{"source":"AI 2","target":"You 3","strength":0.1717},{"source":"You 2","target":"You 3","strength":0.1395},{"source":"You 3","target":"You 4","strength":0.0791},{"source":"You 4","target":"AI 3","strength":0.1469},{"source":"AI 3","target":"You 5","strength":0.0832},{"source":"You 5","target":"AI 4","strength":0.1546},{"source":"AI 4","target":"You 6","strength":0.0876},{"source":"You 6","target":"AI 5","strength":0.1627},{"source":"AI 5","target":"You 7","strength":0.0922},{"source":"You 7","target":"AI 6","strength":0.1713},{"source":"You 1","target":"You 2","strength":0.0817},{"source":"AI 1","target":"AI 2","strength":0.1107},{"source":"AI 1","target":"AI 5","strength":0.0984},{"source":"AI 2","target":"You 6","strength":0.0806},{"source":"You 3","target":"AI 3","strength":0.0846},{"source":"You 3","target":"AI 5","strength":0.0937},{"source":"You 4","target":"You 5","strength":0.1106},{"source":"You 4","target":"AI 4","strength":0.0839},{"source":"AI 3","target":"AI 5","strength":0.1226},{"source":"AI 3","target":"AI 6","strength":0.1032},{"source":"AI 4","target":"AI 5","strength":0.1059},{"source":"AI 5","target":"AI 6","strength":0.1047},{"source":"You 1","target":"You 3","strength":0.0748},{"source":"You 2","target":"You 7","strength":0.0762},{"source":"AI 2","target":"You 7","strength":0.0756},{"source":"AI 6","target":"You 8","strength":0.0971},{"source":"You 8","target":"AI 7","strength":0.1803},{"source":"You 4","target":"AI 7","strength":0.1173},{"source":"AI 7","target":"You 9","strength":0.1022},{"source":"You 9","target":"AI 8","strength":0.1898},{"source":"AI 2","target":"AI 8","strength":0.0903},{"source":"You 4","target":"You 9","strength":0.0839},{"source":"AI 8","target":"You 10","strength":0.1076},{"source":"You 10","target":"AI 9","strength":0.1537},{"source":"AI 2","target":"AI 9","strength":0.1285},{"source":"You 5","target":"AI 9","strength":0.1173},{"source":"You 6","target":"AI 9","strength":0.1121},{"source":"AI 6","target":"You 10","strength":0.1089},{"source":"AI 8","target":"AI 9","strength":0.101},{"source":"AI 9","target":"You 11","strength":0.1132},{"source":"You 11","target":"AI 10","strength":0.1618},{"source":"You 6","target":"AI 10","strength":0.1618},{"source":"AI 5","target":"AI 10","strength":0.1618},{"source":"AI 6","target":"You 11","strength":0.1098},{"source":"AI 10","target":"You 12","strength":0.1192},{"source":"You 12","target":"AI 11","strength":0.2214},{"source":"AI 6","target":"AI 11","strength":0.0927},{"source":"AI 11","target":"You 13","strength":0.1792},{"source":"You 13","target":"AI 12","strength":0.233},{"source":"You 2","target":"You 13","strength":0.1792},{"source":"AI 2","target":"You 13","strength":0.1792},{"source":"You 3","target":"You 13","strength":0.1792},{"source":"You 12","target":"You 13","strength":0.1792},{"source":"You 2","target":"AI 12","strength":0.1792},{"source":"AI 2","target":"AI 12","strength":0.1792},{"source":"You 3","target":"AI 12","strength":0.1792},{"source":"AI 5","target":"You 13","strength":0.1084},{"source":"You 10","target":"AI 12","strength":0.1654},{"source":"AI 12","target":"You 14","strength":0.1887},{"source":"You 14","target":"AI 13","strength":0.2453},{"source":"You 8","target":"You 14","strength":0.1887},{"source":"AI 7","target":"You 14","strength":0.1887},{"source":"You 10","target":"You 14","strength":0.1887},{"source":"You 10","target":"AI 13","strength":0.1887},{"source":"AI 12","target":"AI 13","strength":0.1887},{"source":"AI 7","target":"AI 13","strength":0.1962},{"source":"AI 13","target":"You 15","strength":0.139},{"source":"You 15","target":"AI 14","strength":0.2582},{"source":"You 12","target":"You 15","strength":0.2582},{"source":"AI 11","target":"You 15","strength":0.1986},{"source":"You 13","target":"You 15","strength":0.1986},{"source":"You 12","target":"AI 14","strength":0.1986},{"source":"AI 11","target":"AI 14","strength":0.2582},{"source":"You 13","target":"AI 14","strength":0.1986},{"source":"You 11","target":"AI 14","strength":0.1383},{"source":"AI 14","target":"You 16","strength":0.1463},{"source":"You 16","target":"AI 15","strength":0.2718},{"source":"You 13","target":"AI 15","strength":0.2091},{"source":"AI 12","target":"AI 15","strength":0.2091},{"source":"You 1","target":"AI 15","strength":0.1235},{"source":"AI 10","target":"AI 15","strength":0.182},{"source":"AI 15","target":"You 17","strength":0.2201},{"source":"You 17","target":"AI 16","strength":0.2861},{"source":"You 11","target":"You 17","strength":0.2201},{"source":"AI 10","target":"You 17","strength":0.2201},{"source":"You 16","target":"You 17","strength":0.2201},{"source":"You 11","target":"AI 16","strength":0.2201},{"source":"AI 10","target":"AI 16","strength":0.2201},{"source":"You 16","target":"AI 16","strength":0.2201},{"source":"AI 15","target":"AI 16","strength":0.2201},{"source":"AI 16","target":"You 18","strength":0.3706},{"source":"You 18","target":"AI 17","strength":0.3706},{"source":"You 11","target":"You 18","strength":0.2316},{"source":"AI 10","target":"You 18","strength":0.2316},{"source":"You 16","target":"You 18","strength":0.2316},{"source":"AI 15","target":"You 18","strength":0.2316},{"source":"You 17","target":"You 18","strength":0.3011},{"source":"You 11","target":"AI 17","strength":0.2316},{"source":"AI 10","target":"AI 17","strength":0.2316},{"source":"You 16","target":"AI 17","strength":0.2316},{"source":"AI 15","target":"AI 17","strength":0.2316},{"source":"You 17","target":"AI 17","strength":0.3011},{"source":"AI 16","target":"AI 17","strength":0.3706},{"source":"You 1","target":"You 18","strength":0.1904},{"source":"You 10","target":"AI 17","strength":0.2393},{"source":"AI 17","target":"You 19","strength":0.317},{"source":"You 19","target":"AI 18","strength":0.3901},{"source":"You 16","target":"You 19","strength":0.2438},{"source":"AI 15","target":"You 19","strength":0.2438},{"source":"You 17","target":"You 19","strength":0.2438},{"source":"AI 16","target":"You 19","strength":0.317},{"source":"You 18","target":"You 19","strength":0.317},{"source":"You 16","target":"AI 18","strength":0.2438},{"source":"AI 15","target":"AI 18","strength":0.2438},{"source":"You 17","target":"AI 18","strength":0.2438},{"source":"AI 16","target":"AI 18","strength":0.317},{"source":"You 18","target":"AI 18","strength":0.317},{"source":"AI 17","target":"AI 18","strength":0.317},{"source":"You 13","target":"AI 18","strength":0.1657},{"source":"AI 18","target":"You 20","strength":0.1797},{"source":"You 20","target":"AI 19","strength":0.4107},{"source":"You 2","target":"You 20","strength":0.2567},{"source":"AI 2","target":"You 20","strength":0.2567},{"source":"You 3","target":"You 20","strength":0.2567},{"source":"You 8","target":"You 20","strength":0.2567},{"source":"AI 7","target":"You 20","strength":0.2567},{"source":"You 13","target":"You 20","strength":0.3337},{"source":"AI 12","target":"You 20","strength":0.3337},{"source":"You 14","target":"You 20","strength":0.2567},{"source":"AI 15","target":"You 20","strength":0.2567},{"source":"You 2","target":"AI 19","strength":0.2567},{"source":"AI 2","target":"AI 19","strength":0.2567},{"source":"You 3","target":"AI 19","strength":0.2567},{"source":"You 8","target":"AI 19","strength":0.2567},{"source":"AI 7","target":"AI 19","strength":0.2567},{"source":"You 13","target":"AI 19","strength":0.3337},{"source":"AI 12","target":"AI 19","strength":0.3337},{"source":"You 14","target":"AI 19","strength":0.2567},{"source":"AI 15","target":"AI 19","strength":0.2567},{"source":"You 1","target":"You 20","strength":0.1948},{"source":"You 7","target":"You 20","strength":0.164},{"source":"You 9","target":"You 20","strength":0.1531},{"source":"AI 13","target":"AI 19","strength":0.2858},{"source":"You 17","target":"You 20","strength":0.1794},{"source":"AI 19","target":"You 21","strength":0.3512},{"source":"You 21","target":"AI 20","strength":0.4323},{"source":"You 2","target":"You 21","strength":0.2702},{"source":"AI 2","target":"You 21","strength":0.2702},{"source":"You 3","target":"You 21","strength":0.2702},{"source":"AI 7","target":"You 21","strength":0.2702},{"source":"You 13","target":"You 21","strength":0.3512},{"source":"AI 12","target":"You 21","strength":0.3512},{"source":"AI 15","target":"You 21","strength":0.2702},{"source":"You 20","target":"You 21","strength":0.3512},{"source":"You 2","target":"AI 20","strength":0.2702},{"source":"AI 2","target":"AI 20","strength":0.2702},{"source":"You 3","target":"AI 20","strength":0.2702},{"source":"AI 7","target":"AI 20","strength":0.2702},{"source":"You 13","target":"AI 20","strength":0.3512},{"source":"AI 12","target":"AI 20","strength":0.3512},{"source":"AI 15","target":"AI 20","strength":0.2702},{"source":"You 20","target":"AI 20","strength":0.3512},{"source":"AI 19","target":"AI 20","strength":0.3512},{"source":"AI 3","target":"AI 20","strength":0.2047},{"source":"You 8","target":"You 21","strength":0.3512},{"source":"You 10","target":"You 21","strength":0.2414},{"source":"You 14","target":"You 21","strength":0.2888},{"source":"AI 20","target":"You 22","strength":0.2844},{"source":"You 22","target":"AI 21","strength":0.3697},{"source":"You 13","target":"You 22","strength":0.2844},{"source":"AI 12","target":"You 22","strength":0.2844},{"source":"AI 15","target":"You 22","strength":0.2844},{"source":"You 20","target":"You 22","strength":0.2844},{"source":"AI 19","target":"You 22","strength":0.2844},{"source":"You 21","target":"You 22","strength":0.2844},{"source":"AI 1","target":"You 22","strength":0.1882},{"source":"AI 15","target":"AI 21","strength":0.2445},{"source":"AI 21","target":"You 23","strength":0.2096},{"source":"You 23","target":"AI 22","strength":0.479},{"source":"You 11","target":"You 23","strength":0.2994},{"source":"AI 10","target":"You 23","strength":0.2994},{"source":"You 17","target":"You 23","strength":0.2994},{"source":"AI 16","target":"You 23","strength":0.2994},{"source":"You 18","target":"You 23","strength":0.2994},{"source":"AI 17","target":"You 23","strength":0.2994},{"source":"You 11","target":"AI 22","strength":0.2994},{"source":"AI 10","target":"AI 22","strength":0.2994},{"source":"You 17","target":"AI 22","strength":0.2994},{"source":"AI 16","target":"AI 22","strength":0.2994},{"source":"You 18","target":"AI 22","strength":0.2994},{"source":"AI 17","target":"AI 22","strength":0.2994},{"source":"You 7","target":"AI 22","strength":0.1927},{"source":"AI 15","target":"AI 22","strength":0.2179},{"source":"AI 22","target":"You 24","strength":0.5042},{"source":"You 24","target":"AI 23","strength":0.5042},{"source":"You 11","target":"You 24","strength":0.3151},{"source":"AI 10","target":"You 24","strength":0.3151},{"source":"You 17","target":"You 24","strength":0.3151},{"source":"AI 16","target":"You 24","strength":0.3151},{"source":"You 18","target":"You 24","strength":0.3151},{"source":"AI 17","target":"You 24","strength":0.3151},{"source":"You 23","target":"You 24","strength":0.5042},{"source":"You 11","target":"AI 23","strength":0.3151},{"source":"AI 10","target":"AI 23","strength":0.3151},{"source":"You 17","target":"AI 23","strength":0.3151},{"source":"AI 16","target":"AI 23","strength":0.3151},{"source":"You 18","target":"AI 23","strength":0.3151},{"source":"AI 17","target":"AI 23","strength":0.3151},{"source":"You 23","target":"AI 23","strength":0.5042},{"source":"AI 22","target":"AI 23","strength":0.5042},{"source":"You 2","target":"AI 23","strength":0.2647},{"source":"AI 23","target":"You 25","strength":0.2322},{"source":"You 25","target":"AI 24","strength":0.5307},{"source":"You 22","target":"You 25","strength":0.4312},{"source":"AI 21","target":"You 25","strength":0.4312},{"source":"You 22","target":"AI 24","strength":0.4312},{"source":"AI 21","target":"AI 24","strength":0.4312},{"source":"AI 16","target":"You 25","strength":0.2605},{"source":"AI 24","target":"You 26","strength":0.2444},{"source":"You 26","target":"AI 25","strength":0.6634},{"source":"You 16","target":"You 26","strength":0.3492},{"source":"AI 15","target":"You 26","strength":0.3492},{"source":"You 17","target":"You 26","strength":0.3492},{"source":"AI 16","target":"You 26","strength":0.3492},{"source":"You 18","target":"You 26","strength":0.3492},{"source":"AI 17","target":"You 26","strength":0.3492},{"source":"You 19","target":"You 26","strength":0.3492},{"source":"AI 18","target":"You 26","strength":0.3492},{"source":"You 16","target":"AI 25","strength":0.3492},{"source":"AI 15","target":"AI 25","strength":0.3492},{"source":"You 17","target":"AI 25","strength":0.3492},{"source":"AI 16","target":"AI 25","strength":0.3492},{"source":"You 18","target":"AI 25","strength":0.3492},{"source":"AI 17","target":"AI 25","strength":0.3492},{"source":"You 19","target":"AI 25","strength":0.3492},{"source":"AI 18","target":"AI 25","strength":0.3492},{"source":"You 7","target":"You 26","strength":0.2381},{"source":"You 11","target":"AI 25","strength":0.2971},{"source":"You 20","target":"You 26","strength":0.2502},{"source":"AI 25","target":"You 27","strength":0.2573},{"source":"You 27","target":"AI 26","strength":0.6983},{"source":"You 22","target":"You 27","strength":0.4778},{"source":"AI 21","target":"You 27","strength":0.4778},{"source":"You 25","target":"You 27","strength":0.4778},{"source":"AI 24","target":"You 27","strength":0.4778},{"source":"You 22","target":"AI 26","strength":0.4778},{"source":"AI 21","target":"AI 26","strength":0.4778},{"source":"You 25","target":"AI 26","strength":0.4778},{"source":"AI 24","target":"AI 26","strength":0.4778},{"source":"You 16","target":"You 27","strength":0.2987},{"source":"AI 26","target":"You 28","strength":0.503},{"source":"You 28","target":"AI 27","strength":0.619},{"source":"You 27","target":"You 28","strength":0.503},{"source":"You 27","target":"AI 27","strength":0.503},{"source":"AI 26","target":"AI 27","strength":0.503},{"source":"AI 24","target":"You 28","strength":0.2441},{"source":"AI 24","target":"AI 27","strength":0.2249},{"source":"AI 27","target":"You 29","strength":0.4073},{"source":"You 29","target":"AI 28","strength":0.6516},{"source":"You 22","target":"You 29","strength":0.4073},{"source":"AI 21","target":"You 29","strength":0.4073},{"source":"You 25","target":"You 29","strength":0.4073},{"source":"AI 24","target":"You 29","strength":0.4073},{"source":"You 27","target":"You 29","strength":0.5294},{"source":"AI 26","target":"You 29","strength":0.5294},{"source":"You 28","target":"You 29","strength":0.4073},{"source":"You 22","target":"AI 28","strength":0.4073},{"source":"AI 21","target":"AI 28","strength":0.4073},{"source":"You 25","target":"AI 28","strength":0.4073},{"source":"AI 24","target":"AI 28","strength":0.4073},{"source":"You 27","target":"AI 28","strength":0.5294},{"source":"AI 26","target":"AI 28","strength":0.5294},{"source":"You 28","target":"AI 28","strength":0.4073},{"source":"AI 27","target":"AI 28","strength":0.4073},{"source":"AI 28","target":"You 30","strength":0.3001},{"source":"You 30","target":"AI 29","strength":0.6859},{"source":"You 23","target":"You 30","strength":0.2648},{"source":"You 24","target":"AI 29","strength":0.3411},{"source":"AI 23","target":"AI 29","strength":0.3002},{"source":"AI 29","target":"You 31","strength":0.3159},{"source":"You 31","target":"AI 30","strength":0.722},{"source":"You 3","target":"AI 30","strength":0.342},{"source":"AI 3","target":"AI 30","strength":0.3497},{"source":"You 9","target":"You 31","strength":0.2733},{"source":"You 10","target":"You 31","strength":0.3199},{"source":"You 30","target":"AI 30","strength":0.28},{"source":"AI 30","target":"You 32","strength":0.6175},{"source":"You 32","target":"AI 31","strength":0.76},{"source":"You 31","target":"You 32","strength":0.6175},{"source":"You 31","target":"AI 31","strength":0.6175},{"source":"AI 30","target":"AI 31","strength":0.6175},{"source":"AI 22","target":"AI 31","strength":0.382},{"source":"AI 29","target":"AI 31","strength":0.3307},{"source":"AI 31","target":"You 33","strength":0.35},{"source":"You 33","target":"AI 32","strength":0.8},{"source":"You 12","target":"You 33","strength":0.5},{"source":"AI 11","target":"You 33","strength":0.5},{"source":"You 13","target":"You 33","strength":0.5},{"source":"You 15","target":"You 33","strength":0.5},{"source":"AI 14","target":"You 33","strength":0.5},{"source":"You 12","target":"AI 32","strength":0.5},{"source":"AI 11","target":"AI 32","strength":0.5},{"source":"You 13","target":"AI 32","strength":0.5},{"source":"You 15","target":"AI 32","strength":0.5},{"source":"AI 14","target":"AI 32","strength":0.5},{"source":"You 11","target":"You 33","strength":0.4662},{"source":"AI 32","target":"You 34","strength":0.35},{"source":"You 34","target":"AI 33","strength":0.35,"created_cycle":31},{"source":"AI 2","target":"AI 33","strength":0.3579,"created_cycle":31},{"source":"You 4","target":"AI 19","strength":0.3952},{"source":"AI 19","target":"AI 33","strength":0.3961,"created_cycle":31},{"source":"You 11","target":"domain-separation","strength":0.84},{"source":"AI 10","target":"domain-separation","strength":0.84},{"source":"You 17","target":"domain-separation","strength":0.84},{"source":"AI 16","target":"domain-separation","strength":0.84},{"source":"You 18","target":"domain-separation","strength":0.84},{"source":"AI 17","target":"domain-separation","strength":0.84},{"source":"You 23","target":"domain-separation","strength":0.84},{"source":"AI 22","target":"domain-separation","strength":0.84},{"source":"You 24","target":"domain-separation","strength":0.84},{"source":"AI 23","target":"domain-separation","strength":0.84},{"source":"You 16","target":"food","strength":0.84},{"source":"AI 15","target":"food","strength":0.84},{"source":"You 17","target":"food","strength":0.84},{"source":"AI 16","target":"food","strength":0.84},{"source":"You 18","target":"food","strength":0.84},{"source":"AI 17","target":"food","strength":0.84},{"source":"You 19","target":"food","strength":0.84},{"source":"AI 18","target":"food","strength":0.84},{"source":"You 26","target":"food","strength":0.84},{"source":"AI 25","target":"food","strength":0.84},{"source":"You 2","target":"persistence","strength":0.78},{"source":"AI 2","target":"persistence","strength":0.78},{"source":"You 3","target":"persistence","strength":0.78},{"source":"You 13","target":"persistence","strength":0.78},{"source":"AI 12","target":"persistence","strength":0.78},{"source":"You 20","target":"persistence","strength":0.78},{"source":"AI 19","target":"persistence","strength":0.78},{"source":"You 21","target":"persistence","strength":0.78},{"source":"AI 20","target":"persistence","strength":0.78},{"source":"You 13","target":"memory-ingestion","strength":0.72},{"source":"AI 12","target":"memory-ingestion","strength":0.72},{"source":"AI 15","target":"memory-ingestion","strength":0.72},{"source":"You 20","target":"memory-ingestion","strength":0.72},{"source":"AI 19","target":"memory-ingestion","strength":0.72},{"source":"You 21","target":"memory-ingestion","strength":0.72},{"source":"AI 20","target":"memory-ingestion","strength":0.72},{"source":"You 22","target":"memory-ingestion","strength":0.72},{"source":"You 22","target":"tv-show","strength":0.72},{"source":"AI 21","target":"tv-show","strength":0.72},{"source":"You 25","target":"tv-show","strength":0.72},{"source":"AI 24","target":"tv-show","strength":0.72},{"source":"You 27","target":"tv-show","strength":0.72},{"source":"AI 26","target":"tv-show","strength":0.72},{"source":"You 29","target":"tv-show","strength":0.72},{"source":"AI 28","target":"tv-show","strength":0.72},{"source":"You 12","target":"scripture","strength":0.66},{"source":"AI 11","target":"scripture","strength":0.66},{"source":"You 13","target":"scripture","strength":0.66},{"source":"You 15","target":"scripture","strength":0.66},{"source":"AI 14","target":"scripture","strength":0.66},{"source":"You 33","target":"scripture","strength":0.66},{"source":"AI 32","target":"scripture","strength":0.66},{"source":"You 22","target":"elementary","strength":0.6},{"source":"AI 21","target":"elementary","strength":0.6},{"source":"You 25","target":"elementary","strength":0.6},{"source":"AI 24","target":"elementary","strength":0.6},{"source":"You 27","target":"elementary","strength":0.6},{"source":"AI 26","target":"elementary","strength":0.6},{"source":"You 27","target":"entertainment","strength":0.6},{"source":"AI 26","target":"entertainment","strength":0.6},{"source":"You 28","target":"entertainment","strength":0.6},{"source":"AI 27","target":"entertainment","strength":0.6},{"source":"You 29","target":"entertainment","strength":0.6},{"source":"AI 28","target":"entertainment","strength":0.6},{"source":"You 8","target":"live-updates","strength":0.54},{"source":"AI 7","target":"live-updates","strength":0.54},{"source":"You 14","target":"live-updates","strength":0.54},{"source":"You 20","target":"live-updates","strength":0.54},{"source":"AI 19","target":"live-updates","strength":0.54},{"source":"AI 16","target":"visual-layout","strength":0.54},{"source":"You 18","target":"visual-layout","strength":0.54},{"source":"AI 17","target":"visual-layout","strength":0.54},{"source":"You 19","target":"visual-layout","strength":0.54},{"source":"AI 18","target":"visual-layout","strength":0.54},{"source":"You 31","target":"agents","strength":0.48},{"source":"AI 30","target":"agents","strength":0.48},{"source":"You 32","target":"agents","strength":0.48},{"source":"AI 31","target":"agents","strength":0.48},{"source":"You 23","target":"evaluation","strength":0.48},{"source":"AI 22","target":"evaluation","strength":0.48},{"source":"You 24","target":"evaluation","strength":0.48},{"source":"AI 23","target":"evaluation","strength":0.48},{"source":"You 31","target":"memory-architecture","strength":0.48},{"source":"AI 30","target":"memory-architecture","strength":0.48},{"source":"You 32","target":"memory-architecture","strength":0.48},{"source":"AI 31","target":"memory-architecture","strength":0.48},{"source":"You 23","target":"meta","strength":0.48},{"source":"AI 22","target":"meta","strength":0.48},{"source":"You 24","target":"meta","strength":0.48},{"source":"AI 23","target":"meta","strength":0.48},{"source":"You 27","target":"star-trek","strength":0.48},{"source":"AI 26","target":"star-trek","strength":0.48},{"source":"You 28","target":"star-trek","strength":0.48},{"source":"AI 27","target":"star-trek","strength":0.48},{"source":"AI 12","target":"auto-ingest","strength":0.42},{"source":"You 14","target":"auto-ingest","strength":0.42},{"source":"AI 13","target":"auto-ingest","strength":0.42},{"source":"AI 7","target":"automation","strength":0.42},{"source":"You 21","target":"automation","strength":0.42},{"source":"AI 20","target":"automation","strength":0.42},{"source":"You 2","target":"real-memory","strength":0.42},{"source":"AI 2","target":"real-memory","strength":0.42},{"source":"You 3","target":"real-memory","strength":0.42},{"source":"You 6","target":"retrieval","strength":0.42},{"source":"AI 5","target":"retrieval","strength":0.42},{"source":"AI 10","target":"retrieval","strength":0.42},{"source":"You 10","target":"workflow","strength":0.42},{"source":"You 14","target":"workflow","strength":0.42},{"source":"AI 13","target":"workflow","strength":0.42},{"source":"You 33","target":"armor-of-god","strength":0.36},{"source":"AI 32","target":"armor-of-god","strength":0.36},{"source":"You 9","target":"autopilot","strength":0.36},{"source":"AI 8","target":"autopilot","strength":0.36},{"source":"You 33","target":"bible","strength":0.36},{"source":"AI 32","target":"bible","strength":0.36},{"source":"You 28","target":"captain-picard","strength":0.36},{"source":"AI 27","target":"captain-picard","strength":0.36},{"source":"You 25","target":"cast","strength":0.36},{"source":"AI 24","target":"cast","strength":0.36},{"source":"You 12","target":"christianity","strength":0.36},{"source":"You 15","target":"christianity","strength":0.36},{"source":"You 29","target":"count","strength":0.36},{"source":"AI 28","target":"count","strength":0.36},{"source":"You 30","target":"domains","strength":0.36},{"source":"AI 29","target":"domains","strength":0.36},{"source":"You 30","target":"evolution","strength":0.36},{"source":"AI 29","target":"evolution","strength":0.36},{"source":"AI 11","target":"explanation","strength":0.36},{"source":"AI 14","target":"explanation","strength":0.36},{"source":"You 16","target":"favorite-foods","strength":0.36},{"source":"AI 15","target":"favorite-foods","strength":0.36},{"source":"You 7","target":"graph-quality","strength":0.36},{"source":"AI 6","target":"graph-quality","strength":0.36},{"source":"AI 2","target":"ingestion","strength":0.36},{"source":"You 3","target":"ingestion","strength":0.36},{"source":"You 1","target":"interactivity","strength":0.36},{"source":"AI 1","target":"interactivity","strength":0.36},{"source":"You 12","target":"john-3-16","strength":0.36},{"source":"AI 11","target":"john-3-16","strength":0.36},{"source":"You 5","target":"learning-model","strength":0.36},{"source":"AI 4","target":"learning-model","strength":0.36},{"source":"You 27","target":"mcgyver","strength":0.36},{"source":"AI 26","target":"mcgyver","strength":0.36},{"source":"You 26","target":"meat-sauce","strength":0.36},{"source":"AI 25","target":"meat-sauce","strength":0.36},{"source":"You 30","target":"memory-design","strength":0.36},{"source":"AI 29","target":"memory-design","strength":0.36},{"source":"You 7","target":"memory-links","strength":0.36},{"source":"AI 6","target":"memory-links","strength":0.36},{"source":"You 5","target":"memory-model","strength":0.36},{"source":"AI 4","target":"memory-model","strength":0.36},{"source":"You 27","target":"next-generation","strength":0.36},{"source":"AI 26","target":"next-generation","strength":0.36},{"source":"You 19","target":"overlap","strength":0.36},{"source":"AI 18","target":"overlap","strength":0.36},{"source":"You 26","target":"pasta","strength":0.36},{"source":"AI 25","target":"pasta","strength":0.36},{"source":"You 4","target":"persistent-memory","strength":0.36},{"source":"AI 3","target":"persistent-memory","strength":0.36},{"source":"You 32","target":"policy","strength":0.36},{"source":"AI 31","target":"policy","strength":0.36},{"source":"You 4","target":"practical-use","strength":0.36},{"source":"AI 3","target":"practical-use","strength":0.36},{"source":"You 31","target":"querying","strength":0.36},{"source":"AI 30","target":"querying","strength":0.36},{"source":"You 8","target":"refresh","strength":0.36},{"source":"AI 7","target":"refresh","strength":0.36},{"source":"You 15","target":"romans-3-23","strength":0.36},{"source":"AI 14","target":"romans-3-23","strength":0.36},{"source":"You 10","target":"semantic-retrieval","strength":0.36},{"source":"AI 9","target":"semantic-retrieval","strength":0.36},{"source":"You 26","target":"spaghetti","strength":0.36},{"source":"AI 25","target":"spaghetti","strength":0.36},{"source":"You 6","target":"storage","strength":0.36},{"source":"AI 5","target":"storage","strength":0.36},{"source":"You 9","target":"task-completion","strength":0.36},{"source":"AI 8","target":"task-completion","strength":0.36},{"source":"You 1","target":"visualization","strength":0.36},{"source":"AI 1","target":"visualization","strength":0.36},{"source":"AI 21","target":"ai-memory","strength":0.3},{"source":"You 3","target":"chat-transcript","strength":0.3},{"source":"AI 1","target":"consolidation","strength":0.3},{"source":"AI 13","target":"correction","strength":0.3},{"source":"AI 1","target":"decay","strength":0.3},{"source":"AI 14","target":"grace","strength":0.3},{"source":"AI 3","target":"graph-retrieval","strength":0.3},{"source":"AI 5","target":"graph-search","strength":0.3},{"source":"AI 9","target":"graph-status","strength":0.3},{"source":"AI 9","target":"learning-layer","strength":0.3},{"source":"AI 6","target":"lexical-retrieval","strength":0.3},{"source":"AI 4","target":"limitations","strength":0.3},{"source":"You 17","target":"memory-clustering","strength":0.3},{"source":"AI 1","target":"memory-model","strength":0.3},{"source":"AI 2","target":"memory-system","strength":0.3},{"source":"You 11","target":"namespaces","strength":0.3},{"source":"You 11","target":"off-topic","strength":0.3},{"source":"You 16","target":"pizza","strength":0.3},{"source":"AI 1","target":"recall","strength":0.3},{"source":"You 10","target":"status","strength":0.3},{"source":"AI 6","target":"tfidf","strength":0.3},{"source":"AI 10","target":"topic-clustering","strength":0.3},{"source":"AI 8","target":"verification","strength":0.3}],"stats":{"node_count":144,"link_count":516,"avg_importance":0.2809027777777778,"max_importance":0.95,"avg_link_strength":0.36571393568244337,"consolidated_count":0,"forgotten_count":56},"seed_id":"You 1","cycles":31,"sidebarCollapsed":true,"query":""};
+const original = JSON.parse(JSON.stringify(initialGraph));
+const state = {
+  nodes: initialGraph.nodes.map(n => ({
+    ...n,
+    rawImportance: typeof n.rawImportance === "number" ? n.rawImportance : (typeof n.importance === "number" ? n.importance : 0.0),
+    history: [],
+    feedback: n.feedback || {helpful: 0, corrections: 0, weak: 0, recalls: 0},
+    created_cycle: n.created_cycle
+  })),
+  links: initialGraph.links.map(l => ({...l})),
+  cycles: initialGraph.cycles || 0,
+  selected: null,
+  sidebarCollapsed: false,
+  graphStateStamp: null,
+  active: {},
+  lastActivated: null,
+  query: "",
+  results: [],
+  searchStatus: "idle",
+  searchRequestId: 0
+};
+const graphStateApi = "http://localhost:3001/api/graph-state";
+const svg = document.getElementById("graph");
+const ns = "http://www.w3.org/2000/svg";
+const positions = {};
+const queryInput = document.getElementById("memory-query");
+const searchResults = document.getElementById("search-results");
+const sidebarToggleButton = document.getElementById("sidebar-toggle-button");
+const selectedSidebarToggleButton = document.getElementById("selected-sidebar-toggle-button");
+const selectedMemoryPanel = document.getElementById("selected-memory-panel");
+function domainForNode(node) {
+  const topics = nodeTopics(node).join(" ").toLowerCase();
+  const text = nodeSearchText(node);
+  if (
+    node.kind === "topic" &&
+    ["scripture", "john-3-16", "christianity"].some(item => topics.includes(item))
+  ) {
+    return "scripture";
+  }
+  if (
+    ["scripture", "john-3-16", "christianity", "bible", "verse", "verses", "gospel"].some(item => text.includes(item))
+  ) {
+    return "scripture";
+  }
+  if (
+    ["food", "pizza", "meal", "meals", "recipe", "recipes", "cooking", "cook", "cuisine", "dinner", "lunch", "breakfast", "snack", "favorite-food", "favorite foods"].some(item => text.includes(item) || topics.includes(item))
+  ) {
+    return "food";
+  }
+  if (
+    ["evaluation", "meta", "domain-separation", "classification", "policy", "under evaluation", "under-evaluation", "general area", "outside the core", "not related to ai memory"].some(item => text.includes(item) || topics.includes(item))
+  ) {
+    return "evaluation";
+  }
+  if (
+    ["entertainment", "tv", "tv show", "television", "series", "show", "shows", "elementary", "star trek", "next generation", "mcgyver", "macgyver", "cast"].some(item => text.includes(item) || topics.includes(item))
+  ) {
+    return "entertainment";
+  }
+  return "memory";
+}
+state.nodes.forEach(node => {
+  node.domain = domainForNode(node);
+});
+const domainGroups = Object.entries(
+  state.nodes.reduce((acc, node) => {
+    const domain = node.domain || "memory";
+    (acc[domain] ||= []).push(node);
+    return acc;
+  }, {})
+);
+function domainLayoutFor(domain, nodes) {
+  const totalImportance = nodes.reduce((sum, node) => sum + (node.importance || 0), 0);
+  if (domain === "scripture") {
+  return { center: {x: 684, y: 214}, radius: 42, label: "Scripture", subtitle: "" };
+  }
+  if (domain === "food") {
+    const promoted = totalImportance >= 1.8 || nodes.length >= 3;
+    return promoted
+      ? {
+          center: {x: 802, y: 486},
+          radius: 28,
+          label: "Food",
+          subtitle: "",
+        }
+      : {
+          center: {x: 802, y: 486},
+          radius: 28,
+          label: "Food",
+          subtitle: "",
+        };
+  }
+  if (domain === "evaluation") {
+    return {
+        center: {x: 742, y: 56},
+        radius: 32,
+        label: "Under evaluation",
+        subtitle: "",
+    };
+  }
+  if (domain === "entertainment") {
+    return {
+      center: {x: 586, y: 494},
+      radius: 32,
+      label: "Entertainment",
+      subtitle: "",
+    };
+  }
+  if (domain === "other") {
+    return { center: {x: 872, y: 304}, radius: 44, label: "Other", subtitle: "" };
+  }
+  return { center: {x: 272, y: 286}, radius: 122, label: "AI memory", subtitle: "" };
+}
+const domainLayouts = new Map();
+domainGroups.forEach(([domain, nodes]) => {
+  const layout = domainLayoutFor(domain, nodes);
+  domainLayouts.set(domain, layout);
+  const center = layout.center;
+  const radius = layout.radius;
+  nodes.forEach((node, index) => {
+    const angle = -Math.PI / 2 + (2 * Math.PI * index / Math.max(nodes.length, 1));
+    positions[node.id] = {
+      x: center.x + radius * Math.cos(angle),
+      y: center.y + radius * Math.sin(angle)
+    };
+  });
+});
+function defaultFeedback() {
+  return {helpful: 0, corrections: 0, weak: 0, recalls: 0};
+}
+function tokenize(text) {
+  return String(text || "").toLowerCase().match(/[a-z0-9]+/g) || [];
+}
+function nodeTopics(node) {
+  return Array.isArray(node.topics) ? node.topics : [];
+}
+function nodeSearchText(node) {
+  return [node.id, node.content, node.kind, node.role || "", nodeTopics(node).join(" ")].join(" ").toLowerCase();
+}
+async function loadSnapshot() {
+  try {
+    const response = await fetch(graphStateApi, { headers: { Accept: "application/json" } });
+    if (!response.ok) return null;
+    const payload = await response.json();
+    if (typeof payload.updatedAt === "number") {
+      state.graphStateStamp = payload.updatedAt;
+    }
+    return payload.snapshot || null;
+  } catch {
+    return null;
+  }
+}
+async function saveSnapshot() {
+  try {
+    const response = await fetch(graphStateApi, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({
+        nodes: state.nodes.map(node => ({
+          id: node.id,
+          rawImportance: node.rawImportance,
+          history: node.history,
+          consolidated: !!node.consolidated,
+          created_cycle: node.created_cycle ?? null,
+          feedback: node.feedback || defaultFeedback()
+        })),
+        links: state.links.map(link => ({
+          source: link.source,
+          target: link.target,
+          strength: link.strength,
+          kind: link.kind
+        })),
+        cycles: state.cycles,
+        sidebarCollapsed: state.sidebarCollapsed,
+        query: state.query
+      })
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to save graph state (${response.status})`);
+    }
+    const payload = await response.json();
+    if (typeof payload.updatedAt === "number") {
+      state.graphStateStamp = payload.updatedAt;
+    }
+  } catch {
+    // Ignore storage failures when the backend is unavailable.
+  }
+}
+function applySnapshot(snapshot) {
+  if (!snapshot) return;
+  const nodesById = new Map(state.nodes.map(node => [node.id, node]));
+  (snapshot.nodes || []).forEach(saved => {
+    const node = nodesById.get(saved.id);
+    if (!node) return;
+    if (typeof saved.rawImportance === "number") node.rawImportance = saved.rawImportance;
+    if (Array.isArray(saved.history)) node.history = saved.history.slice(-50);
+    node.consolidated = !!saved.consolidated;
+    node.feedback = saved.feedback ? {...defaultFeedback(), ...saved.feedback} : defaultFeedback();
+  });
+  const linksByKey = new Map(state.links.map(link => [`${link.source}|${link.target}|${link.kind || ""}`, link]));
+  (snapshot.links || []).forEach(saved => {
+    const link = linksByKey.get(`${saved.source}|${saved.target}|${saved.kind || ""}`);
+    if (link && typeof saved.strength === "number") link.strength = saved.strength;
+  });
+  if (typeof snapshot.cycles === "number") state.cycles = snapshot.cycles;
+  if (typeof snapshot.sidebarCollapsed === "boolean") state.sidebarCollapsed = snapshot.sidebarCollapsed;
+  state.query = typeof snapshot.query === "string" ? snapshot.query : "";
+  if (queryInput) queryInput.value = state.query;
+}
+async function refreshRemoteSnapshot() {
+  try {
+    const response = await fetch(graphStateApi, { headers: { Accept: "application/json" } });
+    if (!response.ok) return;
+    const payload = await response.json();
+    if (!payload.snapshot) return;
+    if (typeof payload.updatedAt === "number" && payload.updatedAt === state.graphStateStamp) return;
+    if (typeof payload.updatedAt === "number") {
+      state.graphStateStamp = payload.updatedAt;
+    }
+    applySnapshot(payload.snapshot);
+    render();
+    if (state.query) {
+      void refreshSearchResults();
+    }
+  } catch {
+    // Best-effort sync; keep the local graph interactive if the backend blips.
+  }
+}
+function el(tag, attrs = {}, text = "") {
+  const item = document.createElementNS(ns, tag);
+  for (const [key, value] of Object.entries(attrs)) item.setAttribute(key, value);
+  if (text) item.textContent = text;
+  return item;
+}
+function importance(node) {
+  if (!node.history.length) return node.rawImportance;
+  const weights = node.history.map((_, i) => 2 ** (i / Math.max(node.history.length, 1)));
+  const total = weights.reduce((a, b) => a + b, 0);
+  const average = node.history.reduce((sum, value, i) => sum + value * weights[i] / total, 0);
+  return node.rawImportance * average;
+}
+function learnedScore(node) {
+  const fb = node.feedback || defaultFeedback();
+  const base = importance(node);
+  const recency = Math.min(0.25, node.history.length * 0.02);
+  const helpful = fb.helpful * 0.09;
+  const correction = fb.corrections * 0.14;
+  const weak = fb.weak * 0.07;
+  const recall = fb.recalls * 0.03;
+  const topicBoost = node.kind === "topic" ? 0.08 : 0;
+  return Math.max(0.02, base * (1 + recency + helpful + recall + topicBoost - correction - weak));
+}
+function neighborsFor(nodeId) {
+  return state.links.filter(link => link.source === nodeId || link.target === nodeId);
+}
+function relatedIds(nodeId) {
+  const ids = new Set([nodeId]);
+  neighborsFor(nodeId).forEach(link => {
+    ids.add(link.source);
+    ids.add(link.target);
+  });
+  return ids;
+}
+function queryMatches(node) {
+  const terms = tokenize(state.query);
+  if (!terms.length) return false;
+  const haystack = nodeSearchText(node);
+  return terms.some(term => haystack.includes(term));
+}
+function queryScore(node) {
+  const terms = tokenize(state.query);
+  if (!terms.length) return learnedScore(node);
+  const haystack = nodeSearchText(node);
+  const overlap = terms.reduce((sum, term) => sum + (haystack.includes(term) ? 1 : 0), 0);
+  const topicHits = nodeTopics(node).reduce((sum, topic) => sum + (state.query.toLowerCase().includes(topic.toLowerCase()) ? 1 : 0), 0);
+  return learnedScore(node) + overlap * 0.55 + topicHits * 0.3;
+}
+function makeFocusSet() {
+  const focus = new Set();
+  if (state.query) {
+    state.results.forEach(result => {
+      focus.add(result.node.id);
+      relatedIds(result.node.id).forEach(id => focus.add(id));
+    });
+  }
+  return focus;
+}
+function newestMessageIds() {
+  const created = state.nodes.filter(node => node.created_cycle === state.cycles).map(node => node.id);
+  if (created.length) return new Set(created);
+  const assistantNodes = state.nodes.filter(node => node.role === "Assistant" && typeof node.timestamp === "number");
+  if (assistantNodes.length) {
+    const newestTs = Math.max(...assistantNodes.map(node => node.timestamp));
+    return new Set(assistantNodes.filter(node => node.timestamp === newestTs).map(node => node.id));
+  }
+  const newestNodes = state.nodes.filter(node => typeof node.timestamp === "number");
+  if (newestNodes.length) {
+    const newestTs = Math.max(...newestNodes.map(node => node.timestamp));
+    return new Set(newestNodes.filter(node => node.timestamp === newestTs).map(node => node.id));
+  }
+  return new Set();
+}
+function saveAndRender() {
+  void saveSnapshot();
+  render();
+}
+function syncSidebarVisibility() {
+  document.body.classList.toggle("sidebar-collapsed", state.sidebarCollapsed);
+  if (sidebarToggleButton) {
+    sidebarToggleButton.textContent = state.sidebarCollapsed ? "Show right menu" : "Hide right menu";
+    sidebarToggleButton.setAttribute(
+      "aria-pressed",
+      state.sidebarCollapsed ? "true" : "false"
+    );
+  }
+  if (selectedSidebarToggleButton) {
+    selectedSidebarToggleButton.textContent = state.sidebarCollapsed ? "Show right menu" : "Hide right menu";
+    selectedSidebarToggleButton.setAttribute("aria-pressed", state.sidebarCollapsed ? "true" : "false");
+  }
+}
+function syncSelectedMemoryPanel() {
+  const node = state.nodes.find(item => item.id === state.selected);
+  const hasSelection = Boolean(node);
+  if (selectedMemoryPanel) {
+    selectedMemoryPanel.hidden = !hasSelection;
+  }
+  if (selectedSidebarToggleButton) {
+    selectedSidebarToggleButton.hidden = !hasSelection;
+    selectedSidebarToggleButton.textContent = state.sidebarCollapsed ? "Show right menu" : "Hide right menu";
+    selectedSidebarToggleButton.setAttribute("aria-pressed", state.sidebarCollapsed ? "true" : "false");
+  }
+}
+function render() {
+  syncSidebarVisibility();
+  svg.replaceChildren();
+  const createdIds = newestMessageIds();
+  const backdropLayer = el("g");
+  ["memory", "scripture", "food", "evaluation", "entertainment", "other"].forEach(domain => {
+    const nodes = state.nodes.filter(node => (node.domain || "memory") === domain);
+    if (!nodes.length) return;
+    const layout = domainLayouts.get(domain) || domainLayoutFor(domain, nodes);
+    const padX = 38;
+    const padY = 30;
+    const width = layout.radius * 2 + padX * 2;
+    const height = layout.radius * 2 + padY * 2;
+    const x = layout.center.x - width / 2;
+    const y = layout.center.y - height / 2;
+    backdropLayer.append(el("rect", {
+      x, y, width, height,
+      class: `cluster-bg ${domain}`
+    }));
+    backdropLayer.append(el("text", {x: layout.center.x, y: y + 22, class: `cluster-title ${domain}`, "text-anchor": "middle"}, layout.label));
+    if (layout.subtitle) {
+      backdropLayer.append(el("text", {x: layout.center.x, y: y + 38, class: `cluster-subtitle ${domain}`, "text-anchor": "middle"}, layout.subtitle));
+    }
+  });
+  svg.append(backdropLayer);
+  const edges = el("g");
+  const focus = makeFocusSet();
+  state.links.forEach(link => {
+    const a = positions[link.source], b = positions[link.target];
+    const active = (state.active[link.source] || 0) > 0.05 && (state.active[link.target] || 0) > 0.05;
+    const dimmed = focus.size > 0 && !(focus.has(link.source) && focus.has(link.target));
+    const sourceDomain = state.nodes.find(node => node.id === link.source)?.domain || "memory";
+    const targetDomain = state.nodes.find(node => node.id === link.target)?.domain || "memory";
+    const crossDomain = sourceDomain !== targetDomain;
+    const created = createdIds.has(link.source) || createdIds.has(link.target) || link.created_cycle === state.cycles;
+    edges.append(el("line", {
+      x1: a.x, y1: a.y, x2: b.x, y2: b.y,
+      class: `edge ${link.kind || "sequence"}${created ? " created" : ""}${active ? " recalled" : ""}${dimmed ? " dimmed" : ""}${crossDomain ? " cross-domain" : ""}`,
+      "stroke-width": 0.25 + link.strength * 1,
+      "data-link": `${link.source}-${link.target}`
+    }));
+    const relation = link.kind === "similarity" ? "Related wording"
+      : link.kind === "topic" ? "Shared topic" : "Adjacent turn";
+    edges.lastChild.append(el("title", {}, `${relation}: ${link.strength.toFixed(2)}`));
+  });
+  svg.append(edges);
+
+  state.nodes.forEach(node => {
+    const p = positions[node.id], value = learnedScore(node);
+    const isMatch = queryMatches(node);
+    const dimmed = focus.size > 0 && !focus.has(node.id);
+    const fb = node.feedback || defaultFeedback();
+    const isCreated = createdIds.has(node.id);
+    const group = el("g", {
+      class: `node${state.selected === node.id ? " selected" : ""}${node.consolidated ? " consolidated" : ""}${node.kind === "topic" ? " topic" : ""}${node.domain ? ` ${node.domain}` : ""}${isCreated ? " created" : ""}${isMatch ? " match" : ""}${dimmed ? " dimmed" : ""}`,
+      transform: `translate(${p.x} ${p.y})`,
+      tabindex: "0",
+      role: "button",
+      "aria-label": `${node.id}, score ${value.toFixed(2)}. Click to activate.`
+    });
+    group.append(el("circle", {class: `pulse-ring${(state.active[node.id] || 0) > 0.05 || isCreated ? " animate" : ""}`, r: 2.75}));
+    const circle = el("circle", {class: "core", r: 2.25 + value * 1.75});
+    const title = el("title", {}, `${node.content}\nScore: ${value.toFixed(2)}\nHelpful: ${fb.helpful} · Corrections: ${fb.corrections} · Recalls: ${fb.recalls}${node.consolidated ? "\nConsolidated" : ""}`);
+    circle.append(title);
+    group.append(circle);
+    group.addEventListener("click", () => activate(node.id));
+    group.addEventListener("keydown", event => {
+      if (event.key === "Enter" || event.key === " ") { event.preventDefault(); activate(node.id); }
+    });
+    svg.append(group);
+  });
+  updateStats();
+  updateDetails();
+  renderSearchResults();
+}
+function updateStats() {
+  document.getElementById("node-count").textContent = state.nodes.length;
+  document.getElementById("link-count").textContent = state.links.length;
+  const average = state.nodes.reduce((sum, node) => sum + learnedScore(node), 0) / Math.max(state.nodes.length, 1);
+  document.getElementById("avg-importance").textContent = average.toFixed(2);
+  document.getElementById("cycle-count").textContent = state.cycles;
+  document.getElementById("topic-count").textContent = state.nodes.filter(node => node.kind === "topic").length;
+}
+function updateDetails() {
+  const node = state.nodes.find(item => item.id === state.selected);
+  if (!node) {
+    document.getElementById("selected-name").textContent = "Pick a memory";
+    document.getElementById("selected-content").textContent = "Select a message in the graph to inspect and activate it.";
+    document.getElementById("importance-value").textContent = "—";
+    document.getElementById("importance-meter").style.width = "0";
+    document.getElementById("connection-value").textContent = "—";
+    document.getElementById("connection-meter").style.width = "0";
+    document.getElementById("selected-signals").innerHTML = "";
+    syncSelectedMemoryPanel();
+    return;
+  }
+  const value = learnedScore(node);
+  const neighbors = state.links.filter(link => link.source === node.id || link.target === node.id);
+  const fb = node.feedback || defaultFeedback();
+  document.getElementById("selected-name").textContent = node.id;
+  document.getElementById("selected-content").textContent = node.content;
+  document.getElementById("importance-value").textContent = value.toFixed(2);
+  document.getElementById("importance-meter").style.width = `${Math.max(0, Math.min(100, value * 100))}%`;
+  document.getElementById("connection-value").textContent = `${neighbors.length} · ${neighbors.length ? (neighbors.reduce((s, l) => s + l.strength, 0) / neighbors.length).toFixed(2) + " avg strength" : "none"}`;
+  document.getElementById("connection-meter").style.width = `${neighbors.length ? neighbors.reduce((s, l) => s + l.strength, 0) / neighbors.length * 100 : 0}%`;
+  document.getElementById("selected-signals").innerHTML = [
+    `<span class="signal good">Helpful ${fb.helpful}</span>`,
+    `<span class="signal bad">Corrections ${fb.corrections}</span>`,
+    `<span class="signal neutral">Recalls ${fb.recalls}</span>`,
+    `<span class="signal">${node.consolidated ? "Consolidated" : "Not consolidated"}</span>`
+  ].join("");
+  syncSelectedMemoryPanel();
+}
+function announce(html) { document.getElementById("event").innerHTML = html; }
+function localRankedNodes() {
+  return state.nodes
+    .map(node => ({node, score: queryScore(node)}))
+    .sort((a, b) => b.score - a.score);
+}
+function renderSearchResults() {
+  if (!searchResults) return;
+  if (!state.query) {
+    const ranked = localRankedNodes().slice(0, 6);
+    searchResults.replaceChildren();
+    ranked.forEach(result => {
+      const node = result.node;
+      const item = document.createElement("button");
+      item.type = "button";
+      item.className = "result";
+      item.innerHTML = `<strong>${node.id}</strong><div class="meta">${node.content}</div><div class="meta">Score ${result.score.toFixed(2)} · ${node.kind}${nodeTopics(node).length ? ` · ${nodeTopics(node).join(", ")}` : ""}</div>`;
+      item.addEventListener("click", () => activate(node.id));
+      searchResults.append(item);
+    });
+    return;
+  }
+  if (state.searchStatus === "loading") {
+    searchResults.innerHTML = `<div class="result"><strong>Searching semantic memory…</strong><div class="meta">Embedding the query and ranking nearby meanings.</div></div>`;
+    return;
+  }
+  if (!state.results.length) {
+    searchResults.innerHTML = `<div class="result"><strong>No direct match</strong><div class="meta">Try a different phrasing or a nearby topic.</div></div>`;
+    return;
+  }
+  searchResults.replaceChildren();
+  state.results.forEach(result => {
+    const node = result.node;
+    const item = document.createElement("button");
+    item.type = "button";
+    item.className = "result";
+    const sourceLabel = state.searchStatus === "semantic" ? "Embedding" : "Fallback";
+    item.innerHTML = `<strong>${node.id}</strong><div class="meta">${node.content}</div><div class="meta">${sourceLabel} score ${result.score.toFixed(2)} · ${node.kind}${nodeTopics(node).length ? ` · ${nodeTopics(node).join(", ")}` : ""}</div>`;
+    item.addEventListener("click", () => activate(node.id));
+    searchResults.append(item);
+  });
+}
+async function refreshSearchResults() {
+  const query = state.query.trim();
+  const requestId = state.searchRequestId + 1;
+  state.searchRequestId = requestId;
+
+  if (!query) {
+    state.searchStatus = "idle";
+    state.results = [];
+    render();
+    return;
+  }
+
+  state.searchStatus = "loading";
+  state.results = [];
+  render();
+
+  try {
+    const response = await fetch(`http://localhost:3001/api/semantic-search?query=${encodeURIComponent(query)}&limit=6`, {
+      headers: { Accept: "application/json" }
+    });
+    if (!response.ok) {
+      throw new Error(`Semantic search failed (${response.status})`);
+    }
+    const payload = await response.json();
+    if (state.searchRequestId !== requestId) return;
+    state.results = (payload.results || [])
+      .map(result => {
+        const node = state.nodes.find(item => item.id === result.id);
+        return node ? {node, score: result.score} : null;
+      })
+      .filter(Boolean);
+    state.searchStatus = "semantic";
+    render();
+  } catch (error) {
+    if (state.searchRequestId !== requestId) return;
+    const visible = localRankedNodes()
+      .filter(result => result.score > 0.15 || queryMatches(result.node))
+      .slice(0, 6);
+    state.results = visible;
+    state.searchStatus = "fallback";
+    render();
+  }
+}
+function recallLevels(seedId, depth = 2, threshold = 0.05) {
+  const activated = {[seedId]: 1};
+  let frontier = [[seedId, 1]], visited = new Set([seedId]);
+  while (frontier.length && depth > 0) {
+    const next = [];
+    for (const [id, level] of frontier) {
+      const node = state.nodes.find(item => item.id === id);
+      state.links.forEach(link => {
+        const neighborId = link.source === id ? link.target : link.target === id ? link.source : null;
+        if (!neighborId) return;
+        const neighbor = state.nodes.find(item => item.id === neighborId);
+        const nextLevel = level * link.strength * (importance(node) / Math.max(node.rawImportance, 0.01));
+        if (!visited.has(neighborId) && nextLevel > threshold) {
+          visited.add(neighborId);
+          activated[neighborId] = nextLevel;
+          next.push([neighborId, nextLevel]);
+        }
+      });
+    }
+    frontier = next;
+    depth--;
+  }
+  return activated;
+}
+function activate(nodeId) {
+  const node = state.nodes.find(item => item.id === nodeId);
+  if (!node) return;
+  node.history.push(1);
+  if (node.history.length > 50) node.history = node.history.slice(-50);
+  node.feedback = node.feedback || defaultFeedback();
+  node.feedback.recalls += 1;
+  state.links.forEach(link => {
+    if (link.source === nodeId || link.target === nodeId) link.strength = Math.min(1, link.strength + 0.18);
+  });
+  state.selected = nodeId;
+  state.lastActivated = nodeId;
+  state.active = recallLevels(nodeId);
+  saveAndRender();
+  const spread = Object.entries(state.active).filter(([id]) => id !== nodeId);
+  announce(`<strong>${nodeId}</strong> recalled. ${spread.length} related ${spread.length === 1 ? "memory lit up" : "memories lit up"}; adjacent links strengthened through co-activation.`);
+}
+function decay() {
+  state.nodes.forEach(node => {
+    const current = learnedScore(node);
+    const factor = 0.15 / Math.max(current, 0.1);
+    node.rawImportance *= Math.max(0, 1 - factor);
+  });
+  state.links.forEach(link => { if (link.strength > 0.01) link.strength *= 0.95; else link.strength = 0; });
+  state.cycles++;
+  state.active = {};
+  saveAndRender();
+  announce(`<strong>Cycle ${state.cycles}</strong> completed. Memories lost some importance; unused links weakened by 5%.`);
+}
+function consolidate() {
+  let count = 0;
+  state.nodes.forEach(node => {
+    if (!node.consolidated && learnedScore(node) >= 0.7) {
+      node.consolidated = true;
+      node.rawImportance *= 1.2;
+      count++;
+    }
+  });
+  saveAndRender();
+  announce(count
+    ? `<strong>${count} ${count === 1 ? "memory" : "memories"} consolidated.</strong> Strong memories are marked green and get a 20% importance boost.`
+    : "No unconsolidated memories meet the 0.70 importance threshold yet. Recall a memory to raise its activation.");
+}
+function recordFeedback(kind) {
+  const node = state.nodes.find(item => item.id === state.selected);
+  if (!node) {
+    announce("Pick a memory first, then mark how it should change.");
+    return;
+  }
+  node.feedback = node.feedback || defaultFeedback();
+  const related = neighborsFor(node.id);
+  if (kind === "helpful") {
+    node.feedback.helpful += 1;
+    node.rawImportance = Math.min(3, node.rawImportance * 1.05 + 0.02);
+    related.forEach(link => { link.strength = Math.min(1, link.strength + 0.04); });
+    announce(`<strong>${node.id}</strong> marked helpful. It will rank higher next time.`);
+  } else if (kind === "correction") {
+    node.feedback.corrections += 1;
+    node.rawImportance = Math.max(0.03, node.rawImportance * 0.92);
+    related.forEach(link => { link.strength = Math.max(0, link.strength - 0.05); });
+    announce(`<strong>${node.id}</strong> marked as needing correction. It will be down-weighted.`);
+  } else if (kind === "weak") {
+    node.feedback.weak += 1;
+    related.forEach(link => { link.strength = Math.max(0, link.strength - 0.08); });
+    announce(`<strong>${node.id}</strong> link strength reduced. Nearby associations will fade faster.`);
+  }
+  saveAndRender();
+}
+function reset() {
+  state.nodes = original.nodes.map(n => ({...n, rawImportance: n.importance, history: [], feedback: n.feedback || defaultFeedback()}));
+  state.links = original.links.map(l => ({...l}));
+  state.cycles = 0; state.selected = null; state.active = {}; state.lastActivated = null; state.query = "";
+  state.results = [];
+  if (queryInput) queryInput.value = "";
+  document.getElementById("selected-name").textContent = "Pick a memory";
+  document.getElementById("selected-content").textContent = "Select a message in the graph to inspect and activate it.";
+  document.getElementById("importance-value").textContent = "—";
+  document.getElementById("importance-meter").style.width = "0";
+  document.getElementById("connection-value").textContent = "—";
+  document.getElementById("connection-meter").style.width = "0";
+  void saveSnapshot();
+  render();
+  announce("Simulation reset to the original memory graph.");
+}
+document.getElementById("recall-button").addEventListener("click", () => activate(initialGraph.seed_id));
+document.getElementById("helpful-button").addEventListener("click", () => recordFeedback("helpful"));
+document.getElementById("correction-button").addEventListener("click", () => recordFeedback("correction"));
+document.getElementById("weaken-button").addEventListener("click", () => recordFeedback("weak"));
+document.getElementById("decay-button").addEventListener("click", decay);
+document.getElementById("consolidate-button").addEventListener("click", consolidate);
+document.getElementById("reset-button").addEventListener("click", reset);
+sidebarToggleButton.addEventListener("click", () => {
+  state.sidebarCollapsed = !state.sidebarCollapsed;
+  saveAndRender();
+});
+selectedSidebarToggleButton.addEventListener("click", () => {
+  if (!state.selected) return;
+  state.sidebarCollapsed = !state.sidebarCollapsed;
+  saveAndRender();
+});
+queryInput.addEventListener("input", event => {
+  state.query = event.target.value.trim();
+  state.results = [];
+  void saveSnapshot();
+  void refreshSearchResults();
+});
+async function initialize() {
+  const snapshot = await loadSnapshot();
+  if (snapshot) {
+    applySnapshot(snapshot);
+  } else {
+    void saveSnapshot();
+  }
+  render();
+  if (state.query) {
+    void refreshSearchResults();
+  }
+  window.setInterval(() => {
+    void refreshRemoteSnapshot();
+  }, 2000);
+}
+void initialize();
+</script>
+</body>
+</html>
