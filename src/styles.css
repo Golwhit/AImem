@@ -35,6 +35,33 @@ input {
   overflow: hidden;
 }
 
+.hero {
+  margin-bottom: 24px;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.tab {
+  padding: 8px 16px;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  background: #1e293b;
+  color: #94a3b8;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.tab.active {
+  background: #6366f1;
+  border-color: #6366f1;
+  color: #fff;
+}
+
 .backdrop {
   position: absolute;
   border-radius: 999px;

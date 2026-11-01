@@ -7,6 +7,7 @@ from pathlib import Path
 
 from memory_system import MemoryGraph
 from memory_links import infer_similarity_links
+from memory_clusters import apply_graph_domains, update_clusters
 
 
 def build_chat_graph(memory_path: Path) -> tuple[MemoryGraph, str]:
@@ -152,6 +153,22 @@ HTML = r"""<!doctype html>
     .edge.similarity { stroke: #c084fc; stroke-dasharray: 5 5; }
     .edge.created { stroke: #22d3ee; opacity: 1; filter: drop-shadow(0 0 4px rgba(34,211,238,.6)); }
     .edge.cross-domain { stroke: #fda4af; stroke-dasharray: 2 8; opacity: .07; }
+    .edge.transition { stroke: #fda4af; stroke-dasharray: 3 6; opacity: .35; }
+    .edge.transition.created { opacity: .9; }
+    .edge.parent { stroke: #6ee7b7; stroke-dasharray: 6 3; opacity: .65; }
+    .system-node { cursor: pointer; }
+    .system-node rect { fill: #13222b; stroke: #6ee7b7; stroke-width: 1.5; }
+    .system-node.project rect { fill: #192333; stroke: #9ba9c6; }
+    .system-node text { fill: #e8eefc; font-size: 15px; text-anchor: middle; letter-spacing: 0; }
+    .system-node .system-status { fill: #98a6c4; font-size: 11px; }
+    .system-link { stroke: #6ee7b7; stroke-width: 1.2; stroke-dasharray: 6 3; opacity: .7; }
+    .system-link-label { fill: #98a6c4; font-size: 11px; text-anchor: middle; }
+    .prediction-link { stroke: #fbbf24; stroke-dasharray: 4 4; opacity: .85; }
+    .learner-values { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; margin: 12px 0; font-size: 12px; }
+    .learner-values dt { color: var(--muted); overflow-wrap: anywhere; }
+    .learner-values dd { margin: 0; font-variant-numeric: tabular-nums; }
+    .learner-mode { color: var(--green); font-size: 12px; }
+    .prediction-toggle { display: flex; align-items: center; gap: 8px; font-size: 12px; }
     .edge.recalled { stroke: #67e8f9; opacity: .98; filter: drop-shadow(0 0 4px rgba(103,232,249,.7)); }
     .edge-label { fill: #9ba9c6; font-size: 11px; text-anchor: middle; paint-order: stroke; stroke: #11192e; stroke-width: 5px; stroke-linejoin: round; }
     .node { cursor: pointer; outline: none; }
@@ -241,7 +258,7 @@ HTML = r"""<!doctype html>
       <h1>Our chat, in memory</h1>
       <p>Each message is a memory. Nearby turns and shared topics form connections; recall spreads through them, while unused memories fade.</p>
     </div>
-    <div class="live-pill">● LEARNING STATE ON</div>
+    <div class="live-pill" id="learner-state-pill">LEARNER: CONNECTING</div>
   </header>
   <section class="stats" aria-label="Graph statistics">
     <div class="stat"><div class="stat-label">Memories</div><div class="stat-value" id="node-count">0</div></div>
@@ -255,12 +272,38 @@ HTML = r"""<!doctype html>
       <div class="graph-head">
         <h2>Conversation memory graph</h2>
         <div class="graph-actions">
+          <button type="button" id="inspect-learner-button" title="Inspect the learner's live parameters and evaluation">Inspect learner</button>
           <button type="button" id="sidebar-toggle-button">Hide right menu</button>
         </div>
       </div>
       <svg id="graph" viewBox="0 0 1120 760" role="img" aria-label="Interactive graph of connected memories"></svg>
     </div>
     <aside class="panel">
+      <section id="prompt-training-panel">
+        <div class="section-label">Prompt training</div>
+        <form id="training-prompt-form">
+          <textarea id="memory-query" class="query-input" rows="2" placeholder="Enter a training prompt" aria-label="Training prompt" required></textarea>
+        </form>
+        <div class="section-label" style="margin-top:16px">Latest evaluation</div>
+        <div id="evaluation-question" class="selected-content"></div>
+        <div class="event" id="event" aria-live="polite">Ready</div>
+        <section id="model-response-panel" hidden>
+          <div class="section-label">Retrieved response (not generated)</div>
+          <div id="model-response" class="selected-content" style="white-space:pre-wrap"></div>
+          <div id="response-evaluation-status" class="learner-mode" hidden></div>
+          <div id="response-feedback-controls">
+          <textarea id="response-correction" class="query-input" rows="2" placeholder="Your correction (optional)" aria-label="Response correction" maxlength="2000"></textarea>
+          <div class="graph-actions"><button type="button" id="response-useful">Response useful</button><button type="button" id="response-needs-correction">Needs correction</button></div>
+          </div>
+        </section>
+        <div id="search-results" class="search-results" aria-live="polite"></div>
+      </section>
+      <section id="learner-panel">
+        <div class="section-label">Learner component</div>
+        <div class="learner-mode" id="learner-mode" aria-live="polite">Connecting</div>
+        <dl class="learner-values" id="learner-values"></dl>
+        <label class="prediction-toggle"><input type="checkbox" id="show-predictions" checked>Relevance links</label>
+      </section>
       <section id="selected-memory-panel">
         <div class="selected-memory-head">
           <div class="section-label">Selected memory</div>
@@ -276,34 +319,15 @@ HTML = r"""<!doctype html>
         <div class="meter-row"><span>Connected ideas</span><span id="connection-value">—</span></div>
         <div class="meter"><span id="connection-meter"></span></div>
       </section>
-      <section>
-        <div class="section-label">Search and learn</div>
-        <input id="memory-query" class="query-input" type="search" placeholder="Search memories or topics" aria-label="Search memories">
-        <div id="search-results" class="search-results" aria-live="polite"></div>
-      </section>
-      <section>
-        <div class="section-label">Run the memory</div>
-        <div class="actions">
-          <button class="primary" id="recall-button">Recall this chat</button>
-          <button id="helpful-button">Mark helpful</button>
-          <button id="correction-button">Mark correction</button>
-          <button id="weaken-button">Weaken links</button>
-          <button id="decay-button">Advance 1 decay cycle</button>
-          <button id="consolidate-button">Consolidate strong memories</button>
-          <button id="reset-button">Reset simulation</button>
-        </div>
-      </section>
-      <section>
-        <div class="section-label">What's happening</div>
-        <div class="event" id="event" aria-live="polite">Ready. Click any message, or start with <strong>Recall this chat</strong>.</div>
-      </section>
     </aside>
   </section>
-  <footer>Source: this conversation is stored locally in chat_memory.json. Links combine turn order, shared-topic tags, learned feedback stored in a backend graph-state file, and semantic search served from the local embeddings endpoint when available. Recall, reinforcement, correction, decay, and consolidation persist across refreshes through backend storage.</footer>
+  <footer>Source: chat_memory.json. Local model: memory_learner.py.</footer>
 </main>
 <script>
 const initialGraph = __GRAPH_DATA__;
 const original = JSON.parse(JSON.stringify(initialGraph));
+let savedEvaluation = null;
+try { savedEvaluation = JSON.parse(sessionStorage.getItem("latest-memory-evaluation") || "null"); } catch {}
 const state = {
   nodes: initialGraph.nodes.map(n => ({
     ...n,
@@ -319,11 +343,19 @@ const state = {
   graphStateStamp: null,
   active: {},
   lastActivated: null,
-  query: "",
+  query: savedEvaluation?.query || "",
+  currentEvaluation: savedEvaluation,
+  submitting: false,
   results: [],
   searchStatus: "idle",
-  searchRequestId: 0
+  searchRequestId: 0,
+  searchGeneration: null,
+  latestJudgment: null,
+  learner: null,
+  learnerOffline: false,
+  showPredictions: true
 };
+const revisingJudgments = new Set();
 const graphStateApi = "http://localhost:3001/api/graph-state";
 const svg = document.getElementById("graph");
 const ns = "http://www.w3.org/2000/svg";
@@ -333,7 +365,134 @@ const searchResults = document.getElementById("search-results");
 const sidebarToggleButton = document.getElementById("sidebar-toggle-button");
 const selectedSidebarToggleButton = document.getElementById("selected-sidebar-toggle-button");
 const selectedMemoryPanel = document.getElementById("selected-memory-panel");
+const learnerPosition = {x: 550, y: 610};
+function inspectLearner() {
+  state.sidebarCollapsed = false;
+  render();
+  document.getElementById("learner-panel").scrollIntoView({block: "nearest"});
+}
+async function refreshLearnerStatus() {
+  try {
+    const response = await fetch("http://localhost:3001/api/learner-status");
+    if (!response.ok) throw new Error("Learner unavailable");
+    const status = await response.json();
+    const previousGeneration = state.learner?.generation;
+    const changed = state.learnerOffline || JSON.stringify(status) !== JSON.stringify(state.learner);
+    state.learner = status;
+    state.learnerOffline = false;
+    if (changed) render();
+    if (previousGeneration != null && previousGeneration !== status.generation && state.query) void refreshSearchResults();
+  } catch {
+    if (!state.learnerOffline) {
+      state.learnerOffline = true;
+      render();
+    }
+  }
+}
+function renderLearnerStatus() {
+  const status = state.learner;
+  const mode = state.learnerOffline ? "Unavailable" : !status ? "Connecting" : status.generation > 0 ? "Trained checkpoint" : status.pending_review ? "Awaiting review" : "Initial scoring rule";
+  document.getElementById("learner-mode").textContent = mode;
+  document.getElementById("learner-state-pill").textContent = `LEARNER: ${mode.toUpperCase()}`;
+  const list = document.getElementById("learner-values");
+  list.replaceChildren();
+  if (!status) return;
+  const values = [
+    ["Generation", status.generation], ["User memories", status.user_documents],
+    ["Reviewed memories", status.approved_memories], ["Recorded judgments", status.feedback_examples],
+    ["Eligible judgments", `${status.eligible_examples} / ${status.minimum_examples}`],
+    ["Eligible questions", `${status.eligible_queries} / ${status.minimum_queries}`],
+    ["Pending review", status.pending_review],
+    ["Needs relabeling", status.needs_relabel || 0],
+    ...Object.entries(status.judgment_counts || {}).map(([name, value]) => [name.replaceAll("_", " ") + " judgments", value]),
+    ...Object.entries(status.weights || {}).map(([name, value]) => [name.replaceAll("_", " "), Number(value).toFixed(4)]),
+    ["Intercept", Number(status.intercept).toFixed(4)],
+    ["Last evaluation", status.training?.status || "Not run"]
+  ];
+  if (status.training?.candidate_loss != null) {
+    values.push(["Previous loss", status.training.baseline_loss.toFixed(4)], ["Candidate loss", status.training.candidate_loss.toFixed(4)]);
+  }
+  for (const [name, value] of values) {
+    const term = document.createElement("dt"), description = document.createElement("dd");
+    term.textContent = name;
+    description.textContent = String(value);
+    list.append(term, description);
+  }
+}
+function renderModelResponse() {
+  const evaluation = state.currentEvaluation;
+  document.getElementById("model-response-panel").hidden = !evaluation;
+  if (evaluation) {
+    const reply = evaluation.reply;
+    document.getElementById("model-response").textContent = reply.length > 650 ? reply.slice(0, 647).trimEnd() + "..." : reply;
+  }
+  const rated = evaluation?.response_rating;
+  document.getElementById("response-feedback-controls").hidden = !!rated;
+  document.getElementById("response-evaluation-status").hidden = !rated;
+  if (rated) document.getElementById("response-evaluation-status").textContent = `Evaluated: ${rated === "useful" ? "Useful" : "Needs correction"}`;
+}
+async function recordResponseFeedback(rating) {
+  if (!state.currentEvaluation || state.responseFeedbackPending) return;
+  state.responseFeedbackPending = true;
+  const responseButtons = document.querySelectorAll("#response-feedback-controls button");
+  responseButtons.forEach(button => { button.disabled = true; });
+  try {
+    const response = await fetch("http://localhost:3001/api/response-feedback", {
+      method: "POST", headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({response_id: state.currentEvaluation.response_memory_id, rating, correction: document.getElementById("response-correction").value})
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || "Response feedback was not saved");
+    state.currentEvaluation.response_rating = rating;
+    sessionStorage.setItem("latest-memory-evaluation", JSON.stringify(state.currentEvaluation));
+    renderModelResponse();
+    state.latestJudgment = {query: state.query, responseFeedback: true};
+    announce("Response feedback saved for review; not used as an automatic training target.");
+  } catch (error) { document.getElementById("event").textContent = error.message; }
+  finally { state.responseFeedbackPending = false; responseButtons.forEach(button => { button.disabled = false; }); }
+}
+function renderSystemComponents() {
+  const layer = el("g", {class: "system-components"});
+  const definitions = el("defs");
+  const marker = el("marker", {id: "learner-flow-arrow", viewBox: "0 0 6 6", refX: 6, refY: 3, markerWidth: 6, markerHeight: 6, orient: "auto"});
+  marker.append(el("path", {d: "M 0 0 L 6 3 L 0 6 Z", fill: "#6ee7b7"}));
+  definitions.append(marker);
+  layer.append(definitions);
+  const memoryPoint = {x: 272, y: 426};
+  const relation = (first, second, label, labelX, labelY) => {
+    const line = el("line", {x1: first.x, y1: first.y, x2: second.x, y2: second.y, class: "system-link", "marker-end": "url(#learner-flow-arrow)"});
+    line.append(el("title", {}, label));
+    layer.append(line, el("text", {x: labelX, y: labelY, class: "system-link-label"}, label));
+  };
+  relation({x: 330, y: 610}, {x: 430, y: 610}, "building", 380, 595);
+  relation({x: 500, y: 580}, memoryPoint, "retrieves memories", 350, 500);
+  const reviewed = state.learner?.eligible_examples || 0;
+  relation({x: memoryPoint.x + 18, y: memoryPoint.y}, {x: 530, y: 580}, `reviewed examples: ${reviewed}`, 440, 560);
+  if (state.showPredictions && state.query && state.searchStatus === "semantic") {
+    for (const result of state.results.slice(0, 3)) {
+      const target = positions[result.node.id];
+      if (!target) continue;
+      const line = el("line", {x1: learnerPosition.x, y1: learnerPosition.y, x2: target.x, y2: target.y, class: "prediction-link", "stroke-width": 0.5 + result.score * 2});
+      line.append(el("title", {}, `Predicted relevance to "${state.query}": ${result.score.toFixed(3)}. Generation ${state.searchGeneration ?? "unknown"}: ${state.searchGeneration ? "trained checkpoint" : "initial scoring rule"}; not a permanent memory connection.`));
+      layer.append(line);
+    }
+  }
+  const component = (centerX, width, label, detail, kind, action) => {
+    const group = el("g", {class: `system-node ${kind}`, tabindex: "0", role: "button", "aria-label": label});
+    group.append(el("title", {}, kind === "project" ? "Declared project grouping, not an automatically promoted memory topic." : "Inspect live learner parameters, review progress, and last evaluation."));
+    group.append(el("rect", {x: centerX - width / 2, y: 580, width, height: 60, rx: 4}));
+    group.append(el("text", {x: centerX, y: 605}, label), el("text", {x: centerX, y: 626, class: "system-status"}, detail));
+    group.addEventListener("click", action);
+    group.addEventListener("keydown", event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); action(); } });
+    layer.append(group);
+  };
+  component(210, 240, "AI creation from scratch", "Project", "project", inspectLearner);
+  const detail = state.learnerOffline ? "Unavailable" : state.learner ? `Generation ${state.learner.generation} / ${state.learner.learning_state}` : "Connecting";
+  component(learnerPosition.x, 240, "Learner", detail, "learner", inspectLearner);
+  svg.append(layer);
+}
 function domainForNode(node) {
+  if (node.domain) return node.domain;
   const topics = nodeTopics(node).join(" ").toLowerCase();
   const text = nodeSearchText(node);
   if (
@@ -380,25 +539,18 @@ const domainGroups = Object.entries(
   }, {})
 );
 function domainLayoutFor(domain, nodes) {
-  const totalImportance = nodes.reduce((sum, node) => sum + (node.importance || 0), 0);
+  const cluster = initialGraph.clusters?.[domain];
+  if (cluster) {
+    const index = Object.keys(initialGraph.clusters).filter(key => initialGraph.clusters[key].promoted).indexOf(domain);
+    const row = Math.floor(index / 4);
+    svg.setAttribute("viewBox", `0 0 1120 ${Math.max(760, 990 + row * 220)}`);
+    return {center: {x: 140 + (index % 4) * 280, y: 870 + row * 220}, radius: 65, label: cluster.label, subtitle: `${cluster.parent_domain}: ${cluster.distinct_interactions} distinct contributions`};
+  }
   if (domain === "scripture") {
   return { center: {x: 684, y: 214}, radius: 42, label: "Scripture", subtitle: "" };
   }
   if (domain === "food") {
-    const promoted = totalImportance >= 1.8 || nodes.length >= 3;
-    return promoted
-      ? {
-          center: {x: 802, y: 486},
-          radius: 28,
-          label: "Food",
-          subtitle: "",
-        }
-      : {
-          center: {x: 802, y: 486},
-          radius: 28,
-          label: "Food",
-          subtitle: "",
-        };
+    return {center: {x: 802, y: 486}, radius: 28, label: "Food", subtitle: ""};
   }
   if (domain === "finance") {
     return {
@@ -522,15 +674,27 @@ function applySnapshot(snapshot) {
   });
   if (typeof snapshot.cycles === "number") state.cycles = snapshot.cycles;
   if (typeof snapshot.sidebarCollapsed === "boolean") state.sidebarCollapsed = snapshot.sidebarCollapsed;
-  state.query = typeof snapshot.query === "string" ? snapshot.query : "";
+  if (!state.currentEvaluation) state.query = typeof snapshot.query === "string" ? snapshot.query : "";
   if (queryInput) queryInput.value = state.query;
 }
 async function refreshRemoteSnapshot() {
+  if (state.submitting) return;
   try {
     const response = await fetch(graphStateApi, { headers: { Accept: "application/json" } });
     if (!response.ok) return;
     const payload = await response.json();
+    if (state.submitting) return;
     if (!payload.snapshot) return;
+    const knownIds = new Set(state.nodes.map(node => node.id));
+    const knownNodes = new Map(state.nodes.map(node => [node.id, node]));
+    const changedMembership = (payload.snapshot.nodes || []).some(node => {
+      const current = knownNodes.get(node.id);
+      return current && typeof node.domain === "string" && (current.domain !== node.domain || current.parent_domain !== node.parent_domain || current.candidate_cluster !== node.candidate_cluster);
+    });
+    if ((payload.snapshot.nodes || []).some(node => !knownIds.has(node.id)) || changedMembership) {
+      location.reload();
+      return;
+    }
     if (typeof payload.updatedAt === "number" && payload.updatedAt === state.graphStateStamp) return;
     if (typeof payload.updatedAt === "number") {
       state.graphStateStamp = payload.updatedAt;
@@ -604,7 +768,7 @@ function makeFocusSet() {
   return focus;
 }
 function newestMessageIds() {
-  const created = state.nodes.filter(node => node.created_cycle === state.cycles).map(node => node.id);
+  const created = state.nodes.filter(node => node.kind === "message" && node.created_cycle === state.cycles).map(node => node.id);
   if (created.length) return new Set(created);
   const assistantNodes = state.nodes.filter(node => node.role === "Assistant" && typeof node.timestamp === "number");
   if (assistantNodes.length) {
@@ -653,10 +817,9 @@ function render() {
   svg.replaceChildren();
   const createdIds = newestMessageIds();
   const backdropLayer = el("g");
-  ["memory", "scripture", "food", "evaluation", "entertainment", "other"].forEach(domain => {
+  domainLayouts.forEach((layout, domain) => {
     const nodes = state.nodes.filter(node => (node.domain || "memory") === domain);
     if (!nodes.length) return;
-    const layout = domainLayouts.get(domain) || domainLayoutFor(domain, nodes);
     const padX = 38;
     const padY = 30;
     const width = layout.radius * 2 + padX * 2;
@@ -690,6 +853,8 @@ function render() {
       "data-link": `${link.source}-${link.target}`
     }));
     const relation = link.kind === "similarity" ? "Related wording"
+      : link.kind === "parent" ? "Subtopic of parent domain (not shared core membership)"
+      : link.kind === "transition" ? "Subject transition (not core membership)"
       : link.kind === "topic" ? "Shared topic" : "Adjacent turn";
     edges.lastChild.append(el("title", {}, `${relation}: ${link.strength.toFixed(2)}`));
   });
@@ -710,7 +875,9 @@ function render() {
     });
     group.append(el("circle", {class: `pulse-ring${(state.active[node.id] || 0) > 0.05 || isCreated ? " animate" : ""}`, r: 2.75}));
     const circle = el("circle", {class: "core", r: 2.25 + value * 1.75});
-    const title = el("title", {}, `${node.content}\nScore: ${value.toFixed(2)}\nHelpful: ${fb.helpful} · Corrections: ${fb.corrections} · Recalls: ${fb.recalls}${node.consolidated ? "\nConsolidated" : ""}`);
+    const candidate = initialGraph.clusters?.[node.candidate_cluster];
+    const evidence = candidate ? `\n${candidate.label}: ${candidate.promoted ? "Promoted" : "Under evaluation"}\n${candidate.reason}` : "";
+    const title = el("title", {}, `${node.content}\nScore: ${value.toFixed(2)}\nHelpful: ${fb.helpful} · Corrections: ${fb.corrections} · Recalls: ${fb.recalls}${node.consolidated ? "\nConsolidated" : ""}${evidence}`);
     circle.append(title);
     group.append(circle);
     group.addEventListener("click", () => activate(node.id));
@@ -722,6 +889,9 @@ function render() {
   updateStats();
   updateDetails();
   renderSearchResults();
+  renderLearnerStatus();
+  renderModelResponse();
+  renderSystemComponents();
 }
 function updateStats() {
   document.getElementById("node-count").textContent = state.nodes.length;
@@ -784,7 +954,7 @@ function renderSearchResults() {
     return;
   }
   if (state.searchStatus === "loading") {
-    searchResults.innerHTML = `<div class="result"><strong>Searching semantic memory…</strong><div class="meta">Embedding the query and ranking nearby meanings.</div></div>`;
+    searchResults.innerHTML = `<div class="result"><strong>Searching local memory...</strong></div>`;
     return;
   }
   if (!state.results.length) {
@@ -797,10 +967,62 @@ function renderSearchResults() {
     const item = document.createElement("button");
     item.type = "button";
     item.className = "result";
-    const sourceLabel = state.searchStatus === "semantic" ? "Embedding" : "Fallback";
-    item.innerHTML = `<strong>${node.id}</strong><div class="meta">${node.content}</div><div class="meta">${sourceLabel} score ${result.score.toFixed(2)} · ${node.kind}${nodeTopics(node).length ? ` · ${nodeTopics(node).join(", ")}` : ""}</div>`;
+    const sourceLabel = state.searchStatus === "semantic" ? "Local model" : "Fallback";
+    item.innerHTML = `<strong>${node.id}</strong><div class="meta">${node.role === "Assistant" ? "Assistant reply (unverified)" : "Your message"}</div><div class="meta">${node.content}</div><div class="meta">${sourceLabel} score ${result.score.toFixed(2)} · ${node.kind}${nodeTopics(node).length ? ` · ${nodeTopics(node).join(", ")}` : ""}</div>`;
     item.addEventListener("click", () => activate(node.id));
     searchResults.append(item);
+    const judgmentKey = JSON.stringify([state.query.toLowerCase().trim(), node.id]);
+    if (result.judgment && !revisingJudgments.has(judgmentKey)) {
+      const status = document.createElement("div");
+      status.className = "learner-mode";
+      status.textContent = `Evaluated: ${result.judgment.label.replaceAll("_", " ")}${result.judgment.reviewed ? "" : " (pending review)"}`;
+      const revise = document.createElement("button");
+      revise.type = "button";
+      revise.textContent = "Revise judgment";
+      revise.setAttribute("aria-label", `Revise judgment: ${node.id}`);
+      revise.addEventListener("click", () => { revisingJudgments.add(judgmentKey); renderSearchResults(); });
+      searchResults.append(status, revise);
+    } else if (state.searchStatus === "semantic") {
+      const controls = document.createElement("div");
+      controls.style.cssText = "display:flex;gap:8px;margin:4px 0 12px;flex-wrap:wrap";
+      const query = state.query;
+      [["direct_answer", "Direct answer"], ["related_context", "Related context"], ["unrelated", "Unrelated"]].forEach(([label, caption]) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.textContent = caption;
+        button.title = label === "direct_answer" ? "Helps answer this question" : label === "related_context" ? "Connected context, but not a direct answer" : "Does not help with this question or its context";
+        button.setAttribute("aria-label", `${button.textContent}: ${node.id}`);
+        button.addEventListener("click", async () => {
+          const approveForTraining = node.role === "You";
+          if (approveForTraining && sessionStorage.getItem("training-grading-consent") !== "true") {
+            if (!confirm("Use your judgments for training? Each grading click confirms review of your displayed memory/current prompt. Assistant replies remain unverified and pending review. This applies to later clicks in this tab, not all stored memories. Cancel skips this judgment.")) return;
+            sessionStorage.setItem("training-grading-consent", "true");
+          }
+          controls.querySelectorAll("button").forEach(control => { control.disabled = true; });
+          try {
+            const response = await fetch("http://localhost:3001/api/learner-feedback", {
+              method: "POST", headers: {"Content-Type": "application/json"},
+              body: JSON.stringify({query, memory_id: node.id, label, approve_for_training: approveForTraining})
+            });
+            const outcome = await response.json();
+            if (!response.ok) throw new Error(outcome.error || "Feedback was not saved");
+            result.judgment = {label, reviewed: approveForTraining};
+            revisingJudgments.delete(judgmentKey);
+            renderSearchResults();
+            state.latestJudgment = {query, label, outcome};
+            const reviewStatus = outcome.training.pending_review ? ` ${outcome.training.pending_review} judgments pending review.` : "";
+            const progress = outcome.training.examples != null ? ` ${outcome.training.examples}/12 eligible judgments; ${outcome.training.queries}/6 questions.` : "";
+            announce(`${caption} saved. Generation ${outcome.generation}: ${outcome.training.status}.${progress}${reviewStatus}`);
+            void refreshLearnerStatus();
+            if (state.query === query) void refreshSearchResults();
+          } catch (error) {
+            document.getElementById("event").textContent = error.message;
+          } finally { controls.querySelectorAll("button").forEach(control => { control.disabled = false; }); }
+        });
+        controls.append(button);
+      });
+      searchResults.append(controls);
+    }
   });
 }
 async function refreshSearchResults() {
@@ -820,7 +1042,7 @@ async function refreshSearchResults() {
   render();
 
   try {
-    const response = await fetch(`http://localhost:3001/api/semantic-search?query=${encodeURIComponent(query)}&limit=6`, {
+    const response = await fetch(`http://localhost:3001/api/semantic-search?query=${encodeURIComponent(query)}&limit=3&exclude_id=${encodeURIComponent(state.currentEvaluation?.prompt_memory_id || "")}`, {
       headers: { Accept: "application/json" }
     });
     if (!response.ok) {
@@ -828,13 +1050,16 @@ async function refreshSearchResults() {
     }
     const payload = await response.json();
     if (state.searchRequestId !== requestId) return;
+    state.searchGeneration = payload.generation ?? null;
     state.results = (payload.results || [])
       .map(result => {
         const node = state.nodes.find(item => item.id === result.id);
-        return node ? {node, score: result.score} : null;
+        return node ? {node, score: result.score, judgment: result.judgment || null} : null;
       })
       .filter(Boolean);
     state.searchStatus = "semantic";
+    document.getElementById("evaluation-question").textContent = query;
+    if (state.latestJudgment?.query !== query) announce(`Generation ${state.searchGeneration}: ${state.results.length} conversation memories. Choose a judgment below.`);
     render();
   } catch (error) {
     if (state.searchRequestId !== requestId) return;
@@ -954,13 +1179,8 @@ function reset() {
   render();
   announce("Simulation reset to the original memory graph.");
 }
-document.getElementById("recall-button").addEventListener("click", () => activate(initialGraph.seed_id));
-document.getElementById("helpful-button").addEventListener("click", () => recordFeedback("helpful"));
-document.getElementById("correction-button").addEventListener("click", () => recordFeedback("correction"));
-document.getElementById("weaken-button").addEventListener("click", () => recordFeedback("weak"));
-document.getElementById("decay-button").addEventListener("click", decay);
-document.getElementById("consolidate-button").addEventListener("click", consolidate);
-document.getElementById("reset-button").addEventListener("click", reset);
+document.getElementById("inspect-learner-button").addEventListener("click", inspectLearner);
+document.getElementById("show-predictions").addEventListener("change", event => { state.showPredictions = event.target.checked; render(); });
 sidebarToggleButton.addEventListener("click", () => {
   state.sidebarCollapsed = !state.sidebarCollapsed;
   saveAndRender();
@@ -970,11 +1190,38 @@ selectedSidebarToggleButton.addEventListener("click", () => {
   state.sidebarCollapsed = !state.sidebarCollapsed;
   saveAndRender();
 });
-queryInput.addEventListener("input", event => {
-  state.query = event.target.value.trim();
+document.getElementById("response-useful").addEventListener("click", () => recordResponseFeedback("useful"));
+document.getElementById("response-needs-correction").addEventListener("click", () => recordResponseFeedback("needs_correction"));
+document.getElementById("training-prompt-form").addEventListener("submit", async event => {
+  event.preventDefault();
+  if (state.submitting) return;
+  state.query = queryInput.value.trim();
+  state.latestJudgment = null;
   state.results = [];
-  void saveSnapshot();
-  void refreshSearchResults();
+  document.getElementById("evaluation-question").textContent = state.query;
+  state.submitting = true;
+  queryInput.readOnly = true;
+  announce("Evaluating and saving this question...");
+  try {
+    let sessionId = sessionStorage.getItem("memory-trainer-session");
+    if (!sessionId) { sessionId = crypto.randomUUID(); sessionStorage.setItem("memory-trainer-session", sessionId); }
+    const response = await fetch("http://localhost:3001/api/chat", {
+      method: "POST", headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({message: state.query, training_mode: true, sessionId})
+    });
+    const result = await response.json();
+    if (!response.ok || !result.prompt_memory_id || !result.response_memory_id) throw new Error(result.error || "Question capture failed");
+    state.currentEvaluation = {...result, query: state.query};
+    sessionStorage.setItem("latest-memory-evaluation", JSON.stringify(state.currentEvaluation));
+    location.reload();
+  } catch (error) { document.getElementById("event").textContent = error.message; }
+  finally { state.submitting = false; queryInput.readOnly = false; }
+});
+queryInput.addEventListener("keydown", event => {
+  if (event.key === "Enter" && !event.shiftKey) {
+    event.preventDefault();
+    document.getElementById("training-prompt-form").requestSubmit();
+  }
 });
 async function initialize() {
   const snapshot = await loadSnapshot();
@@ -990,6 +1237,8 @@ async function initialize() {
   window.setInterval(() => {
     void refreshRemoteSnapshot();
   }, 2000);
+  void refreshLearnerStatus();
+  window.setInterval(() => { void refreshLearnerStatus(); }, 5000);
 }
 void initialize();
 </script>
@@ -1002,6 +1251,8 @@ def main() -> None:
     memory_path = Path(__file__).with_name("chat_memory.json")
     state_path = Path(__file__).with_name("memory_graph_state.json")
     transcript = json.loads(memory_path.read_text(encoding="utf-8"))
+    clusters = update_clusters(transcript)
+    memory_path.write_text(json.dumps(transcript, indent=2) + "\n", encoding="utf-8")
     graph, seed_id = build_chat_graph(memory_path)
     data = graph.to_dict()
     latest_cycle = transcript.get("cycles", 0)
@@ -1019,17 +1270,20 @@ def main() -> None:
                 node["role"] = source.get("role")
                 node["text"] = source.get("text")
                 node["topics"] = source.get("topics", [])
+                node["domain"] = source["domain"]
+                node["parent_domain"] = source["parent_domain"]
+                node["candidate_cluster"] = source.get("candidate_cluster")
                 if message_created_cycles.get(node["id"]) is not None:
                     node["created_cycle"] = message_created_cycles[node["id"]]
-        elif node["kind"] == "topic":
-            node["topic"] = node["content"].removeprefix("Topic: ")
     for link in data["links"]:
         if (
             message_created_cycles.get(link["source"]) == latest_cycle
             or message_created_cycles.get(link["target"]) == latest_cycle
         ):
             link["created_cycle"] = latest_cycle
+    apply_graph_domains(data, transcript)
     data["seed_id"] = seed_id
+    data["clusters"] = clusters
     data["cycles"] = transcript.get("cycles", 0)
     current_state = None
     if state_path.exists():
@@ -1049,7 +1303,7 @@ def main() -> None:
             preserved = nodes_by_id.get(node["id"])
             if not preserved:
                 continue
-            for key in ("rawImportance", "history", "consolidated", "feedback", "created_cycle"):
+            for key in ("rawImportance", "history", "consolidated", "feedback"):
                 if key in preserved:
                     node[key] = preserved[key]
         for link in data["links"]:

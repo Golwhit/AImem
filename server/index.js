@@ -1,7 +1,6 @@
 import express from 'express';
-import { execFile } from 'child_process';
+import { execFile, spawn } from 'child_process';
 import { randomUUID } from 'crypto';
-import { pipeline } from '@xenova/transformers';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -28,17 +27,11 @@ webpush.setVapidDetails(
   vapidKeys.privateKey
 );
 
-const semanticModelName = process.env.SEMANTIC_MODEL || 'Xenova/all-MiniLM-L6-v2';
-const memoryPath = path.join(rootDir, 'chat_memory.json');
 const graphStatePath = path.join(rootDir, 'memory_graph_state.json');
 const updateScriptPath = path.join(rootDir, 'update_chat_memory.py');
 const execFileAsync = promisify(execFile);
-let embedderPromise = null;
-let semanticIndexCache = {
-  mtimeMs: 0,
-  messages: [],
-  embeddings: []
-};
+const learnerPython = process.env.MEMORY_PYTHON || 'python3';
+let learnerQueue = Promise.resolve();
 
 const state = {
   subscription: null,
@@ -47,6 +40,7 @@ const state = {
   events: []
 };
 
+app.use('/api/graph-state', express.json({ limit: '2mb' }));
 app.use(express.json());
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -59,48 +53,25 @@ app.use((req, res, next) => {
   next();
 });
 
-async function getEmbedder() {
-  if (!embedderPromise) {
-    embedderPromise = pipeline('feature-extraction', semanticModelName);
-  }
-  return embedderPromise;
-}
-
-function cosineScore(a, b) {
-  let score = 0;
-  for (let index = 0; index < a.length; index += 1) {
-    score += a[index] * b[index];
-  }
-  return score;
-}
-
-async function loadSemanticIndex() {
-  const stat = await fs.stat(memoryPath);
-  if (semanticIndexCache.mtimeMs === stat.mtimeMs) {
-    return semanticIndexCache;
-  }
-
-  const transcript = JSON.parse(await fs.readFile(memoryPath, 'utf8'));
-  const messages = transcript.messages.map((message) => ({
-    id: message.id,
-    role: message.role,
-    text: message.text,
-    topics: Array.isArray(message.topics) ? message.topics : [],
-    kind: 'message'
+function runLearner(command, payload = {}) {
+  const result = learnerQueue.then(() => new Promise((resolve, reject) => {
+    const child = spawn(learnerPython, [path.join(rootDir, 'memory_learner.py'), command], { cwd: rootDir });
+    let output = '';
+    let errors = '';
+    const timer = setTimeout(() => child.kill(), 30000);
+    child.stdout.on('data', chunk => { output += chunk; });
+    child.stderr.on('data', chunk => { errors += chunk; });
+    child.on('error', error => { clearTimeout(timer); reject(error); });
+    child.on('close', code => {
+      clearTimeout(timer);
+      if (code !== 0) { reject(new Error(errors || 'Local learner failed')); return; }
+      try { resolve(JSON.parse(output)); } catch (error) { reject(error); }
+    });
+    child.stdin.on('error', () => {});
+    child.stdin.end(JSON.stringify(payload));
   }));
-  const texts = messages.map((message) =>
-    `${message.role}: ${message.text}\nTopics: ${message.topics.join(', ')}`
-  );
-  const embedder = await getEmbedder();
-  const embeddingsTensor = await embedder(texts, { pooling: 'mean', normalize: true });
-  const embeddings = embeddingsTensor.tolist();
-
-  semanticIndexCache = {
-    mtimeMs: stat.mtimeMs,
-    messages,
-    embeddings
-  };
-  return semanticIndexCache;
+  learnerQueue = result.catch(() => {});
+  return result;
 }
 
 async function readGraphState() {
@@ -119,17 +90,41 @@ async function readGraphState() {
 }
 
 async function writeGraphState(snapshot) {
-  await fs.writeFile(graphStatePath, `${JSON.stringify(snapshot, null, 2)}\n`, 'utf8');
+  const current = await readGraphState();
+  let merged = snapshot;
+  if (current.snapshot?.nodes) {
+    merged = current.snapshot;
+    const feedbackById = new Map((snapshot.nodes || []).map(node => [node.id, node]));
+    for (const node of merged.nodes) {
+      const feedback = feedbackById.get(node.id);
+      if (!feedback) continue;
+      for (const field of ['rawImportance', 'history', 'consolidated', 'feedback']) {
+        if (Object.hasOwn(feedback, field)) node[field] = feedback[field];
+      }
+    }
+    const strengths = new Map((snapshot.links || []).map(link => [`${link.source}|${link.target}|${link.kind || ''}`, link.strength]));
+    for (const link of merged.links || []) {
+      const strength = strengths.get(`${link.source}|${link.target}|${link.kind || ''}`);
+      if (typeof strength === 'number' && Number.isFinite(strength)) link.strength = strength;
+    }
+    if (typeof snapshot.query === 'string') merged.query = snapshot.query;
+    if (typeof snapshot.sidebarCollapsed === 'boolean') merged.sidebarCollapsed = snapshot.sidebarCollapsed;
+  }
+  await fs.writeFile(graphStatePath, `${JSON.stringify(merged, null, 2)}\n`, 'utf8');
   const stat = await fs.stat(graphStatePath);
   return stat.mtimeMs;
 }
 
-async function appendMemoryExchange({ user, assistant, userTopics = [], assistantTopics = [] }) {
+async function appendMemoryExchange({ user, assistant, userTopics = [], assistantTopics = [], sessionId, source = 'app' }) {
   const args = [
     updateScriptPath,
     '--user', user,
     '--assistant', assistant
   ];
+  args.push('--source', source);
+  if (typeof sessionId === 'string' && sessionId.trim()) {
+    args.push('--session-id', sessionId);
+  }
   userTopics.forEach((topic) => {
     args.push('--user-topic', topic);
   });
@@ -160,6 +155,7 @@ function inferMemoryTopics(text) {
   return [...topics];
 }
 
+
 function appendEvent(type, payload) {
   state.events.unshift({
     id: randomUUID(),
@@ -169,23 +165,6 @@ function appendEvent(type, payload) {
   });
   state.events = state.events.slice(0, 20);
 }
-
-app.get('/api/config', (req, res) => {
-  res.json({
-    pushSupported: Boolean(vapidKeys.publicKey),
-    vapidPublicKey: vapidKeys.publicKey,
-    hasSubscription: Boolean(state.subscription)
-  });
-});
-
-app.get('/api/status', (req, res) => {
-  res.json({
-    hasSubscription: Boolean(state.subscription),
-    latestPush: state.latestPush,
-    latestResponse: state.latestResponse,
-    events: state.events
-  });
-});
 
 app.get('/api/graph-state', async (req, res) => {
   try {
@@ -199,7 +178,7 @@ app.get('/api/graph-state', async (req, res) => {
 app.post('/api/graph-state', async (req, res) => {
   const snapshot = req.body;
 
-  if (!snapshot || typeof snapshot !== 'object') {
+  if (!snapshot || typeof snapshot !== 'object' || !Array.isArray(snapshot.nodes) || !Array.isArray(snapshot.links)) {
     res.status(400).json({ error: 'Snapshot payload is required.' });
     return;
   }
@@ -260,10 +239,36 @@ app.post('/api/send-push', async (req, res) => {
   try {
     await webpush.sendNotification(state.subscription, JSON.stringify(payload));
     state.latestPush = payload;
-    appendEvent('push', payload);
     res.json({ ok: true, payload });
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+// ─── Chat API (mirrors /api/respond but for direct chat) ─────────────────────
+
+app.post('/api/chat', async (req, res) => {
+  const userMessage = String(req.body?.message || '').trim();
+  if (!userMessage || userMessage.length > 2000) {
+    res.status(400).json({ error: 'Missing message' });
+    return;
+  }
+  try {
+    const retrieval = await runLearner('search', { query: userMessage, limit: 3 });
+    const best = retrieval.results.find(memory => memory.role === 'Assistant');
+    const aiResponse = best
+      ? `[${best.id}] ${best.text.length > 600 ? best.text.slice(0, 600).trimEnd() + '...' : best.text}`
+      : 'No stored assistant reply matched. The current learner retrieves memories; it does not generate new language yet.';
+    const assistantTopics = inferMemoryTopics(aiResponse);
+    const saved = await appendMemoryExchange({ user: userMessage, assistant: aiResponse, userTopics: [], assistantTopics, sessionId: req.body?.sessionId, source: 'local-retrieval' });
+    const recent = saved.snapshot.nodes.filter(node => node.kind === 'message' && node.created_cycle === saved.snapshot.cycles);
+
+    res.json({ reply: aiResponse, model: retrieval.model, generation: retrieval.generation, mode: 'memory-excerpts', response_source_id: best?.id || null, memories: retrieval.results,
+      prompt_memory_id: recent.find(node => node.role === 'You')?.id,
+      response_memory_id: recent.find(node => node.role === 'Assistant')?.id });
+  } catch (err) {
+    console.error('Chat error:', err);
+    res.status(500).json({ error: 'Failed to process chat' });
   }
 });
 
@@ -288,10 +293,8 @@ app.post('/api/respond', async (req, res) => {
       userTopics: inferMemoryTopics(latestPushText),
       assistantTopics: inferMemoryTopics(message)
     });
-    appendEvent('response', { ...state.latestResponse, savedToMemory: true, memoryCycles: graphState?.snapshot?.cycles ?? null });
     res.json({ ok: true, response: state.latestResponse, memory: graphState });
   } catch (error) {
-    appendEvent('response', { ...state.latestResponse, savedToMemory: false, error: error.message });
     res.status(500).json({ error: error.message });
   }
 });
@@ -306,34 +309,50 @@ app.get('/api/semantic-search', async (req, res) => {
   }
 
   try {
-    const index = await loadSemanticIndex();
-    const embedder = await getEmbedder();
-    const queryTensor = await embedder(query, { pooling: 'mean', normalize: true });
-    const queryVector = queryTensor.tolist()[0] || queryTensor.tolist();
-
-    const results = index.messages
-      .map((message, indexPosition) => ({
-        id: message.id,
-        role: message.role,
-        text: message.text,
-        topics: message.topics,
-        score: cosineScore(queryVector, index.embeddings[indexPosition])
-      }))
-      .sort((a, b) => b.score - a.score)
-      .slice(0, limit)
-      .map((item) => ({
-        ...item,
-        score: Number(item.score.toFixed(4))
-      }));
-
-    res.json({
-      query,
-      model: semanticModelName,
-      results
-    });
+    res.json(await runLearner('search', { query, limit: Number.isFinite(limit) ? limit : 6, user_only: req.query.user_only === 'true', exclude_ids: typeof req.query.exclude_id === 'string' ? [req.query.exclude_id] : [] }));
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
+});
+
+app.get('/api/learner-status', async (req, res) => {
+  try { res.json(await runLearner('status')); }
+  catch (error) { res.status(500).json({ error: error.message }); }
+});
+
+app.post('/api/learner-feedback', async (req, res) => {
+  const { query, memory_id, label, approve_for_training = false } = req.body || {};
+  if (typeof query !== 'string' || !query.trim() || query.length > 2000 || typeof memory_id !== 'string' || !['direct_answer', 'related_context', 'unrelated'].includes(label)) {
+    res.status(400).json({ error: 'query, memory_id and label (direct_answer, related_context, unrelated) are required' });
+    return;
+  }
+  if (typeof approve_for_training !== 'boolean') {
+    res.status(400).json({ error: 'approve_for_training must be boolean' });
+    return;
+  }
+  try {
+    if (approve_for_training) {
+      await runLearner('review', { memory_ids: [memory_id], queries: [query], acknowledge: true });
+    }
+    res.json(await runLearner('feedback', { query, memory_id, label }));
+  }
+  catch (error) { res.status(400).json({ error: error.message }); }
+});
+
+// ─── Graph HTML endpoint ─────────────────────────────────────────────────────
+app.post('/api/response-feedback', async (req, res) => {
+  const { response_id, rating, correction = '' } = req.body || {};
+  if (typeof response_id !== 'string' || !['useful', 'needs_correction'].includes(rating) || typeof correction !== 'string' || correction.length > 2000) {
+    res.status(400).json({ error: 'response_id, valid rating and correction up to 2000 characters are required' });
+    return;
+  }
+  try { res.json(await runLearner('response-feedback', { response_id, rating, correction })); }
+  catch (error) { res.status(400).json({ error: error.message }); }
+});
+
+const graphHtmlPath = path.join(rootDir, 'memory_graph.html');
+app.get('/graph', (req, res) => {
+  res.sendFile(graphHtmlPath);
 });
 
 if (process.env.NODE_ENV === 'production') {

@@ -1,0 +1,2 @@
+# The original learner uses Python's standard library only.
+# The old virtual environment is preserved, but its ML packages are not required.
