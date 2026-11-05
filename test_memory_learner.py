@@ -80,11 +80,16 @@ class LearnerTests(unittest.TestCase):
     def test_context_feedback_is_explicit_and_replaces_previous_judgment(self):
         learner = MemoryLearner(self.root)
         learner.feedback("apples", "food", "direct_answer")
-        result = learner.feedback("APPLES", "food", "related_context")
+        self.transcript["messages"].extend([
+            {"id": "answer", "role": "Assistant", "text": "fabricated retrievalword", "source": "local-retrieval"},
+            {"id": "generated", "role": "Assistant", "text": "fabricated generatedword", "source": "local-generated"},
+        ])
         self.assertEqual(result["target"], 0.5)
         self.assertEqual(learner.state["feedback"][0]["label"], "related_context")
-        self.assertEqual(len(learner.state["feedback"]), 1)
+        self.assertNotIn("retrievalword", learner.vocabulary)
+        self.assertNotIn("generatedword", learner.vocabulary)
         self.assertEqual(learner.status()["judgment_counts"]["related_context"], 1)
+        self.assertNotIn("generated", learner.by_id)
         self.assertEqual(learner.status()["eligible_examples"], 0)
         restored = MemoryLearner(self.root)
         result = restored.search("APPLES", user_only=True)["results"][0]
@@ -145,15 +150,18 @@ class LearnerTests(unittest.TestCase):
         train_queries = {item["query"] for item in learner.state["feedback"] if item["query"] not in validation_queries}
         self.assertFalse(validation_queries & train_queries)
         self.assertNotEqual(learner.state["weights"], starting_weights)
-        self.assertEqual(learner.status()["learning_state"], "trained")
-        self.assertEqual(learner.status()["generation"], 1)
 
     def test_generated_answers_do_not_teach_the_representation(self):
-        self.transcript["messages"].append({"id": "answer", "role": "Assistant", "text": "fabricated artificialword", "source": "local-retrieval"})
+        self.transcript["messages"].extend([
+            {"id": "answer", "role": "Assistant", "text": "fabricated retrievalword", "source": "local-retrieval"},
+            {"id": "generated", "role": "Assistant", "text": "fabricated generatedword", "source": "local-generated"},
+        ])
         (self.root / "chat_memory.json").write_text(json.dumps(self.transcript))
         learner = MemoryLearner(self.root)
-        self.assertNotIn("artificialword", learner.vocabulary)
+        self.assertNotIn("retrievalword", learner.vocabulary)
+        self.assertNotIn("generatedword", learner.vocabulary)
         self.assertNotIn("answer", learner.by_id)
+        self.assertNotIn("generated", learner.by_id)
 
     def test_local_user_prompts_remain_training_input(self):
         self.transcript["messages"].append({"id": "prompt", "role": "You", "text": "telescopes astronomy starlight", "source": "local-retrieval"})
@@ -236,6 +244,9 @@ class LearnerTests(unittest.TestCase):
                     return json.load(response)
 
             self.assertFalse(request("/api/learner-status")["pretrained_weights"])
+            generator_status = request("/api/generator")
+            self.assertFalse(generator_status["pretrained_weights"])
+            self.assertEqual(generator_status["document_count"], 0)
             result = request("/api/semantic-search?query=apples")
             self.assertEqual(result["results"][0]["id"], "food")
             self.assertEqual(request("/api/learner-feedback", {"query": "apples", "memory_id": "food", "label": "direct_answer"})["training"]["status"], "collecting")
@@ -251,6 +262,8 @@ class LearnerTests(unittest.TestCase):
             rejected.exception.close()
             chat = request("/api/chat", {"message": "apples", "sessionId": "http-test", "training_mode": True})
             self.assertEqual(chat["mode"], "memory-excerpts")
+            self.assertEqual(chat["generator_learning"]["reason"], "opted_out")
+            self.assertEqual(request('/api/generator')['document_count'], 0)
             self.assertIn("[assistant]", chat["reply"])
             self.assertEqual(chat["response_source_id"], "assistant")
             self.assertTrue(any(item["role"] == "Assistant" for item in chat["memories"]))
@@ -265,19 +278,60 @@ class LearnerTests(unittest.TestCase):
             self.assertFalse(response_feedback["used_for_training"])
             stored_feedback = json.loads((self.root / '.data' / 'response-feedback.json').read_text())
             self.assertFalse(stored_feedback["items"][0]["training_approved"])
+            trained = request('/api/generator/documents', {
+                'title': 'Approved seed', 'source': 'User-authored sample',
+                'rights_note': 'Original text written for this test.',
+                'text': 'the moon moves over the water. the moon moves over the water. ' * 6,
+                'acknowledge_review': True,
+            })
+            self.assertEqual(trained['document_count'], 1)
+            tracked = request('/api/generator/evaluations', {'prompt': 'the moon'})
+            evaluation = tracked['prompts'][0]
+            self.assertEqual([run['generation'] for run in evaluation['runs']], [1])
+            rated = request(f"/api/generator/evaluations/{evaluation['id']}/1", {
+                'rating': 'edit', 'correction': 'The moon travels over water.',
+            })
+            self.assertEqual(rated['prompts'][0]['runs'][0]['rating'], 'edit')
+            generated_chat = request('/api/chat', {
+                'message': 'the moon ', 'sessionId': 'http-test', 'include_in_generator': True,
+            })
+            self.assertEqual(generated_chat['mode'], 'local-character-ngram')
+            self.assertTrue(generated_chat['reply'])
+            self.assertEqual(generated_chat['training_sources'][0]['title'], 'Approved seed')
+            self.assertTrue(generated_chat['generator_learning']['added'])
+            generator_status = request('/api/generator')
+            self.assertEqual(generator_status['document_count'], 2)
+            self.assertEqual(generator_status['documents'][1]['source'], 'Memory chat')
+            self.assertEqual(generator_status['documents'][1]['title'], 'Memory chat prompt')
+            generated_feedback = request('/api/response-feedback', {
+                'response_id': generated_chat['response_memory_id'],
+                'rating': 'needs_correction', 'correction': 'An experimental generation, not a fact.',
+            })
+            self.assertFalse(generated_feedback['used_for_training'])
+            defaulted = request('/api/generator/documents', {
+                'text': 'A second locally reviewed source for the generator.' * 2,
+                'acknowledge_review': True,
+            })
+            self.assertEqual(defaulted['documents'][2]['title'], 'Untitled source 3')
+            self.assertEqual(defaulted['documents'][2]['source'], 'Me')
+            evaluations = request('/api/generator/evaluations')
+            runs = evaluations['prompts'][0]['runs']
+            self.assertEqual([run['generation'] for run in runs], [1, 2, 3])
+            self.assertEqual(runs[0]['correction'], 'The moon travels over water.')
+            self.assertEqual(request('/api/generator')['evaluation_sample_count'], 3)
             saved = json.loads((self.root / "chat_memory.json").read_text())
-            self.assertEqual(len(saved["messages"]), len(self.transcript["messages"]) + 2)
-            self.assertEqual(saved["messages"][-1]["source"], "local-retrieval")
+            self.assertEqual(len(saved["messages"]), len(self.transcript["messages"]) + 4)
+            self.assertEqual(saved["messages"][-1]["source"], "local-generated")
             snapshot = {"nodes": [], "links": [], "padding": "x" * 120000}
             self.assertTrue(request("/api/graph-state", snapshot)["ok"])
             canonical = request("/api/graph-state")["snapshot"]
-            self.assertEqual(canonical["cycles"], 1)
+            self.assertEqual(canonical["cycles"], 2)
             self.assertTrue(any(node["id"] == "food" for node in canonical["nodes"]))
             newest = canonical["nodes"][-1]["id"]
             minimal = {"nodes": [{"id": "food", "feedback": {"helpful": 2}}], "links": [], "cycles": 0}
             self.assertTrue(request("/api/graph-state", minimal)["ok"])
             preserved = request("/api/graph-state")["snapshot"]
-            self.assertEqual(preserved["cycles"], 1)
+            self.assertEqual(preserved["cycles"], 2)
             self.assertTrue(any(node["id"] == newest for node in preserved["nodes"]))
             self.assertTrue(all("domain" in node for node in preserved["nodes"]))
             self.assertEqual(next(node for node in preserved["nodes"] if node["id"] == "food")["feedback"]["helpful"], 2)

@@ -41,7 +41,9 @@ class MemoryLearner:
         self.review_path = root / ".data" / "learning-review.json"
         transcript = json.loads((root / "chat_memory.json").read_text(encoding="utf-8"))
         self.records = {message["id"]: message for message in transcript["messages"]}
-        self.messages = [message for message in transcript["messages"] if not (message["role"] == "Assistant" and message.get("source") == "local-retrieval")]
+        self.messages = [message for message in transcript["messages"] if not (
+            message["role"] == "Assistant" and message.get("source") in {"local-retrieval", "local-generated"}
+        )]
         self.by_id = {message["id"]: message for message in self.messages}
         self.state = json.loads(self.path.read_text(encoding="utf-8")) if self.path.exists() else {
             "version": 3, "generation": 0, "features": FEATURES,
@@ -137,7 +139,7 @@ class MemoryLearner:
 
     def response_feedback(self, response_id: str, rating: str, correction: str = "") -> dict:
         response = self.records.get(response_id)
-        if not response or response["role"] != "Assistant" or response.get("source") != "local-retrieval":
+        if not response or response["role"] != "Assistant" or response.get("source") not in {"local-retrieval", "local-generated"}:
             raise ValueError("Unknown local model response")
         if rating not in ("useful", "needs_correction") or not isinstance(correction, str) or len(correction) > 2000:
             raise ValueError("Response feedback requires a valid rating and correction up to 2000 characters")

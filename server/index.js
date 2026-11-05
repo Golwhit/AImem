@@ -29,9 +29,11 @@ webpush.setVapidDetails(
 
 const graphStatePath = path.join(rootDir, 'memory_graph_state.json');
 const updateScriptPath = path.join(rootDir, 'update_chat_memory.py');
+const generatorScriptPath = path.join(rootDir, 'original_generator.py');
 const execFileAsync = promisify(execFile);
 const learnerPython = process.env.MEMORY_PYTHON || 'python3';
 let learnerQueue = Promise.resolve();
+let generatorQueue = Promise.resolve();
 
 const state = {
   subscription: null,
@@ -41,10 +43,11 @@ const state = {
 };
 
 app.use('/api/graph-state', express.json({ limit: '2mb' }));
+app.use('/api/generator', express.json({ limit: '2mb' }));
 app.use(express.json());
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,DELETE,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') {
     res.sendStatus(204);
@@ -71,6 +74,27 @@ function runLearner(command, payload = {}) {
     child.stdin.end(JSON.stringify(payload));
   }));
   learnerQueue = result.catch(() => {});
+  return result;
+}
+
+function runGenerator(command, payload = {}) {
+  const result = generatorQueue.then(() => new Promise((resolve, reject) => {
+    const child = spawn(learnerPython, [generatorScriptPath, command], { cwd: rootDir });
+    let output = '';
+    let errors = '';
+    const timer = setTimeout(() => child.kill(), 30000);
+    child.stdout.on('data', chunk => { output += chunk; });
+    child.stderr.on('data', chunk => { errors += chunk; });
+    child.on('error', error => { clearTimeout(timer); reject(error); });
+    child.on('close', code => {
+      clearTimeout(timer);
+      if (code !== 0) { reject(new Error(errors || 'Local generator failed')); return; }
+      try { resolve(JSON.parse(output)); } catch (error) { reject(error); }
+    });
+    child.stdin.on('error', () => {});
+    child.stdin.end(JSON.stringify(payload));
+  }));
+  generatorQueue = result.catch(() => {});
   return result;
 }
 
@@ -249,21 +273,42 @@ app.post('/api/send-push', async (req, res) => {
 
 app.post('/api/chat', async (req, res) => {
   const userMessage = String(req.body?.message || '').trim();
+  const includeInGenerator = req.body?.include_in_generator === true;
   if (!userMessage || userMessage.length > 2000) {
     res.status(400).json({ error: 'Missing message' });
     return;
   }
   try {
     const retrieval = await runLearner('search', { query: userMessage, limit: 3 });
+    const generatorStatus = await runGenerator('status');
     const best = retrieval.results.find(memory => memory.role === 'Assistant');
-    const aiResponse = best
+    let aiResponse = best
       ? `[${best.id}] ${best.text.length > 600 ? best.text.slice(0, 600).trimEnd() + '...' : best.text}`
-      : 'No stored assistant reply matched. The current learner retrieves memories; it does not generate new language yet.';
+      : 'No stored assistant reply matched. Add explicitly reviewed text in Generation to seed the local character model.';
+    let mode = 'memory-excerpts';
+    let responseSource = 'local-retrieval';
+    let generated = null;
+    if (generatorStatus.ready) {
+      generated = await runGenerator('generate', { prompt: userMessage, max_chars: 320 });
+      if (generated.text) {
+        aiResponse = generated.text;
+        mode = 'local-character-ngram';
+        responseSource = 'local-generated';
+      }
+    }
+    let generatorLearning = { added: false, reason: includeInGenerator ? 'not_added' : 'opted_out' };
+    if (includeInGenerator) {
+      try {
+        generatorLearning = await runGenerator('ingest-chat-prompt', { text: userMessage });
+      } catch (error) {
+        generatorLearning = { added: false, reason: 'error', message: error.message };
+      }
+    }
     const assistantTopics = inferMemoryTopics(aiResponse);
-    const saved = await appendMemoryExchange({ user: userMessage, assistant: aiResponse, userTopics: [], assistantTopics, sessionId: req.body?.sessionId, source: 'local-retrieval' });
+    const saved = await appendMemoryExchange({ user: userMessage, assistant: aiResponse, userTopics: [], assistantTopics, sessionId: req.body?.sessionId, source: responseSource });
     const recent = saved.snapshot.nodes.filter(node => node.kind === 'message' && node.created_cycle === saved.snapshot.cycles);
 
-    res.json({ reply: aiResponse, model: retrieval.model, generation: retrieval.generation, mode: 'memory-excerpts', response_source_id: best?.id || null, memories: retrieval.results,
+    res.json({ reply: aiResponse, model: generated?.model || retrieval.model, generation: generated?.generation ?? retrieval.generation, mode, training_sources: generated?.training_sources || [], generator_learning: generatorLearning, response_source_id: best?.id || null, memories: retrieval.results,
       prompt_memory_id: recent.find(node => node.role === 'You')?.id,
       response_memory_id: recent.find(node => node.role === 'Assistant')?.id });
   } catch (err) {
@@ -318,6 +363,67 @@ app.get('/api/semantic-search', async (req, res) => {
 app.get('/api/learner-status', async (req, res) => {
   try { res.json(await runLearner('status')); }
   catch (error) { res.status(500).json({ error: error.message }); }
+});
+
+app.get('/api/generator', async (req, res) => {
+  try { res.json(await runGenerator('status')); }
+  catch (error) { res.status(500).json({ error: error.message }); }
+});
+
+app.get('/api/generator/evaluations', async (req, res) => {
+  try { res.json(await runGenerator('evaluations')); }
+  catch (error) { res.status(500).json({ error: error.message }); }
+});
+
+app.post('/api/generator/evaluations', async (req, res) => {
+  const { prompt } = req.body || {};
+  if (typeof prompt !== 'string' || !prompt.trim() || prompt.length > 1000) {
+    res.status(400).json({ error: 'A fixed prompt up to 1000 characters is required.' });
+    return;
+  }
+  try { res.status(201).json(await runGenerator('track-prompt', { prompt })); }
+  catch (error) { res.status(400).json({ error: error.message }); }
+});
+
+app.post('/api/generator/evaluations/:promptId/:generation', async (req, res) => {
+  const generation = Number(req.params.generation);
+  const { rating, correction = '' } = req.body || {};
+  if (!Number.isSafeInteger(generation) || !['keep', 'edit', 'reject'].includes(rating)
+      || typeof correction !== 'string' || correction.length > 2000) {
+    res.status(400).json({ error: 'A valid generation, Keep/Edit/Reject rating, and correction up to 2000 characters are required.' });
+    return;
+  }
+  try {
+    res.json(await runGenerator('rate-evaluation', {
+      prompt_id: req.params.promptId, generation, rating, correction,
+    }));
+  } catch (error) { res.status(400).json({ error: error.message }); }
+});
+
+app.post('/api/generator/documents', async (req, res) => {
+  const body = req.body || {};
+  const title = typeof body.title === 'string' ? body.title.trim() : '';
+  const source = typeof body.source === 'string' && body.source.trim() ? body.source.trim() : 'Me';
+  const rightsNote = typeof body.rights_note === 'string' ? body.rights_note.trim() : '';
+  const { text, acknowledge_review } = body;
+  if ((body.title != null && typeof body.title !== 'string')
+      || (body.source != null && typeof body.source !== 'string')
+      || (body.rights_note != null && typeof body.rights_note !== 'string')
+      || typeof text !== 'string' || !text.trim() || acknowledge_review !== true
+      || title.length > 160 || source.length > 500 || rightsNote.length > 1000 || text.length > 50000) {
+    res.status(400).json({ error: 'Text and explicit training approval are required; title, source, and provenance note are optional; text is limited to 50000 characters.' });
+    return;
+  }
+  try {
+    res.status(201).json(await runGenerator('add', { title, source, rights_note: rightsNote, text, acknowledge_review }));
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.delete('/api/generator/documents/:documentId', async (req, res) => {
+  try { res.json(await runGenerator('remove', { document_id: req.params.documentId })); }
+  catch (error) { res.status(400).json({ error: error.message }); }
 });
 
 app.post('/api/learner-feedback', async (req, res) => {

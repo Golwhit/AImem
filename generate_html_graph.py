@@ -129,16 +129,17 @@ HTML = r"""<!doctype html>
     }
     main { max-width: 1180px; margin: 0 auto; }
     body.sidebar-collapsed main { max-width: 1400px; }
-    header { display: flex; justify-content: space-between; align-items: end; gap: 20px; margin-bottom: 24px; }
+    header { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 10px; }
+    .graph-nav { display: flex; gap: 8px; }
+    .graph-nav a { border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; color: #dce7f8; font-size: 11px; text-decoration: none; }
+    .graph-nav a:hover { border-color: rgba(103,232,249,.4); background: rgba(103,232,249,.08); }
     .eyebrow { color: var(--cyan); text-transform: uppercase; letter-spacing: .16em; font-size: 11px; font-weight: 750; }
-    h1 { font-size: clamp(30px, 5vw, 46px); letter-spacing: -.045em; line-height: 1.05; margin: 8px 0 8px; }
-    header p { color: var(--muted); margin: 0; max-width: 650px; line-height: 1.55; }
     .live-pill { white-space: nowrap; border: 1px solid rgba(110,231,183,.25); color: var(--green); border-radius: 30px; padding: 9px 13px; font-size: 12px; background: rgba(110,231,183,.07); }
-    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+    .stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin-bottom: 10px; }
     .stat, .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 18px 60px rgba(0,0,0,.18); }
-    .stat { padding: 15px 18px; }
-    .stat-label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .1em; }
-    .stat-value { margin-top: 5px; font-size: 25px; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .stat { padding: 9px 12px; }
+    .stat-label { color: var(--muted); font-size: 9px; text-transform: uppercase; letter-spacing: .06em; }
+    .stat-value { margin-top: 3px; font-size: 19px; font-weight: 700; font-variant-numeric: tabular-nums; }
     .workspace { display: grid; grid-template-columns: minmax(0, 1fr) 332px; gap: 16px; align-items: stretch; }
     body.sidebar-collapsed .workspace { grid-template-columns: minmax(0, 1fr); }
     .graph-panel { position: relative; min-width: 0; padding: 15px; overflow: hidden; }
@@ -156,19 +157,10 @@ HTML = r"""<!doctype html>
     .edge.transition { stroke: #fda4af; stroke-dasharray: 3 6; opacity: .35; }
     .edge.transition.created { opacity: .9; }
     .edge.parent { stroke: #6ee7b7; stroke-dasharray: 6 3; opacity: .65; }
-    .system-node { cursor: pointer; }
-    .system-node rect { fill: #13222b; stroke: #6ee7b7; stroke-width: 1.5; }
-    .system-node.project rect { fill: #192333; stroke: #9ba9c6; }
-    .system-node text { fill: #e8eefc; font-size: 15px; text-anchor: middle; letter-spacing: 0; }
-    .system-node .system-status { fill: #98a6c4; font-size: 11px; }
-    .system-link { stroke: #6ee7b7; stroke-width: 1.2; stroke-dasharray: 6 3; opacity: .7; }
-    .system-link-label { fill: #98a6c4; font-size: 11px; text-anchor: middle; }
-    .prediction-link { stroke: #fbbf24; stroke-dasharray: 4 4; opacity: .85; }
     .learner-values { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; margin: 12px 0; font-size: 12px; }
     .learner-values dt { color: var(--muted); overflow-wrap: anywhere; }
     .learner-values dd { margin: 0; font-variant-numeric: tabular-nums; }
     .learner-mode { color: var(--green); font-size: 12px; }
-    .prediction-toggle { display: flex; align-items: center; gap: 8px; font-size: 12px; }
     .edge.recalled { stroke: #67e8f9; opacity: .98; filter: drop-shadow(0 0 4px rgba(103,232,249,.7)); }
     .edge-label { fill: #9ba9c6; font-size: 11px; text-anchor: middle; paint-order: stroke; stroke: #11192e; stroke-width: 5px; stroke-linejoin: round; }
     .node { cursor: pointer; outline: none; }
@@ -247,17 +239,16 @@ HTML = r"""<!doctype html>
     body.sidebar-collapsed aside { display: none; }
     footer { color: #687896; font-size: 10px; padding: 14px 4px 0; line-height: 1.5; }
     @media (max-width: 850px) { .workspace { grid-template-columns: 1fr; } aside { display: grid; grid-template-columns: 1fr 1fr; } aside > :last-child { grid-column: 1 / -1; } .graph-head { flex-wrap: wrap; } .graph-actions { margin-left: auto; } }
-    @media (max-width: 560px) { body { padding: 24px 12px; } header { display: block; } .live-pill { display: inline-block; margin-top: 15px; } .stats { grid-template-columns: repeat(2, 1fr); } .stat { padding: 12px 14px; } .stat-value { font-size: 21px; } aside { display: flex; } svg { min-height: 265px; } }
+    @media (max-width: 560px) { body { padding: 24px 12px; } .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); } .stat { padding: 8px 10px; } .stat-value { font-size: 18px; } aside { display: flex; } svg { min-height: 265px; } }
   </style>
 </head>
 <body>
 <main>
   <header>
-    <div>
-      <div class="eyebrow">Interactive memory model</div>
-      <h1>Our chat, in memory</h1>
-      <p>Each message is a memory. Nearby turns and shared topics form connections; recall spreads through them, while unused memories fade.</p>
-    </div>
+    <nav class="graph-nav" aria-label="App navigation">
+      <a href="/">Chat</a>
+      <a href="/?view=generation">Generator</a>
+    </nav>
     <div class="live-pill" id="learner-state-pill">LEARNER: CONNECTING</div>
   </header>
   <section class="stats" aria-label="Graph statistics">
@@ -288,8 +279,9 @@ HTML = r"""<!doctype html>
         <div id="evaluation-question" class="selected-content"></div>
         <div class="event" id="event" aria-live="polite">Ready</div>
         <section id="model-response-panel" hidden>
-          <div class="section-label">Retrieved response (not generated)</div>
+          <div class="section-label" id="model-response-label">Retrieved memory excerpt</div>
           <div id="model-response" class="selected-content" style="white-space:pre-wrap"></div>
+          <div id="model-response-meta" class="selected-content"></div>
           <div id="response-evaluation-status" class="learner-mode" hidden></div>
           <div id="response-feedback-controls">
           <textarea id="response-correction" class="query-input" rows="2" placeholder="Your correction (optional)" aria-label="Response correction" maxlength="2000"></textarea>
@@ -302,7 +294,6 @@ HTML = r"""<!doctype html>
         <div class="section-label">Learner component</div>
         <div class="learner-mode" id="learner-mode" aria-live="polite">Connecting</div>
         <dl class="learner-values" id="learner-values"></dl>
-        <label class="prediction-toggle"><input type="checkbox" id="show-predictions" checked>Relevance links</label>
       </section>
       <section id="selected-memory-panel">
         <div class="selected-memory-head">
@@ -321,7 +312,7 @@ HTML = r"""<!doctype html>
       </section>
     </aside>
   </section>
-  <footer>Source: chat_memory.json. Local model: memory_learner.py.</footer>
+  <footer>Source: chat_memory.json. Local models: memory_learner.py and original_generator.py.</footer>
 </main>
 <script>
 const initialGraph = __GRAPH_DATA__;
@@ -353,7 +344,8 @@ const state = {
   latestJudgment: null,
   learner: null,
   learnerOffline: false,
-  showPredictions: true
+  generator: null,
+  generatorOffline: false,
 };
 const revisingJudgments = new Set();
 const graphStateApi = "http://localhost:3001/api/graph-state";
@@ -365,7 +357,6 @@ const searchResults = document.getElementById("search-results");
 const sidebarToggleButton = document.getElementById("sidebar-toggle-button");
 const selectedSidebarToggleButton = document.getElementById("selected-sidebar-toggle-button");
 const selectedMemoryPanel = document.getElementById("selected-memory-panel");
-const learnerPosition = {x: 550, y: 610};
 function inspectLearner() {
   state.sidebarCollapsed = false;
   render();
@@ -385,6 +376,22 @@ async function refreshLearnerStatus() {
   } catch {
     if (!state.learnerOffline) {
       state.learnerOffline = true;
+      render();
+    }
+  }
+}
+async function refreshGeneratorStatus() {
+  try {
+    const response = await fetch("http://localhost:3001/api/generator");
+    if (!response.ok) throw new Error("Generator unavailable");
+    const status = await response.json();
+    const changed = state.generatorOffline || JSON.stringify(status) !== JSON.stringify(state.generator);
+    state.generator = status;
+    state.generatorOffline = false;
+    if (changed) render();
+  } catch {
+    if (!state.generatorOffline) {
+      state.generatorOffline = true;
       render();
     }
   }
@@ -424,7 +431,13 @@ function renderModelResponse() {
   document.getElementById("model-response-panel").hidden = !evaluation;
   if (evaluation) {
     const reply = evaluation.reply;
+    const generated = evaluation.mode === "local-character-ngram";
+    document.getElementById("model-response-label").textContent = generated ? "Experimental local character output" : "Retrieved memory excerpt";
     document.getElementById("model-response").textContent = reply.length > 650 ? reply.slice(0, 647).trimEnd() + "..." : reply;
+    const sources = (evaluation.training_sources || []).map(source => source.title).filter(Boolean);
+    document.getElementById("model-response-meta").textContent = generated
+      ? `Experimental, not a grounded answer. Generator ${evaluation.generation}. Training sources: ${sources.join(", ") || "unknown"}.`
+      : "Selected from stored conversation memory.";
   }
   const rated = evaluation?.response_rating;
   document.getElementById("response-feedback-controls").hidden = !!rated;
@@ -450,46 +463,6 @@ async function recordResponseFeedback(rating) {
     announce("Response feedback saved for review; not used as an automatic training target.");
   } catch (error) { document.getElementById("event").textContent = error.message; }
   finally { state.responseFeedbackPending = false; responseButtons.forEach(button => { button.disabled = false; }); }
-}
-function renderSystemComponents() {
-  const layer = el("g", {class: "system-components"});
-  const definitions = el("defs");
-  const marker = el("marker", {id: "learner-flow-arrow", viewBox: "0 0 6 6", refX: 6, refY: 3, markerWidth: 6, markerHeight: 6, orient: "auto"});
-  marker.append(el("path", {d: "M 0 0 L 6 3 L 0 6 Z", fill: "#6ee7b7"}));
-  definitions.append(marker);
-  layer.append(definitions);
-  const memoryPoint = {x: 272, y: 426};
-  const relation = (first, second, label, labelX, labelY) => {
-    const line = el("line", {x1: first.x, y1: first.y, x2: second.x, y2: second.y, class: "system-link", "marker-end": "url(#learner-flow-arrow)"});
-    line.append(el("title", {}, label));
-    layer.append(line, el("text", {x: labelX, y: labelY, class: "system-link-label"}, label));
-  };
-  relation({x: 330, y: 610}, {x: 430, y: 610}, "building", 380, 595);
-  relation({x: 500, y: 580}, memoryPoint, "retrieves memories", 350, 500);
-  const reviewed = state.learner?.eligible_examples || 0;
-  relation({x: memoryPoint.x + 18, y: memoryPoint.y}, {x: 530, y: 580}, `reviewed examples: ${reviewed}`, 440, 560);
-  if (state.showPredictions && state.query && state.searchStatus === "semantic") {
-    for (const result of state.results.slice(0, 3)) {
-      const target = positions[result.node.id];
-      if (!target) continue;
-      const line = el("line", {x1: learnerPosition.x, y1: learnerPosition.y, x2: target.x, y2: target.y, class: "prediction-link", "stroke-width": 0.5 + result.score * 2});
-      line.append(el("title", {}, `Predicted relevance to "${state.query}": ${result.score.toFixed(3)}. Generation ${state.searchGeneration ?? "unknown"}: ${state.searchGeneration ? "trained checkpoint" : "initial scoring rule"}; not a permanent memory connection.`));
-      layer.append(line);
-    }
-  }
-  const component = (centerX, width, label, detail, kind, action) => {
-    const group = el("g", {class: `system-node ${kind}`, tabindex: "0", role: "button", "aria-label": label});
-    group.append(el("title", {}, kind === "project" ? "Declared project grouping, not an automatically promoted memory topic." : "Inspect live learner parameters, review progress, and last evaluation."));
-    group.append(el("rect", {x: centerX - width / 2, y: 580, width, height: 60, rx: 4}));
-    group.append(el("text", {x: centerX, y: 605}, label), el("text", {x: centerX, y: 626, class: "system-status"}, detail));
-    group.addEventListener("click", action);
-    group.addEventListener("keydown", event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); action(); } });
-    layer.append(group);
-  };
-  component(210, 240, "AI creation from scratch", "Project", "project", inspectLearner);
-  const detail = state.learnerOffline ? "Unavailable" : state.learner ? `Generation ${state.learner.generation} / ${state.learner.learning_state}` : "Connecting";
-  component(learnerPosition.x, 240, "Learner", detail, "learner", inspectLearner);
-  svg.append(layer);
 }
 function domainForNode(node) {
   if (node.domain) return node.domain;
@@ -891,7 +864,6 @@ function render() {
   renderSearchResults();
   renderLearnerStatus();
   renderModelResponse();
-  renderSystemComponents();
 }
 function updateStats() {
   document.getElementById("node-count").textContent = state.nodes.length;
@@ -1180,7 +1152,6 @@ function reset() {
   announce("Simulation reset to the original memory graph.");
 }
 document.getElementById("inspect-learner-button").addEventListener("click", inspectLearner);
-document.getElementById("show-predictions").addEventListener("change", event => { state.showPredictions = event.target.checked; render(); });
 sidebarToggleButton.addEventListener("click", () => {
   state.sidebarCollapsed = !state.sidebarCollapsed;
   saveAndRender();
@@ -1195,7 +1166,9 @@ document.getElementById("response-needs-correction").addEventListener("click", (
 document.getElementById("training-prompt-form").addEventListener("submit", async event => {
   event.preventDefault();
   if (state.submitting) return;
-  state.query = queryInput.value.trim();
+  const prompt = queryInput.value.trim();
+  state.query = prompt;
+  queryInput.value = "";
   state.latestJudgment = null;
   state.results = [];
   document.getElementById("evaluation-question").textContent = state.query;
@@ -1207,14 +1180,22 @@ document.getElementById("training-prompt-form").addEventListener("submit", async
     if (!sessionId) { sessionId = crypto.randomUUID(); sessionStorage.setItem("memory-trainer-session", sessionId); }
     const response = await fetch("http://localhost:3001/api/chat", {
       method: "POST", headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({message: state.query, training_mode: true, sessionId})
+      body: JSON.stringify({message: prompt, training_mode: true, sessionId, include_in_generator: true})
     });
     const result = await response.json();
     if (!response.ok || !result.prompt_memory_id || !result.response_memory_id) throw new Error(result.error || "Question capture failed");
-    state.currentEvaluation = {...result, query: state.query};
+    state.currentEvaluation = {...result, query: prompt};
     sessionStorage.setItem("latest-memory-evaluation", JSON.stringify(state.currentEvaluation));
+    queryInput.value = "";
+    sessionStorage.setItem("clear-training-prompt", "true");
+    await saveSnapshot();
     location.reload();
-  } catch (error) { document.getElementById("event").textContent = error.message; }
+  } catch (error) {
+    state.query = prompt;
+    queryInput.value = prompt;
+    sessionStorage.removeItem("clear-training-prompt");
+    document.getElementById("event").textContent = error.message;
+  }
   finally { state.submitting = false; queryInput.readOnly = false; }
 });
 queryInput.addEventListener("keydown", event => {
@@ -1230,6 +1211,10 @@ async function initialize() {
   } else {
     void saveSnapshot();
   }
+  if (sessionStorage.getItem("clear-training-prompt") === "true") {
+    queryInput.value = "";
+    sessionStorage.removeItem("clear-training-prompt");
+  }
   render();
   if (state.query) {
     void refreshSearchResults();
@@ -1239,6 +1224,8 @@ async function initialize() {
   }, 2000);
   void refreshLearnerStatus();
   window.setInterval(() => { void refreshLearnerStatus(); }, 5000);
+  void refreshGeneratorStatus();
+  window.setInterval(() => { void refreshGeneratorStatus(); }, 5000);
 }
 void initialize();
 </script>
@@ -1328,7 +1315,9 @@ def main() -> None:
             node["created_cycle"] = message_created_cycles.get(node["id"])
 
     state_path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    html = HTML.replace("__GRAPH_DATA__", json.dumps(data, separators=(",", ":")))
+    graph_json = json.dumps(data, separators=(",", ":"))
+    graph_json = graph_json.replace("&", "\\u0026").replace("<", "\\u003c").replace(">", "\\u003e")
+    html = HTML.replace("__GRAPH_DATA__", graph_json)
     output = Path(__file__).with_name("memory_graph.html")
     output.write_text(html, encoding="utf-8")
     print(

@@ -31,7 +31,7 @@ calculations.
 
 ```bash
 npm run dev
-```
+The original learning and generation cores need Python 3.11+ and its standard library only.
 
 This starts the API server on `http://localhost:3001` and the Vite client on `http://localhost:5173`. The memory graph page can open directly from disk, but model retrieval and relevance feedback require the local API. No hosted AI service, AI API key, pretrained weights, or model downloads are used. The unrelated phone-push feature still communicates with browser push providers when invoked.
 
@@ -66,13 +66,13 @@ This updates the local transcript and saved graph weights, then regenerates the 
 
 ## Locally Trained Miniature Model
 
-**Language generation is not implemented.** The response path selects a matched
-stored assistant reply and marks it as retrieved, not generated. If none of the
-retrieved candidates is an assistant reply, it reports that limitation rather
-than echoing the user's question as an answer. Relevance feedback trains ranking
-only; a from-scratch token-prediction/decoding component is a separate next
-milestone. Old saved responses remain historical records; submit a new prompt
-to use the corrected response selection.
+**Generation is an early from-scratch prototype.** The app's Generation tab
+trains a character n-gram model only from text you explicitly approve there.
+Until at least one source is approved, chat keeps the stored-memory excerpt
+fallback. Once ready, chat samples character continuations from the local model.
+This first step is expected to be incoherent; it does not understand meaning or
+ground its output in retrieved facts. Old saved responses remain historical
+records; submit a new prompt to use the current generator.
 
 Trainer submissions now save the question and its source-linked local response
 as a memory exchange. A response uses one top-ranked excerpt capped at 600
@@ -88,14 +88,13 @@ evaluation from tab-local session storage and does not submit it again. Each
 intentional new submission creates a new exchange. A saved question is not a
 verified factual assertion or automatic training approval.
 
-The response area currently shows ranked memory excerpts, not a neural language
-generator. Response useful/Needs correction and optional user corrections are
-stored separately in `.data/response-feedback.json`, with response IDs and
-content hashes. They remain unapproved and do not automatically train the
-relevance model or future text generator. Grade the cited memories separately
-to train retrieval. Model output must never become its own trusted target merely
-because it was generated; reviewed human corrections and independent checks can
-supply evidence for future response training.
+The graph's prompt evaluation labels whether a response is a retrieved memory
+excerpt or experimental local character output, and shows approved generator
+source titles. Response useful/Needs correction and optional user corrections
+are stored separately in `.data/response-feedback.json`, with response IDs and
+content hashes. They remain unapproved and do not automatically train either
+model. Grade cited memories separately to train retrieval. Generated output is
+never added to the generator corpus automatically.
 
 For the fastest in-app workflow, open `/graph`, enter a prompt in **Prompt
 training**, and press Enter. Shift+Enter keeps a newline. The current question, results, and
@@ -159,17 +158,45 @@ of a validation set can overfit it, and future releases need separate benchmarks
 
 New memories are searchable but do not automatically become training data.
 Initial ranking weights are specified heuristics until training is accepted.
-`/api/chat` returns identified excerpts, not invented free-form answers. Topic
-promotion still follows the separate rules below. Semantic representation and
-language generation remain future milestones.
+Topic promotion still follows the separate rules below. Semantic representation
+remains future work.
 
 Inspect `/api/learner-status`, or run:
 
 ```bash
 printf '{}' | python3 memory_learner.py status
 printf '{"query":"memory graph"}' | python3 memory_learner.py search
-python3 -m unittest test_original_learning test_memory_learner test_memory_clusters -v
 ```
+
+`/api/chat` uses a local character n-gram generator after at least one source is
+explicitly approved in the **Generation** tab. Before that, it retains the
+identified-memory-excerpt fallback. The first generator predicts one character
+from the previous four; it does not understand meaning, follow instructions,
+or produce grounded answers. Its output is experimental and may be incoherent.
+
+Text explicitly added in the Generation tab and each new prompt submitted in
+either in-app chat enter this separate corpus. Pressing Enter is the user's
+choice to add that prompt for future training; there is no separate checkbox.
+Historical conversations and retrieval approvals are not imported. Generated
+replies are never added automatically. Each source stores its title,
+provenance, content hash, and review record.
+The title and additional provenance note are optional; source defaults to `Me`.
+Clicking **Approve text and train** is the explicit approval action. That
+declaration is not legal clearance. Removing a source rebuilds the model without
+it. Generated outputs are saved to chat memory with a `local-generated` source
+tag, but are excluded from both the generation corpus and relevance learner
+representation. Response feedback is recorded separately and does not train
+either model.
+
+The **Progress checks** section tracks fixed prompts and saves one deterministic
+sample per prompt for each generator generation. Corpus additions and removals
+automatically capture the next comparison. Keep/Edit/Reject ratings and edits
+are stored separately for evaluation; they do not train on generated output.
+
+The generated checkpoint is `.data/original-generator.json` and is git-ignored.
+Its transition counts are rebuilt from the approved local corpus when a source
+is added or removed. Topic promotion still follows the separate rules below.
+Semantic understanding and grounded language generation remain future work.
 
 The new checkpoint is `.data/learner-graded.json`; the previous accepted
 version is `.data/learner-graded.previous.json`. Review records are in
@@ -182,13 +209,15 @@ All are JSON and git-ignored. Stop the
 server before manual rollback. The reviewed vocabulary is an inspection
 inventory, not a learned semantic representation.
 
-The graph also displays a visual-only AI-creation project and Learner component.
+The graph shows the memory network separately from a responsive system-flow
+diagram. Reviewed source text feeds the local generator; chat exchanges are
+saved in shared memory; eligible memories and explicit labels inform the
+relevance learner. Generated replies are stored but are not automatically used
+to train either model, and retrieved memories do not yet condition generation.
 Inspect learner shows live generation, all five parameters, review/eligibility
-counts, and the latest evaluation. Directed system links are architectural
-relationships, not memories or automatically promoted topics. Query-specific
-amber relevance links are temporary overlays and are never stored as memory
-connections. The learner status polls every five seconds and refreshes after
-feedback; generation zero does not mean trained weights. See Lesson 8 in the
+counts, and the latest evaluation. The learner status polls every five seconds
+and refreshes after feedback; generation zero does not mean trained weights.
+See Lesson 8 in the
 [walkthrough](docs/FROM_SCRATCH.md) for how memory growth differs from learning.
 
 ## Commercial Use Boundaries

@@ -198,10 +198,12 @@ First, collect and review real examples. Then evaluate whether this small
 learner makes useful predictions on fresh questions. That evidence should guide
 the next representation or model change, rather than adding size immediately.
 
-Semantic representation, neural layers, and language generation are separate
-later milestones. The suitably licensed viewer may remain in use. Topic-cluster
-promotion still follows its existing rules; this learner does not yet reorganize
-topics.
+The first language-generation milestone is a small character n-gram model. It
+does not add semantic representation or neural layers, and it is not evidence
+of understanding. Evaluate changes on reviewed, held-out samples before adding
+complexity. The suitably licensed viewer may remain in use. Topic-cluster
+promotion still follows its existing rules; the relevance learner does not
+reorganize topics.
 
 ## Lesson 6: A Domain Can Grow Subtopics
 
@@ -291,10 +293,29 @@ The latest question/response survives a page reload without being submitted
 again. Questions may contain information, but recording them is not verification
 of an assertion and does not approve them for training.
 
-Our present learner ranks memories; it does not predict new language tokens.
-The response panel is therefore explicitly memory-based, not invented gibberish
-presented as a new language model. A response rating or your correction is useful
-future evidence and is stored separately with provenance, but it currently does
-not change model weights. Retrieval judgments still follow the reviewed-example
-and held-out-evaluation gates. A later response generator needs its own training
-objective and evaluation rather than learning its own mistakes as facts.
+The relevance learner and language generator are separate. The first generator
+is an original character-level four-character context model trained from text
+explicitly added in the app's Generation tab and each new prompt submitted in
+either in-app chat. Pressing Enter opts that prompt into future generator
+training. It predicts character
+transitions; it does not understand meaning, follow instructions, or produce
+grounded answers. Its output may be incoherent, and it can reproduce sequences
+from its small training corpus.
+
+Each approved source records its title, provenance note, content hash, and the
+user's review declaration. The title and additional provenance note are
+optional; the source defaults to `Me`. Clicking **Approve text and train** is
+the explicit approval action, not legal clearance. Removing a source rebuilds
+the saved transition counts from the remaining approved corpus.
+Historical conversations, retrieval approvals, and generated outputs are never
+imported automatically. Generated responses are stored with a `local-generated`
+source tag and excluded from generator training and the relevance learner's
+representation. The
+Generation view tracks fixed prompts, captures a deterministic sample at each
+corpus generation, and records Keep/Edit/Reject feedback separately. Ratings
+and corrections do not train on generated output.
+
+This establishes a deliberately small, inspectable language-generation loop.
+The next work is to test how its output changes with varied, reviewed documents
+and to design evaluation before increasing model complexity. It is not evidence
+of semantic understanding or factual reliability.
