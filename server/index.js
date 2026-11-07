@@ -122,7 +122,7 @@ async function writeGraphState(snapshot) {
     for (const node of merged.nodes) {
       const feedback = feedbackById.get(node.id);
       if (!feedback) continue;
-      for (const field of ['rawImportance', 'history', 'consolidated', 'feedback']) {
+      for (const field of ['rawImportance', 'history', 'consolidated', 'feedback', 'userImportant']) {
         if (Object.hasOwn(feedback, field)) node[field] = feedback[field];
       }
     }

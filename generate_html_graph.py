@@ -186,6 +186,7 @@ HTML = r"""<!doctype html>
     .node.entertainment circle.core { fill: #1f3d62; stroke: #60a5fa; }
     .node.topic.entertainment circle.core { fill: #26507f; stroke: #bfdbfe; }
     .node.bridge circle.core { stroke-dasharray: 2 3; }
+    .node.user-important circle.core { stroke: var(--amber); stroke-width: 1.6; filter: drop-shadow(0 0 5px rgba(251,191,36,.75)); }
     .cluster-bg { fill: rgba(14, 22, 39, .68); stroke: rgba(165,180,220,.16); stroke-width: 1.2; rx: 18; ry: 18; }
     .cluster-bg.memory { fill: rgba(11, 32, 52, .84); stroke: rgba(103,232,249,.32); }
     .cluster-bg.scripture { fill: rgba(56, 18, 47, .80); stroke: rgba(244,114,182,.44); stroke-dasharray: 7 6; }
@@ -305,11 +306,13 @@ HTML = r"""<!doctype html>
         <div class="selected-memory-head">
           <div class="section-label">Selected memory</div>
           <div class="selected-memory-actions">
+            <button type="button" id="importance-toggle-button" hidden aria-pressed="false">Mark important</button>
             <button type="button" id="selected-sidebar-toggle-button">Hide right menu</button>
           </div>
         </div>
         <h2 id="selected-name" class="selected-name">Pick a memory</h2>
         <div id="selected-content" class="selected-content">Select a message in the graph to inspect and activate it.</div>
+        <div id="cluster-importance-evidence" class="selected-content" hidden></div>
         <div class="signal-row" id="selected-signals"></div>
         <div class="meter-row"><span>Importance</span><span id="importance-value">—</span></div>
         <div class="meter"><span id="importance-meter"></span></div>
@@ -331,6 +334,7 @@ const state = {
     rawImportance: typeof n.rawImportance === "number" ? n.rawImportance : (typeof n.importance === "number" ? n.importance : 0.0),
     history: [],
     feedback: n.feedback || {helpful: 0, corrections: 0, weak: 0, recalls: 0},
+    userImportant: !!n.userImportant,
     created_cycle: n.created_cycle
   })),
   links: initialGraph.links.map(l => ({...l})),
@@ -362,6 +366,7 @@ const queryInput = document.getElementById("memory-query");
 const searchResults = document.getElementById("search-results");
 const sidebarToggleButton = document.getElementById("sidebar-toggle-button");
 const selectedSidebarToggleButton = document.getElementById("selected-sidebar-toggle-button");
+const importanceToggleButton = document.getElementById("importance-toggle-button");
 const selectedMemoryPanel = document.getElementById("selected-memory-panel");
 function inspectLearner() {
   state.sidebarCollapsed = false;
@@ -589,7 +594,8 @@ async function saveSnapshot() {
           history: node.history,
           consolidated: !!node.consolidated,
           created_cycle: node.created_cycle ?? null,
-          feedback: node.feedback || defaultFeedback()
+          feedback: node.feedback || defaultFeedback(),
+          userImportant: !!node.userImportant
         })),
         links: state.links.map(link => ({
           source: link.source,
@@ -623,6 +629,7 @@ function applySnapshot(snapshot) {
     if (Array.isArray(saved.history)) node.history = saved.history.slice(-50);
     node.consolidated = !!saved.consolidated;
     node.feedback = saved.feedback ? {...defaultFeedback(), ...saved.feedback} : defaultFeedback();
+    node.userImportant = !!saved.userImportant;
   });
   const linksByKey = new Map(state.links.map(link => [`${link.source}|${link.target}|${link.kind || ""}`, link]));
   (snapshot.links || []).forEach(saved => {
@@ -768,6 +775,12 @@ function syncSelectedMemoryPanel() {
     selectedSidebarToggleButton.textContent = state.sidebarCollapsed ? "Show right menu" : "Hide right menu";
     selectedSidebarToggleButton.setAttribute("aria-pressed", state.sidebarCollapsed ? "true" : "false");
   }
+  if (importanceToggleButton) {
+    const canMark = node?.role === "You";
+    importanceToggleButton.hidden = !canMark;
+    importanceToggleButton.textContent = node?.userImportant ? "Marked important" : "Mark important";
+    importanceToggleButton.setAttribute("aria-pressed", node?.userImportant ? "true" : "false");
+  }
 }
 function render() {
   syncSidebarVisibility();
@@ -829,7 +842,7 @@ function render() {
     const fb = node.feedback || defaultFeedback();
     const isCreated = createdIds.has(node.id);
     const group = el("g", {
-      class: `node${state.selected === node.id ? " selected" : ""}${node.consolidated ? " consolidated" : ""}${node.kind === "topic" ? " topic" : ""}${node.domain ? ` ${node.domain}` : ""}${isCreated ? " created" : ""}${isMatch ? " match" : ""}${dimmed ? " dimmed" : ""}`,
+      class: `node${state.selected === node.id ? " selected" : ""}${node.consolidated ? " consolidated" : ""}${node.userImportant ? " user-important" : ""}${node.kind === "topic" ? " topic" : ""}${node.domain ? ` ${node.domain}` : ""}${isCreated ? " created" : ""}${isMatch ? " match" : ""}${dimmed ? " dimmed" : ""}`,
       transform: `translate(${p.x} ${p.y})`,
       tabindex: "0",
       role: "button",
@@ -866,6 +879,7 @@ function updateStats() {
 }
 function updateDetails() {
   const node = state.nodes.find(item => item.id === state.selected);
+  const clusterEvidence = document.getElementById("cluster-importance-evidence");
   if (!node) {
     document.getElementById("selected-name").textContent = "Pick a memory";
     document.getElementById("selected-content").textContent = "Select a message in the graph to inspect and activate it.";
@@ -874,12 +888,32 @@ function updateDetails() {
     document.getElementById("connection-value").textContent = "—";
     document.getElementById("connection-meter").style.width = "0";
     document.getElementById("selected-signals").innerHTML = "";
+    clusterEvidence.hidden = true;
+    clusterEvidence.textContent = "";
     syncSelectedMemoryPanel();
     return;
   }
   const value = learnedScore(node);
   const neighbors = state.links.filter(link => link.source === node.id || link.target === node.id);
   const fb = node.feedback || defaultFeedback();
+  const clusterId = node.candidate_cluster;
+  const cluster = clusterId ? initialGraph.clusters?.[clusterId] : null;
+  if (cluster) {
+    const members = state.nodes.filter(item => item.kind === "message" && item.role === "You" && item.candidate_cluster === clusterId);
+    const marked = members.filter(item => item.userImportant).length;
+    const helpful = members.reduce((sum, item) => sum + (item.feedback?.helpful || 0), 0);
+    const repetition = Math.min(1, (cluster.distinct_interactions || members.length) / 8);
+    const sessionEvidence = Math.min(1, (cluster.sessions || 0) / 3);
+    const cohesion = Math.max(0, Math.min(1, cluster.cohesion || 0));
+    const helpfulEvidence = Math.min(1, helpful / 3);
+    const explicitEvidence = Math.min(1, marked / 3);
+    const estimate = 0.25 * repetition + 0.20 * sessionEvidence + 0.25 * cohesion + 0.15 * helpfulEvidence + 0.15 * explicitEvidence;
+    clusterEvidence.hidden = false;
+    clusterEvidence.textContent = `Candidate cluster: ${cluster.label} · Importance estimate ${estimate.toFixed(2)}/1 (heuristic) · ${cluster.interactions} interactions · ${cluster.sessions} sessions · cohesion ${cohesion.toFixed(2)} · ${helpful} helpful marks · ${marked} important marks. This estimate does not promote the cluster.`;
+  } else {
+    clusterEvidence.hidden = true;
+    clusterEvidence.textContent = "";
+  }
   document.getElementById("selected-name").textContent = node.id;
   document.getElementById("selected-content").textContent = node.content;
   document.getElementById("importance-value").textContent = value.toFixed(2);
@@ -1151,6 +1185,13 @@ selectedSidebarToggleButton.addEventListener("click", () => {
   if (!state.selected) return;
   state.sidebarCollapsed = !state.sidebarCollapsed;
   saveAndRender();
+});
+importanceToggleButton.addEventListener("click", () => {
+  const node = state.nodes.find(item => item.id === state.selected);
+  if (!node || node.role !== "You") return;
+  node.userImportant = !node.userImportant;
+  saveAndRender();
+  announce(node.userImportant ? `<strong>${node.id}</strong> marked important.` : `<strong>${node.id}</strong> importance mark removed.`);
 });
 document.getElementById("response-useful").addEventListener("click", () => recordResponseFeedback("useful"));
 document.getElementById("response-needs-correction").addEventListener("click", () => recordResponseFeedback("needs_correction"));

@@ -72,6 +72,16 @@ class CharacterGeneratorTests(unittest.TestCase):
         self.assertEqual(duplicate["generation"], 1)
         self.assertEqual(generator.status()["document_count"], 1)
 
+    def test_terminal_only_prompt_suffix_falls_back_to_corpus_start(self):
+        generator = CharacterGenerator(self.root)
+        generator.add_document(
+            title="Training text", source="test", text="Hello from training?",
+            acknowledge_review=True,
+        )
+        result = generator.generate("How can I tell if you are actually training?", max_chars=32, seed=4)
+        self.assertGreater(len(result["text"]), 4)
+        self.assertFalse(result["conditioned_on_prompt"])
+
     def test_fixed_prompts_capture_generations_and_feedback_stays_out_of_training(self):
         generator = CharacterGenerator(self.root)
         tracked = generator.track_prompt("the moon")

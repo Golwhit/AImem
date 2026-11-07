@@ -281,23 +281,31 @@ class CharacterGenerator:
         conditioned = False
         for end in range(len(prompt), ORDER - 1, -1):
             candidate = prompt[end - ORDER:end]
-            if candidate in transitions:
+            if candidate in transitions and any(char != END for char in transitions[candidate]):
                 context = candidate
                 conditioned = True
                 break
 
         generator = random.Random(seed)
-        output = []
-        for _ in range(max_chars):
-            counts = transitions.get(context)
-            if not counts:
-                break
-            choices = list(counts)
-            next_character = generator.choices(choices, weights=[counts[char] for char in choices], k=1)[0]
-            if next_character == END:
-                break
-            output.append(next_character)
-            context = (context + next_character)[-ORDER:]
+        def continue_from(start_context: str) -> list[str]:
+            generated = []
+            current_context = start_context
+            for _ in range(max_chars):
+                counts = transitions.get(current_context)
+                if not counts:
+                    break
+                choices = list(counts)
+                next_character = generator.choices(choices, weights=[counts[char] for char in choices], k=1)[0]
+                if next_character == END:
+                    break
+                generated.append(next_character)
+                current_context = (current_context + next_character)[-ORDER:]
+            return generated
+
+        output = continue_from(context)
+        if conditioned and len(output) < min(16, max_chars):
+            output = continue_from(START * ORDER)
+            conditioned = False
 
         return {
             "model": MODEL_NAME,

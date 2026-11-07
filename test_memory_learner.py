@@ -333,13 +333,14 @@ class LearnerTests(unittest.TestCase):
             self.assertEqual(canonical["cycles"], 2)
             self.assertTrue(any(node["id"] == "food" for node in canonical["nodes"]))
             newest = canonical["nodes"][-1]["id"]
-            minimal = {"nodes": [{"id": "food", "feedback": {"helpful": 2}}], "links": [], "cycles": 0}
+            minimal = {"nodes": [{"id": "food", "feedback": {"helpful": 2}, "userImportant": True}], "links": [], "cycles": 0}
             self.assertTrue(request("/api/graph-state", minimal)["ok"])
             preserved = request("/api/graph-state")["snapshot"]
             self.assertEqual(preserved["cycles"], 2)
             self.assertTrue(any(node["id"] == newest for node in preserved["nodes"]))
             self.assertTrue(all("domain" in node for node in preserved["nodes"]))
             self.assertEqual(next(node for node in preserved["nodes"] if node["id"] == "food")["feedback"]["helpful"], 2)
+            self.assertTrue(next(node for node in preserved["nodes"] if node["id"] == "food")["userImportant"])
             correction_payload = {
                 'response_id': generated_chat['response_memory_id'],
                 'rating': 'needs_correction', 'correction': 'The moon reflects sunlight over quiet water.',

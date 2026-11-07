@@ -182,6 +182,9 @@ memory fallback without trying to format a missing selection score.
 The first generator predicts one character from the previous four; it does not
 understand meaning, follow instructions,
 or produce grounded answers. Its output is experimental and may be incoherent.
+If prompt-matched text ends immediately or is only a few characters long, the
+generator falls back to sampling from the corpus start rather than returning a
+blank response.
 
 Text explicitly added in the Generation tab and each new prompt submitted in
 either in-app chat enter this separate corpus. Pressing Enter is the user's
@@ -330,6 +333,13 @@ evidence changes. Hover over a candidate memory to inspect its contribution
 count, distinct count, sessions, span, and cohesion. Candidates can lose promotion
 if evidence no longer meets the thresholds, without deleting memories.
 
+The graph's **Mark important** toggle records an explicit vote on a selected
+user-authored memory in `memory_graph_state.json`. A candidate cluster displays
+a heuristic estimate: 25% distinct-interaction evidence (capped at 8), 20%
+session evidence (capped at 3), 25% cohesion, 15% helpful marks (capped at 3),
+and 15% explicit importance marks (capped at 3). This estimate is not trained,
+does not alter memory salience, and does not change promotion rules.
+
 Explicit AI creation/development wording is classified under the AI-memory
 parent. Unambiguous short follow-ups (for example "sounds good let's do it" or
 "so where are we at now?") retain the latest subject in their own recorded
@@ -341,6 +351,10 @@ to generic acknowledgments.
 Copilot's user-level stop hook records conversation IDs through
 `update_chat_memory.py --session-id ... --source copilot`. App chat uses a
 browser-tab conversation ID retained across refreshes and tab switches.
+The Chat tab and Memory Graph trainer each retain their own ID in that tab's
+`sessionStorage`; Copilot uses the ID supplied to its stop hook. Separate tabs
+and Copilot sessions count as separate conversations, while reloading a tab
+retains its ID.
 Historical messages without provenance do not invent distinct conversations
 and cannot alone satisfy the three-session gate. These thresholds are an initial
 heuristic, not semantic understanding or a trained learning model. Existing
