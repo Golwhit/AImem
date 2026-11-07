@@ -39,10 +39,27 @@ export default function App() {
 
 function ChatPanel({ sessionId }) {
   const [messages, setMessages] = useState([]);
+  const [generatorStatus, setGeneratorStatus] = useState(null);
+  const [progressError, setProgressError] = useState('');
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const bottomRef = useRef(null);
+
+  const refreshProgress = async () => {
+    try {
+      const response = await fetch('/api/generator');
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      setGeneratorStatus(await response.json());
+      setProgressError('');
+    } catch (err) {
+      setProgressError(`Progress unavailable: ${err.message}`);
+    }
+  };
+
+  useEffect(() => {
+    void refreshProgress();
+  }, []);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -71,13 +88,36 @@ function ChatPanel({ sessionId }) {
         mode: data.mode,
         generation: data.generation,
         trainingSources: data.training_sources,
-        generatorLearning: data.generator_learning
+        generatorLearning: data.generator_learning,
+        responseId: data.response_memory_id,
+        selection: data.selection
       }]);
+      void refreshProgress();
     } catch (err) {
       setError(err.message);
       setMessages((prev) => prev.slice(0, -1));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const rateResponse = async (responseId, rating, approveForScoring, correction = '') => {
+    setMessages((previous) => previous.map((message) => message.responseId === responseId ? { ...message, ratingPending: true } : message));
+    setError('');
+    try {
+      const response = await fetch('/api/response-feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ response_id: responseId, rating, correction, approve_for_scoring: approveForScoring, approve_correction: approveForScoring && Boolean(correction.trim()) })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+      setMessages((previous) => previous.map((message) => message.responseId === responseId ? { ...message, rating, scorer: data.scorer, correctionSaved: Boolean(correction.trim()), correctionTrained: data.scorer?.correction_training?.trained } : message));
+      void refreshProgress();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setMessages((previous) => previous.map((message) => message.responseId === responseId ? { ...message, ratingPending: false } : message));
     }
   };
 
@@ -87,6 +127,38 @@ function ChatPanel({ sessionId }) {
         <p className="eyebrow">AI Chat</p>
         <h2>Memory and local generation</h2>
       </div>
+
+      <div className="generator-status" aria-live="polite">
+        {generatorStatus ? (
+          <>
+            <span>Generation {generatorStatus.generation}</span>
+            <span>{generatorStatus.document_count} training sources</span>
+            <span>{generatorStatus.training_characters.toLocaleString()} characters</span>
+          </>
+        ) : <span>Loading progress...</span>}
+        <span>{messages.filter((message) => message.rating === 'useful').length} relevant this session</span>
+        <span>{messages.filter((message) => message.rating === 'needs_correction').length} need correction this session</span>
+        <a href="/?view=generation">Compare generations</a>
+      </div>
+      {progressError && <p className="banner banner-error">{progressError}</p>}
+      {generatorStatus?.scorer && (
+        <section aria-label="Response learning progress" style={{ borderBottom: '1px solid #334155', paddingBottom: 12 }}>
+          <div className="generator-status">
+            <span>Response scorer generation {generatorStatus.scorer.generation}</span>
+            <span>{generatorStatus.scorer.examples} reviewed pairs</span>
+            <span>{generatorStatus.scorer.queries} distinct prompts</span>
+            <span>{generatorStatus.scorer.training?.status || 'Awaiting ratings'}</span>
+          </div>
+          <label style={{ display: 'block', fontSize: 12 }}>Reviewed pairs: {generatorStatus.scorer.examples} / {generatorStatus.scorer.minimum_examples}
+            <progress style={{ width: '100%' }} aria-label="Reviewed pairs toward validation minimum" value={Math.min(generatorStatus.scorer.examples, generatorStatus.scorer.minimum_examples)} max={generatorStatus.scorer.minimum_examples} />
+          </label>
+          <label style={{ display: 'block', fontSize: 12 }}>Distinct prompts: {generatorStatus.scorer.queries} / {generatorStatus.scorer.minimum_queries}
+            <progress style={{ width: '100%' }} aria-label="Distinct prompts toward validation minimum" value={Math.min(generatorStatus.scorer.queries, generatorStatus.scorer.minimum_queries)} max={generatorStatus.scorer.minimum_queries} />
+          </label>
+          {generatorStatus.scorer.training?.reason && <small className="message-meta">{generatorStatus.scorer.training.reason}</small>}
+          {generatorStatus.scorer.training?.candidate_loss != null && <small className="message-meta">Held-out error: {generatorStatus.scorer.training.baseline_loss.toFixed(4)} → {generatorStatus.scorer.training.candidate_loss.toFixed(4)}</small>}
+        </section>
+      )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 360, overflowY: 'auto', margin: '12px 0' }}>
         {messages.length === 0 && (
@@ -105,6 +177,28 @@ function ChatPanel({ sessionId }) {
             {m.generatorLearning?.reason === 'already_present' && <small className="message-meta">Your prompt is already in the generator corpus.</small>}
             {m.generatorLearning?.reason === 'too_short' && <small className="message-meta">Prompt skipped: at least four characters are needed for generator training.</small>}
             {m.generatorLearning?.reason === 'error' && <small className="message-meta">Prompt was saved to memory but not generator training: {m.generatorLearning.message}</small>}
+            {m.selection && <small className="message-meta">{Number.isFinite(m.selection.score) ? `Selected from ${m.selection.candidate_count} candidates. Scorer generation ${m.selection.generation}, selection score ${m.selection.score.toFixed(2)}.` : 'No generated candidate was available; showing the memory fallback.'}</small>}
+            {m.responseId && (
+              <div role="group" aria-label="Response relevance" style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
+                <button type="button" title="Review this pair and train response selection" aria-pressed={m.rating === 'useful'} disabled={m.ratingPending} onClick={() => rateResponse(m.responseId, 'useful', m.mode === 'local-character-ngram')}>Relevant{m.mode === 'local-character-ngram' ? ' and train' : ''}</button>
+                <button type="button" title="Review this pair and train response selection" aria-pressed={m.rating === 'needs_correction'} disabled={m.ratingPending} onClick={() => rateResponse(m.responseId, 'needs_correction', m.mode === 'local-character-ngram')}>Needs correction{m.mode === 'local-character-ngram' ? ' and train' : ''}</button>
+                {m.rating && <small className="message-meta" role="status">{m.scorer ? `Local preference updated. Scorer generation ${m.scorer.generation}: ${m.scorer.training?.status}.` : 'Feedback saved for review.'}</small>}
+              </div>
+            )}
+            {m.rating === 'needs_correction' && (
+              <div style={{ marginTop: 8 }}>
+                <label style={{ display: 'block', fontSize: 12 }}>Your corrected response
+                  <textarea rows={3} maxLength={2000} value={m.correction || ''} style={{ width: '100%', marginTop: 6, resize: 'vertical' }} onChange={(event) => {
+                    const correction = event.target.value;
+                    setMessages((previous) => previous.map((message) => message.responseId === m.responseId ? { ...message, correction, correctionSaved: false } : message));
+                  }} />
+                </label>
+                <button type="button" disabled={m.ratingPending || !m.correction?.trim() || (m.mode === 'local-character-ngram' && m.correction.trim().length < 4)} onClick={async () => {
+                  await rateResponse(m.responseId, 'needs_correction', m.mode === 'local-character-ngram', m.correction);
+                }}>{m.mode === 'local-character-ngram' ? 'Approve correction and train' : 'Save correction for review'}</button>
+                {m.correctionSaved && <small className="message-meta" role="status">{m.correctionTrained ? 'Your correction trained the generator and positive response selection.' : 'Correction saved for review; not added to generator training text.'}</small>}
+              </div>
+            )}
           </div>
         ))}
         {loading && (

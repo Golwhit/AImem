@@ -314,12 +314,49 @@ class CharacterGenerator:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=["status", "add", "remove", "generate", "ingest-chat-prompt", "evaluations", "track-prompt", "rate-evaluation"])
+    parser.add_argument("command", choices=["status", "add", "remove", "generate", "generate-selected", "scorer-feedback", "scorer-status", "ingest-chat-prompt", "evaluations", "track-prompt", "rate-evaluation"])
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parent)
     args = parser.parse_args()
     payload = json.load(sys.stdin)
     generator = CharacterGenerator(args.root)
-    if args.command == "add":
+    if args.command in {"generate-selected", "scorer-feedback", "scorer-status"}:
+        from original_response_scorer import ResponseScorer
+
+        scorer = ResponseScorer(args.root)
+        if args.command == "generate-selected":
+            prompt = payload.get("prompt", "")
+            result = scorer.select(prompt, [generator.generate(prompt, payload.get("max_chars", 320)) for _ in range(4)])
+        elif args.command == "scorer-feedback":
+            if payload.get("acknowledge_review") is not True:
+                raise ValueError("Explicit prompt-response review is required")
+            transcript = json.loads((args.root / "chat_memory.json").read_text(encoding="utf-8"))
+            messages = transcript["messages"]
+            index = next((position for position, message in enumerate(messages) if message["id"] == payload.get("response_id")), -1)
+            if index < 1:
+                raise ValueError("Unknown response")
+            response, prompt = messages[index], messages[index - 1]
+            if response["role"] != "Assistant" or response.get("source") != "local-generated" or prompt["role"] != "You" or prompt.get("created_cycle") != response.get("created_cycle"):
+                raise ValueError("Only a saved local-generated prompt-response pair can train the scorer")
+            correction = payload.get("correction", "")
+            approve_correction = payload.get("approve_correction") is True
+            if approve_correction and (payload.get("rating") != "needs_correction" or not isinstance(correction, str) or len(correction.strip()) < ORDER or len(correction) > 2000 or correction.strip() == response["text"].strip()):
+                raise ValueError("An approved correction must be edited text of 4 to 2000 characters")
+            result = scorer.feedback(prompt["text"], response["text"], payload.get("rating"), f"user-rated:{prompt['id']}:{response['id']}", True)
+            if approve_correction:
+                correction = correction.strip()
+                digest = hashlib.sha256(generator._normalize(correction).encode("utf-8")).hexdigest()
+                added = not any(document["sha256"] == digest for document in generator.state["documents"])
+                if added:
+                    generator.add_document(
+                        title=f"Correction for {response['id']}", source=f"Me:correction:{response['id']}",
+                        text=correction, acknowledge_review=True,
+                        rights_note=f"User explicitly approved edited text for prompt {prompt['id']} and response {response['id']}.",
+                    )
+                result = scorer.feedback(prompt["text"], correction, "useful", f"user-correction:{prompt['id']}:{response['id']}", True)
+                result["correction_training"] = {"trained": True, "document_added": added, "generator_generation": generator.state["generation"]}
+        else:
+            result = scorer.status()
+    elif args.command == "add":
         result = generator.add_document(**payload)
     elif args.command == "remove":
         result = generator.remove_document(payload.get("document_id", ""))
@@ -338,6 +375,9 @@ def main() -> None:
         result = generator.evaluation_status()
     else:
         result = generator.status()
+        from original_response_scorer import ResponseScorer
+
+        result["scorer"] = ResponseScorer(args.root).status()
     print(json.dumps(result, ensure_ascii=False, allow_nan=False))
 
 

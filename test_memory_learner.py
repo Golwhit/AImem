@@ -297,6 +297,7 @@ class LearnerTests(unittest.TestCase):
             })
             self.assertEqual(generated_chat['mode'], 'local-character-ngram')
             self.assertTrue(generated_chat['reply'])
+            self.assertGreater(generated_chat['selection']['candidate_count'], 0)
             self.assertEqual(generated_chat['training_sources'][0]['title'], 'Approved seed')
             self.assertTrue(generated_chat['generator_learning']['added'])
             generator_status = request('/api/generator')
@@ -306,8 +307,12 @@ class LearnerTests(unittest.TestCase):
             generated_feedback = request('/api/response-feedback', {
                 'response_id': generated_chat['response_memory_id'],
                 'rating': 'needs_correction', 'correction': 'An experimental generation, not a fact.',
+                'approve_for_scoring': True,
             })
             self.assertFalse(generated_feedback['used_for_training'])
+            self.assertEqual(generated_feedback['scorer']['examples'], 1)
+            self.assertTrue(generated_feedback['scorer']['local_feedback_active'])
+            self.assertEqual(request('/api/generator')['document_count'], 2)
             defaulted = request('/api/generator/documents', {
                 'text': 'A second locally reviewed source for the generator.' * 2,
                 'acknowledge_review': True,
@@ -335,6 +340,29 @@ class LearnerTests(unittest.TestCase):
             self.assertTrue(any(node["id"] == newest for node in preserved["nodes"]))
             self.assertTrue(all("domain" in node for node in preserved["nodes"]))
             self.assertEqual(next(node for node in preserved["nodes"] if node["id"] == "food")["feedback"]["helpful"], 2)
+            correction_payload = {
+                'response_id': generated_chat['response_memory_id'],
+                'rating': 'needs_correction', 'correction': 'The moon reflects sunlight over quiet water.',
+                'approve_correction': True,
+            }
+            with self.assertRaises(HTTPError) as unapproved:
+                request('/api/response-feedback', correction_payload)
+            self.assertEqual(unapproved.exception.code, 400)
+            unapproved.exception.close()
+            self.assertEqual(request('/api/generator')['document_count'], 3)
+            correction_payload['approve_for_scoring'] = True
+            corrected = request('/api/response-feedback', correction_payload)
+            self.assertTrue(corrected['scorer']['correction_training']['trained'])
+            self.assertEqual(corrected['scorer']['examples'], 2)
+            self.assertEqual(request('/api/generator')['document_count'], 4)
+            scorer_state = json.loads((self.root / '.data' / 'response-scorer.json').read_text())
+            self.assertTrue(any(item['reply'] == correction_payload['correction'] and item['rating'] == 'useful' for item in scorer_state['examples']))
+            repeated = request('/api/response-feedback', correction_payload)
+            self.assertFalse(repeated['scorer']['correction_training']['document_added'])
+            self.assertEqual(repeated['scorer']['examples'], 2)
+            self.assertEqual(request('/api/generator')['document_count'], 4)
+            unchanged = json.loads((self.root / 'chat_memory.json').read_text())
+            self.assertEqual(unchanged['messages'][-1]['text'], generated_chat['reply'])
         finally:
             process.terminate()
             process.communicate(timeout=10)

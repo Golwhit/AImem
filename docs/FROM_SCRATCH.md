@@ -131,6 +131,12 @@ milestone needs a separate frozen benchmark and more varied examples. Passing
 our tiny tests is not evidence of general intelligence.
 
 ## Your First Contribution
+Visual growth is separate from training: domain size grows with the square
+root of its message count and mean salience, capped at 180 graph units.
+Individual memories grow with capped salience and a small consolidation bonus.
+Recall and feedback can grow them; decay can shrink them. All sizes recompute
+when the graph redraws, without changing membership or promotion thresholds.
+AI memory remains central; solid shaded boundaries separate the other domains.
 
 The [first teaching batch](FIRST_TEACHING_BATCH.md) proposes six clear pairs
 from existing user-authored project statements. Its excerpts are verified,
@@ -314,6 +320,40 @@ representation. The
 Generation view tracks fixed prompts, captures a deterministic sample at each
 corpus generation, and records Keep/Edit/Reject feedback separately. Ratings
 and corrections do not train on generated output.
+
+The next response-selection component now has an isolated implementation in
+`original_response_scorer.py`. Explicitly reviewed example pairs can fit four
+scoring weights with the existing standard-library gradient descent. Synthetic
+tests demonstrate lower loss on held-out queries, rating replacement, and
+preservation of previous weights; they do not establish useful conversation or
+truthfulness. Live chat now selects from four generated candidates with this
+scorer and shows candidate count, scorer generation, and selection score.
+Existing ratings remain untouched and unimported.
+
+In AI Chat, choose **Relevant and train** or **Needs correction and train** to
+review a generated pair and update response-selection preferences. A nearby
+reviewed pair can immediately adjust a candidate score by at most 0.25; broad
+weight updates still require query-separated validation. This is a lexical
+preference mechanism, not a check of meaning or truth. These judgments remain
+separate from generator training: adding
+your prompt teaches character patterns, not whether an answer was correct.
+Watch the chat progress strip for corpus growth after each prompt, and use
+**Compare generations** for fixed-prompt samples. Session rating counts reset
+when the chat panel is reopened, but saved feedback is not deleted. More sources
+or a higher generation number alone do not establish better answers.
+Rating revisions replace the previous label for the same pair. Generated text
+is not silently added to the generator corpus by rating it.
+Empty generation candidates have no selection score. Chat preserves the memory
+fallback and remains usable rather than trying to format a missing score.
+AI Chat shows persistent scorer example/query counts, minimum-data progress
+bars, and validation loss when available. These are readiness indicators, not
+an accuracy score. **Needs correction** opens a field for your revised reply.
+**Approve correction and train** explicitly approves that edited answer for
+positive prompt-response scoring and generator character-pattern training.
+The original reply remains a negative example and is not overwritten. Repeated
+saves of the same correction do not multiply examples. Your approval is a review
+declaration, not legal clearance or proof of truth. Fixed-prompt evaluation edits
+remain evaluation-only.
 
 This establishes a deliberately small, inspectable language-generation loop.
 The next work is to test how its output changes with varied, reviewed documents

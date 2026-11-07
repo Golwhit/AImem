@@ -289,7 +289,7 @@ app.post('/api/chat', async (req, res) => {
     let responseSource = 'local-retrieval';
     let generated = null;
     if (generatorStatus.ready) {
-      generated = await runGenerator('generate', { prompt: userMessage, max_chars: 320 });
+      generated = await runGenerator('generate-selected', { prompt: userMessage, max_chars: 320 });
       if (generated.text) {
         aiResponse = generated.text;
         mode = 'local-character-ngram';
@@ -308,7 +308,7 @@ app.post('/api/chat', async (req, res) => {
     const saved = await appendMemoryExchange({ user: userMessage, assistant: aiResponse, userTopics: [], assistantTopics, sessionId: req.body?.sessionId, source: responseSource });
     const recent = saved.snapshot.nodes.filter(node => node.kind === 'message' && node.created_cycle === saved.snapshot.cycles);
 
-    res.json({ reply: aiResponse, model: generated?.model || retrieval.model, generation: generated?.generation ?? retrieval.generation, mode, training_sources: generated?.training_sources || [], generator_learning: generatorLearning, response_source_id: best?.id || null, memories: retrieval.results,
+    res.json({ reply: aiResponse, model: generated?.model || retrieval.model, generation: generated?.generation ?? retrieval.generation, mode, selection: generated?.selection || null, training_sources: generated?.training_sources || [], generator_learning: generatorLearning, response_source_id: best?.id || null, memories: retrieval.results,
       prompt_memory_id: recent.find(node => node.role === 'You')?.id,
       response_memory_id: recent.find(node => node.role === 'Assistant')?.id });
   } catch (err) {
@@ -447,12 +447,21 @@ app.post('/api/learner-feedback', async (req, res) => {
 
 // ─── Graph HTML endpoint ─────────────────────────────────────────────────────
 app.post('/api/response-feedback', async (req, res) => {
-  const { response_id, rating, correction = '' } = req.body || {};
+  const { response_id, rating, correction = '', approve_for_scoring = false, approve_correction = false } = req.body || {};
   if (typeof response_id !== 'string' || !['useful', 'needs_correction'].includes(rating) || typeof correction !== 'string' || correction.length > 2000) {
     res.status(400).json({ error: 'response_id, valid rating and correction up to 2000 characters are required' });
     return;
   }
-  try { res.json(await runLearner('response-feedback', { response_id, rating, correction })); }
+  if (typeof approve_for_scoring !== 'boolean' || typeof approve_correction !== 'boolean'
+      || (approve_correction && (!approve_for_scoring || rating !== 'needs_correction' || correction.trim().length < 4))) {
+    res.status(400).json({ error: 'Correction training requires explicit scoring approval and an edited correction of at least four characters.' });
+    return;
+  }
+  try {
+    const scorer = approve_for_scoring ? await runGenerator('scorer-feedback', { response_id, rating, correction, approve_correction, acknowledge_review: true }) : null;
+    const feedback = await runLearner('response-feedback', { response_id, rating, correction });
+    res.json({ ...feedback, scorer });
+  }
   catch (error) { res.status(400).json({ error: error.message }); }
 });
 

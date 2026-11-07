@@ -162,6 +162,13 @@ Topic promotion still follows the separate rules below. Semantic representation
 remains future work.
 
 Inspect `/api/learner-status`, or run:
+The memory visualizer centers AI memory and arranges other domains on a
+non-overlapping orbit. Solid circular boundaries and SVG shading give depth
+without a 3D engine. Region radius is `min(180, 48 + 6*sqrt(message_count) +
+20*mean_capped_salience)` in graph units. Memory radius is
+`2.5 + 3.5*sqrt(min(1, salience))`, plus `0.75` when consolidated.
+Sizes recompute on redraw, so feedback, recall, and decay affect them.
+These bounded visual sizes do not measure intelligence or approve training.
 
 ```bash
 printf '{}' | python3 memory_learner.py status
@@ -170,8 +177,10 @@ printf '{"query":"memory graph"}' | python3 memory_learner.py search
 
 `/api/chat` uses a local character n-gram generator after at least one source is
 explicitly approved in the **Generation** tab. Before that, it retains the
-identified-memory-excerpt fallback. The first generator predicts one character
-from the previous four; it does not understand meaning, follow instructions,
+identified-memory-excerpt fallback. If all candidates are empty, Chat shows the
+memory fallback without trying to format a missing selection score.
+The first generator predicts one character from the previous four; it does not
+understand meaning, follow instructions,
 or produce grounded answers. Its output is experimental and may be incoherent.
 
 Text explicitly added in the Generation tab and each new prompt submitted in
@@ -185,8 +194,42 @@ Clicking **Approve text and train** is the explicit approval action. That
 declaration is not legal clearance. Removing a source rebuilds the model without
 it. Generated outputs are saved to chat memory with a `local-generated` source
 tag, but are excluded from both the generation corpus and relevance learner
-representation. Response feedback is recorded separately and does not train
-either model.
+representation. Response feedback stays separate from generator text training
+and the memory relevance learner.
+
+AI Chat provides **Relevant and train** and **Needs correction and train** on
+generated replies. Clicking either approves that exact saved prompt/reply pair
+for response-scoring training, not as a factual target or generator document.
+The `original_response_scorer.py` prototype learns response-selection
+weights from explicitly reviewed prompt/reply ratings. It measures lexical
+overlap, query coverage, and word diversity, not factual correctness. It needs
+12 pairs across six distinct prompts and both ratings in query-separated
+training/validation partitions. New weights require improved validation loss;
+the previous accepted state is retained. Chat generates four candidates and
+selects using this scorer. Before global training, nearby reviewed prompt/reply
+pairs provide an immediate bounded preference adjustment (at most 0.25).
+Word repetition is penalized separately. No existing feedback is auto-imported.
+Run `python3 -m unittest test_original_response_scorer` for its isolated checks.
+Its compact progress strip refreshes generator generation, source count, and
+training-character count after each successful prompt. Rating totals cover only
+the currently displayed chat session; the saved feedback records remain durable.
+**Compare generations** opens the existing fixed-prompt evaluation workspace.
+AI Chat also displays durable response-scorer counts, two minimum-data progress
+bars, and the latest query-separated validation result. These counts are not
+accuracy percentages; both labels must also be present in each partition.
+After **Needs correction**, enter an edited reply and click **Approve correction
+and train**. This explicitly approves your edited text: the original reply stays
+negative, the prompt/correction pair becomes a positive scorer example, and the
+correction enters the character generator corpus with user-correction provenance.
+Exact repeated saves do not duplicate examples or documents. The original chat
+record is preserved. This teaches text patterns and selection, not factual truth;
+global scorer weights still require validation. Ordinary ratings and fixed-prompt
+evaluation edits do not approve generator text. Corrections need 4 to 2000
+characters; use only reviewed material you are entitled to train on.
+Ratings are associated with the response ID and content hash, and can be revised.
+They adjust selection preferences, not the character generator's transition
+counts. New prompts still train its text
+patterns independently of these ratings.
 
 The **Progress checks** section tracks fixed prompts and saves one deterministic
 sample per prompt for each generator generation. Corpus additions and removals

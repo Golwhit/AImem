@@ -194,6 +194,12 @@ HTML = r"""<!doctype html>
     .cluster-bg.evaluation { fill: rgba(41, 27, 64, .80); stroke: rgba(196,181,253,.42); stroke-dasharray: 5 8; }
     .cluster-bg.entertainment { fill: rgba(17, 34, 58, .80); stroke: rgba(147,197,253,.42); stroke-dasharray: 6 8; }
     .cluster-bg.other { fill: rgba(52, 34, 11, .66); stroke: rgba(251,191,36,.30); }
+    .cluster-bg { stroke-dasharray: none !important; stroke-width: 1.6; }
+    .region-shadow { fill: #000; opacity: .28; }
+    .region-depth { pointer-events: none; }
+    .node circle.core { filter: drop-shadow(1px 2px 1px rgba(0,0,0,.65)); }
+    .node-shine { fill: #fff; opacity: .48; pointer-events: none; }
+    .cluster-subtitle { fill: var(--muted); font-size: 10px; text-anchor: middle; }
     .cluster-title { fill: #eff6ff; font-size: 12px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
     .cluster-title.scripture { fill: #f9a8d4; }
     .cluster-title.food { fill: #86efac; }
@@ -201,9 +207,9 @@ HTML = r"""<!doctype html>
     .cluster-title.evaluation { fill: #c4b5fd; }
     .cluster-title.entertainment { fill: #93c5fd; }
     .cluster-title.memory { fill: #67e8f9; }
-    .pulse-ring { fill: none; stroke: var(--cyan); stroke-width: 2; opacity: 0; pointer-events: none; }
-    .pulse-ring.animate { animation: ripple 1.15s ease-out infinite; }
-    @keyframes ripple { 0% { r: 22px; opacity: .85; } 100% { r: 58px; opacity: 0; } }
+    .pulse-ring { fill: none; stroke: var(--cyan); stroke-width: 3; opacity: 0; pointer-events: none; filter: drop-shadow(0 0 4px rgba(103,232,249,.8)); }
+    .pulse-ring.animate { animation: ripple 1.5s ease-out infinite; }
+    @keyframes ripple { 0% { r: 22px; opacity: 1; } 45% { opacity: .85; } 100% { r: 58px; opacity: 0; } }
     aside { padding: 20px; display: flex; flex-direction: column; gap: 20px; }
     .section-label { color: var(--muted); text-transform: uppercase; letter-spacing: .12em; font-size: 10px; font-weight: 750; margin-bottom: 11px; }
     .selected-memory-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 11px; }
@@ -513,61 +519,39 @@ const domainGroups = Object.entries(
 );
 function domainLayoutFor(domain, nodes) {
   const cluster = initialGraph.clusters?.[domain];
-  if (cluster) {
-    const index = Object.keys(initialGraph.clusters).filter(key => initialGraph.clusters[key].promoted).indexOf(domain);
-    const row = Math.floor(index / 4);
-    svg.setAttribute("viewBox", `0 0 1120 ${Math.max(760, 990 + row * 220)}`);
-    return {center: {x: 140 + (index % 4) * 280, y: 870 + row * 220}, radius: 65, label: cluster.label, subtitle: `${cluster.parent_domain}: ${cluster.distinct_interactions} distinct contributions`};
-  }
-  if (domain === "scripture") {
-  return { center: {x: 684, y: 214}, radius: 42, label: "Scripture", subtitle: "" };
-  }
-  if (domain === "food") {
-    return {center: {x: 802, y: 486}, radius: 28, label: "Food", subtitle: ""};
-  }
-  if (domain === "finance") {
-    return {
-        center: {x: 968, y: 548},
-        radius: 46,
-        label: "Finance",
-        subtitle: "",
-    };
-  }
-  if (domain === "evaluation") {
-    return {
-          center: {x: 742, y: 56},
-        radius: 32,
-        label: "Under evaluation",
-        subtitle: "",
-    };
-  }
-  if (domain === "entertainment") {
-    return {
-      center: {x: 586, y: 494},
-      radius: 32,
-      label: "Entertainment",
-      subtitle: "",
-    };
-  }
-  if (domain === "other") {
-    return { center: {x: 872, y: 304}, radius: 44, label: "Other", subtitle: "" };
-  }
-  return { center: {x: 272, y: 286}, radius: 122, label: "AI memory", subtitle: "" };
+  const labels = {memory: "AI memory", scripture: "Scripture", food: "Food", finance: "Finance", evaluation: "Under evaluation", entertainment: "Entertainment", other: "Other"};
+  const messages = nodes.filter(node => node.kind === "message");
+  const salience = messages.reduce((sum, node) => sum + Math.min(1, learnedScore(node)), 0) / Math.max(1, messages.length);
+  const radius = Math.min(180, 48 + 6 * Math.sqrt(messages.length) + 20 * salience);
+  return {center: {x: 0, y: 0}, radius, label: cluster?.label || labels[domain] || domain, subtitle: `${messages.length} memories`, messages: messages.length, salience};
 }
 const domainLayouts = new Map();
-domainGroups.forEach(([domain, nodes]) => {
-  const layout = domainLayoutFor(domain, nodes);
-  domainLayouts.set(domain, layout);
-  const center = layout.center;
-  const radius = layout.radius;
-  nodes.forEach((node, index) => {
-    const angle = -Math.PI / 2 + (2 * Math.PI * index / Math.max(nodes.length, 1));
-    positions[node.id] = {
-      x: center.x + radius * Math.cos(angle),
-      y: center.y + radius * Math.sin(angle)
-    };
+function memoryRadius(node) {
+  return 2.5 + 3.5 * Math.sqrt(Math.min(1, learnedScore(node))) + (node.consolidated ? 0.75 : 0);
+}
+function updateLayout() {
+  domainGroups.forEach(([domain, nodes]) => domainLayouts.set(domain, domainLayoutFor(domain, nodes)));
+  const satellites = [...domainLayouts.keys()].filter(domain => domain !== "memory").sort();
+  const centerRadius = domainLayouts.get("memory")?.radius || 48;
+  const satelliteRadius = Math.max(48, ...satellites.map(domain => domainLayouts.get(domain).radius));
+  const orbit = Math.max(centerRadius + satelliteRadius + 65, satellites.length > 1 ? (2 * satelliteRadius + 45) / (2 * Math.sin(Math.PI / satellites.length)) : 0);
+  const extent = Math.max(380, orbit + satelliteRadius + 55);
+  const center = {x: extent, y: extent};
+  svg.setAttribute("viewBox", `0 0 ${extent * 2} ${extent * 2}`);
+  if (domainLayouts.has("memory")) domainLayouts.get("memory").center = center;
+  satellites.forEach((domain, index) => {
+    const angle = -Math.PI / 2 + index * 2 * Math.PI / satellites.length;
+    domainLayouts.get(domain).center = {x: center.x + orbit * Math.cos(angle), y: center.y + orbit * Math.sin(angle)};
   });
-});
+  domainGroups.forEach(([domain, nodes]) => {
+    const layout = domainLayouts.get(domain);
+    nodes.forEach((node, index) => {
+      const angle = index * Math.PI * (3 - Math.sqrt(5));
+      const distance = (layout.radius - 28) * Math.sqrt((index + 0.5) / Math.max(1, nodes.length));
+      positions[node.id] = {x: layout.center.x + distance * Math.cos(angle), y: layout.center.y + distance * Math.sin(angle), depth: (Math.sin(angle) + 1) / 2};
+    });
+  });
+}
 function defaultFeedback() {
   return {helpful: 0, corrections: 0, weak: 0, recalls: 0};
 }
@@ -787,22 +771,27 @@ function syncSelectedMemoryPanel() {
 }
 function render() {
   syncSidebarVisibility();
+  updateLayout();
   svg.replaceChildren();
+  const definitions = el("defs");
+  const shading = el("radialGradient", {id: "region-shading", cx: "32%", cy: "25%", r: "75%"});
+  shading.append(el("stop", {offset: "0%", "stop-color": "#ffffff", "stop-opacity": ".13"}), el("stop", {offset: "50%", "stop-color": "#ffffff", "stop-opacity": ".02"}), el("stop", {offset: "100%", "stop-color": "#000000", "stop-opacity": ".5"}));
+  definitions.append(shading);
+  svg.append(definitions);
   const createdIds = newestMessageIds();
   const backdropLayer = el("g");
   domainLayouts.forEach((layout, domain) => {
     const nodes = state.nodes.filter(node => (node.domain || "memory") === domain);
     if (!nodes.length) return;
-    const padX = 38;
-    const padY = 30;
-    const width = layout.radius * 2 + padX * 2;
-    const height = layout.radius * 2 + padY * 2;
-    const x = layout.center.x - width / 2;
-    const y = layout.center.y - height / 2;
-    backdropLayer.append(el("rect", {
-      x, y, width, height,
+    const y = layout.center.y - layout.radius;
+    backdropLayer.append(el("ellipse", {cx: layout.center.x + 5, cy: layout.center.y + 12, rx: layout.radius, ry: layout.radius, class: "region-shadow"}));
+    const boundary = el("circle", {
+      cx: layout.center.x, cy: layout.center.y, r: layout.radius,
       class: `cluster-bg ${domain}`
-    }));
+    });
+    boundary.append(el("title", {}, `${layout.label}: radius ${layout.radius.toFixed(1)}; ${layout.messages} messages; mean capped salience ${layout.salience.toFixed(2)}. Size is visual salience, not intelligence or training approval.`));
+    backdropLayer.append(boundary);
+    backdropLayer.append(el("circle", {cx: layout.center.x, cy: layout.center.y, r: layout.radius, fill: "url(#region-shading)", class: "region-depth"}));
     backdropLayer.append(el("text", {x: layout.center.x, y: y + 22, class: `cluster-title ${domain}`, "text-anchor": "middle"}, layout.label));
     if (layout.subtitle) {
       backdropLayer.append(el("text", {x: layout.center.x, y: y + 38, class: `cluster-subtitle ${domain}`, "text-anchor": "middle"}, layout.subtitle));
@@ -833,7 +822,7 @@ function render() {
   });
   svg.append(edges);
 
-  state.nodes.forEach(node => {
+  [...state.nodes].sort((first, second) => positions[first.id].depth - positions[second.id].depth).forEach(node => {
     const p = positions[node.id], value = learnedScore(node);
     const isMatch = queryMatches(node);
     const dimmed = focus.size > 0 && !focus.has(node.id);
@@ -847,12 +836,14 @@ function render() {
       "aria-label": `${node.id}, score ${value.toFixed(2)}. Click to activate.`
     });
     group.append(el("circle", {class: `pulse-ring${(state.active[node.id] || 0) > 0.05 || isCreated ? " animate" : ""}`, r: 2.75}));
-    const circle = el("circle", {class: "core", r: 2.25 + value * 1.75});
+    const radius = memoryRadius(node);
+    const circle = el("circle", {class: "core", r: radius});
     const candidate = initialGraph.clusters?.[node.candidate_cluster];
     const evidence = candidate ? `\n${candidate.label}: ${candidate.promoted ? "Promoted" : "Under evaluation"}\n${candidate.reason}` : "";
     const title = el("title", {}, `${node.content}\nScore: ${value.toFixed(2)}\nHelpful: ${fb.helpful} · Corrections: ${fb.corrections} · Recalls: ${fb.recalls}${node.consolidated ? "\nConsolidated" : ""}${evidence}`);
     circle.append(title);
     group.append(circle);
+    group.append(el("circle", {class: "node-shine", cx: -radius * .3, cy: -radius * .35, r: radius * .24}));
     group.addEventListener("click", () => activate(node.id));
     group.addEventListener("keydown", event => {
       if (event.key === "Enter" || event.key === " ") { event.preventDefault(); activate(node.id); }
