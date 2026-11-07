@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "aimem": {
+      "command": "python3",
+      "args": ["-m", "aimem", "mcp", "--db", "~/.aimem/memory.db"],
+      "env": {
+        "PYTHONPATH": "/home/al/Desktop/AI Mem"
+      },
+      "disabled": false,
+      "autoApprove": [
+        "memory_search",
+        "memory_get",
+        "memory_list",
+        "memory_tags",
+        "memory_stats"
+      ]
+    }
+  }
+}

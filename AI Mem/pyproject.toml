@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aimem"
+version = "0.1.0"
+description = "Local, dependency-free long-term memory for AI agents (SQLite FTS5 + MCP)"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+keywords = ["mcp", "memory", "sqlite", "fts5", "ai-agents"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Utilities",
+]
+dependencies = []
+
+[project.scripts]
+aimem = "aimem.cli:main"
+
+[project.urls]
+Documentation = "https://modelcontextprotocol.io"
+
+[tool.setuptools]
+packages = ["aimem"]
