@@ -7,9 +7,10 @@ model service or using a machine-learning library. The first milestone is a
 small relevance learner: given a question and a memory, estimate how useful
 that memory is for answering the question.
 
-This is not yet a language model, a reasoning engine, or a system that knows
-whether a statement is true. It is a manageable first component whose behavior
-we can inspect, test, and improve together.
+That relevance component is not a language model, a reasoning engine, or a
+system that knows whether a statement is true. A separate tiny neural
+language-model baseline is now available below; neither establishes reasoning
+or truthfulness.
 
 The core uses Python's standard library. Third-party viewer/UI dependencies
 such as React and Express are acceptable to the user when suitably licensed;
@@ -18,6 +19,67 @@ third-party software. Public availability does not establish commercial rights.
 Implementing our calculations does not certify that the whole product is
 obligation-free or that AI-assisted code has exclusive ownership. Keep license
 and provenance review separate from engineering progress.
+
+## Neural Weight Milestone
+
+The existing chat lab's equal-length crop can be zero when one mode has no
+living capture. Its cards then show available full outputs with an explicit
+unequal-length label and give the empty modes' reasons. This display does not
+invent captures or change the saved comparison, generation, or training.
+
+`neural_experiment.py` adds an isolated character MLP using our own calculations:
+four context tokens -> concatenated 8-dimensional embeddings -> 16 tanh units
+-> next-character softmax. Two additional tokens represent source boundary and
+unknown characters. Only training text defines the character vocabulary.
+
+For vocabulary size V (including those two tokens), all trainable parameters
+are `8V + (4 * 8 * 16) + 16 + 16V + V = 25V + 528`.
+SGD updates embeddings, both weight matrices, and both biases using
+cross-entropy gradients at learning rate 0.1. One step processes one sampled
+context/target pair. Fixed initialization, training, and sampling seeds make
+runs reproducible; every run starts fresh rather than silently continuing a
+prior corpus. The context boundary is a neural token, not admission to Layer 0.
+
+Finite-difference tests check each gradient group, including accumulation when
+a boundary embedding occurs repeatedly. A synthetic repeating-pattern test
+requires both losses to fall below 30% of their initial values and checks that
+parameters actually changed. This proves mechanics only: its held-out pattern
+deliberately repeats the training pattern and is not independent evidence of
+generalization.
+
+For real text, the Generation tab requires explicit neural-use approval and a
+provenance/rights note for new training and separate held-out text. Nothing is
+backfilled from memory, the old corpus, or app prompts. Exact-copy/substring
+held-out text is rejected, but that cannot establish semantic independence.
+Held-out text never supplies gradients or vocabulary; changing it leaves
+trained weights identical in tests. Unknown held-out characters map to the
+unknown token and are counted in reports; loss on those tokens is not a
+measure of distinguishing unseen characters.
+
+The saved report includes exact parameter counts, changed count, processed
+targets, steps, character counts/hashes, loss history, and before/after
+continuations from one fixed prompt. Loss is average negative log probability
+per character (natural logarithms). Lower loss on a truly independent set is
+evidence of better prediction, not understanding. No early stopping or
+model-selection procedure is implemented.
+
+Checkpoints, including weights, exact texts, and declared provenance, persist
+under `.data/neural-experiments/`; they are not committed. The UI restores the
+latest report on refresh, while older run files remain intact. Training is
+bounded to 2,000 training characters, 1,000 held-out characters, 128 distinct
+training characters, and 1,000 SGD steps (default 300).
+
+Layer 0/1 remain definite rules in their existing seed/lab surfaces. This
+neural run is explicitly unconstrained: it does not claim that its samples
+pass those rules. The next controlled experiment can compare baseline and
+layer-assisted neural behavior with matched initialization, data, and budgets.
+The existing generator still serves ordinary chat; no neural sample trains
+another model or enters conversation memory automatically.
+
+**A small contribution:** write two original short passages on the same topic,
+reserve one for evaluation, and record their provenance. Inspect the loss and
+fixed-prompt outputs rather than increasing parameter count first. A user
+approval record does not resolve third-party rights.
 
 ## Lesson 1: Memory Is Not Learning
 

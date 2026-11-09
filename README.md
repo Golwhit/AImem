@@ -78,6 +78,44 @@ This updates the local transcript and saved graph weights, then regenerates the 
 
 ## Locally Trained Miniature Model
 
+### Neural weight lab
+
+The **Generation** tab now includes a separate, from-scratch character neural
+network: four-character context, 8-value embeddings, a 16-unit tanh hidden
+layer, softmax predictions, cross-entropy loss, hand-written backpropagation,
+and stochastic gradient descent. It uses only Python's standard library.
+Parameter count depends on the training-only vocabulary and is shown exactly.
+This is a tiny neural language-model experiment, not an LLM or a replacement
+for the existing character-count generator.
+
+Start with **Run synthetic learning check**. This original repeating-pattern
+fixture demonstrates weight updates, not generalization. For real experiments,
+provide new training text, separate held-out text, a provenance/rights note,
+and explicit approval for this neural use. Existing corpus approvals, memories,
+and chat prompts are **not** automatically reused. Approval is a user
+declaration, not legal clearance.
+
+Each run starts from deterministic fresh weights and saves its own checkpoint.
+The report shows trainable/changed parameters, steps, processed target tokens,
+initial/final samples, and training/held-out loss at step 0 and every 100 steps.
+Held-out text does not update weights or determine the vocabulary; unknown
+characters are reported. Do not select/tune against held-out text repeatedly
+and then describe it as an untouched final test.
+
+Full submitted text, provenance, hashes, weights, and report are saved locally
+under `.data/neural-experiments/<run_id>.json`; `latest.json` holds the latest
+report. These ignored files can contain sensitive text. This baseline does not
+apply or soften Layer 0/1 rules. Controlled layer-assisted neural comparisons
+are a subsequent milestone; the existing four-mode chat lab is unchanged.
+
+```bash
+echo '{"synthetic":true}' | python3 neural_experiment.py train
+python3 neural_experiment.py status
+python3 -m unittest -q test_neural_experiment
+```
+
+### Seed rules and existing generator
+
 An isolated English seed experiment explores Layer 0 possibilities and Layer 1
 life/death rules before connecting them to training. It preserves exact
 whitespace and returns `alive`, `dead`, or `maybe`:
@@ -143,10 +181,13 @@ suffix-context backoff. No match or no capture is reported, not replaced with
 unrelated generation. Only the opening is confirmed by the layers, not the
 whole continuation or the concatenated layers-only output.
 
-Each mode has a 320-character budget. The main comparison crops all three to
+Each mode has a 320-character budget. The main comparison crops all four to
 the shortest actual output so displayed lengths match without padding; actual
 lengths, shortfalls, and full outputs remain visible. Zero common length is
-reported when a mode cannot produce anything. The ordinary chat reply remains
+reported when a mode cannot produce anything. In that case the main cards show
+available full outputs at their actual lengths, explicitly not an equal-length
+comparison; empty modes show their reason instead of hiding other results.
+The ordinary chat reply remains
 the existing generator's full response (or the existing retrieval fallback).
 All comparisons precede training on that submission, but earlier submissions
 may already be in the corpus. Exact comparison records are saved in

@@ -28,7 +28,7 @@ export default function App() {
 
       <main style={{ maxWidth: 800, margin: '0 auto', padding: '0 16px' }}>
         {activeTab === 'chat' && <ChatPanel sessionId={sessionId} />}
-        {activeTab === 'generation' && <GeneratorPanel />}
+        {activeTab === 'generation' && <><NeuralPanel /><GeneratorPanel /></>}
         {activeTab === 'graph' && (
           <iframe src="/graph" style={{ width: '100%', height: '75vh', border: 'none', background: '#0f0f1a' }} title="Memory Graph" />
         )}
@@ -289,8 +289,11 @@ function ModelLab({ lab }) {
       </div>
       <h3>Generation comparison</h3>
       <p className="message-meta">
-        Same {lab.character_budget}-character maximum per mode. Equal-length comparison: {lab.common_display_characters} characters each,
-        cropped to the shortest actual output without padding. Full outputs and shortfalls are shown below.
+        Same {lab.character_budget}-character maximum per mode.{' '}
+        {lab.common_display_characters > 0
+          ? `Equal-length comparison: ${lab.common_display_characters} characters each, cropped to the shortest actual output without padding.`
+          : 'Equal-length comparison unavailable because at least one mode produced no text. Available full outputs are shown below at their actual lengths; these are not an equal-length comparison.'}
+        {' '}Full outputs and shortfalls are shown below.
         Layers-only is a captured-seed block sampler, not a trained model or proof of sentence validity.
       </p>
       <div className="lab-grid">
@@ -304,7 +307,11 @@ function ModelLab({ lab }) {
           return (
             <section key={key} className="evaluation-run">
               <h4>{title}</h4>
-              <pre className="evaluation-sample">{output.display_text || '(No common output available)'}</pre>
+              <pre className="evaluation-sample">{
+                lab.common_display_characters > 0
+                  ? output.display_text
+                  : output.text || `(No output: ${output.reason || 'this mode produced no text'})`
+              }</pre>
               <small className="message-meta">
                 Actual: {output.characters}/{lab.character_budget} characters; shortfall: {output.shortfall}.
                 {output.reason && ` ${output.reason}.`}
@@ -342,6 +349,93 @@ function ModelLab({ lab }) {
         {' '}Rules: {lab.ruleset}. No lab output is automatically used for training.
       </small>
     </details>
+  );
+}
+
+function NeuralPanel() {
+  const [report, setReport] = useState(null);
+  const [trainingText, setTrainingText] = useState('');
+  const [heldOutText, setHeldOutText] = useState('');
+  const [source, setSource] = useState('');
+  const [approved, setApproved] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    fetch('/api/neural').then(async response => {
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+      setReport(data.report);
+    }).catch(err => setError(err.message));
+  }, []);
+
+  const train = async (synthetic) => {
+    setBusy(true);
+    setError('');
+    try {
+      const response = await fetch('/api/neural/train', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          synthetic, training_text: trainingText, held_out_text: heldOutText,
+          source, acknowledge_review: approved
+        })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+      setReport(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <section className="hero-card generator-panel neural-panel" style={{ marginTop: 24 }}>
+      <h2>Neural weight lab</h2>
+      <p>Tiny from-scratch character MLP. Each run starts fresh; it does not replace chat,
+        import memories, or update the old generator. Layer rules are not applied to this baseline.</p>
+      <button disabled={busy} onClick={() => train(true)}>Run synthetic learning check</button>
+      <form className="generator-form" onSubmit={event => { event.preventDefault(); train(false); }}>
+        <label>New training text (8–2000 characters)
+          <textarea required minLength={8} maxLength={2000} value={trainingText} onChange={event => setTrainingText(event.target.value)} />
+        </label>
+        <label>Separate held-out text (8–1000 characters; never used for weight updates)
+          <textarea required minLength={8} maxLength={1000} value={heldOutText} onChange={event => setHeldOutText(event.target.value)} />
+        </label>
+        <label>Provenance and rights note
+          <input required maxLength={500} value={source} onChange={event => setSource(event.target.value)} />
+        </label>
+        <label><input type="checkbox" required checked={approved} onChange={event => setApproved(event.target.checked)} />
+          I have reviewed these texts and authorize their use in this neural experiment.
+          This declaration is not legal clearance. Full texts and weights are saved locally.
+        </label>
+        <button disabled={busy || !approved} type="submit">{busy ? 'Training…' : 'Train separate neural experiment'}</button>
+      </form>
+      {error && <p className="banner banner-error">{error}</p>}
+      {report && <>
+        <h3>{report.synthetic ? 'Synthetic mechanics check' : 'Approved-text experiment'} progress</h3>
+        <p>{report.trainable_parameters.toLocaleString()} trainable parameters;
+          {' '}{report.changed_parameters.toLocaleString()} changed;
+          {' '}{report.steps} steps / {report.processed_target_tokens} target tokens processed.</p>
+        <p>{report.training_characters} training characters; {report.held_out_characters} held-out;
+          {' '}{report.held_out_unknown_characters} held-out characters unknown to the training vocabulary.</p>
+        <table>
+          <thead><tr><th>Step</th><th>Training loss</th><th>Held-out loss</th></tr></thead>
+          <tbody>{report.history.map(row => <tr key={row.step}>
+            <td>{row.step}</td><td>{row.training_loss.toFixed(4)}</td><td>{row.held_out_loss.toFixed(4)}</td>
+          </tr>)}</tbody>
+        </table>
+        <p>{report.evaluation_note} Loss is mean negative log probability per character; lower is better.</p>
+        <p>Continuation after <code>{JSON.stringify(report.sample_prompt)}</code>:</p>
+        <p>Before training:</p>
+        <pre className="generator-sample">{report.initial_sample}</pre>
+        <p>After training:</p>
+        <pre className="generator-sample">{report.sample}</pre>
+        <details><summary>Exact progress report</summary><pre>{JSON.stringify(report, null, 2)}</pre></details>
+      </>}
+    </section>
   );
 }
 

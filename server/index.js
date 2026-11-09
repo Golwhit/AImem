@@ -77,9 +77,9 @@ function runLearner(command, payload = {}) {
   return result;
 }
 
-function runGenerator(command, payload = {}) {
+function runGenerator(command, payload = {}, scriptPath = generatorScriptPath) {
   const result = generatorQueue.then(() => new Promise((resolve, reject) => {
-    const child = spawn(learnerPython, [generatorScriptPath, command], { cwd: rootDir });
+    const child = spawn(learnerPython, [scriptPath, command], { cwd: rootDir });
     let output = '';
     let errors = '';
     const timer = setTimeout(() => child.kill(), 30000);
@@ -388,6 +388,22 @@ app.get('/api/semantic-search', async (req, res) => {
 app.get('/api/learner-status', async (req, res) => {
   try { res.json(await runLearner('status')); }
   catch (error) { res.status(500).json({ error: error.message }); }
+});
+
+app.get('/api/neural', async (req, res) => {
+  try {
+    res.json(await runGenerator('status', {}, path.join(rootDir, 'neural_experiment.py')));
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/neural/train', async (req, res) => {
+  try {
+    res.json(await runGenerator('train', req.body, path.join(rootDir, 'neural_experiment.py')));
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
 });
 
 app.get('/api/generator', async (req, res) => {

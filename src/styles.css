@@ -261,6 +261,11 @@ h1 {
   gap: 14px;
 }
 
+.neural-panel pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 .generator-form label {
   display: grid;
   gap: 7px;

@@ -5,9 +5,11 @@ order. Design topics need agreement before implementation.
 
 | Item | Status | Next step |
 |---|---|---|
-| Layer 0/1 rules and extraction | Working; frozen rules | Collect alongside results without expanding either layer. |
+| Layer 0/1 rules and extraction | Working; explicitly agreed exclusions | Collect alongside results; no speculative rule expansion. |
 | Generation using the frozen layers | Chat lab implemented | Inspect old-model, layers-only rule sampling, and protected-seed combined generation before training. |
 | Integration into selective model training | Alongside extraction integrated | Observe new approved submissions; restrictive training and generation remain separate future decisions. |
+| Neural weights and progress reports | Tiny isolated MLP baseline implemented | Run synthetic mechanics check, then approve new train/held-out text; inspect loss and fixed-prompt output. No automatic memory/corpus reuse. |
+| Layer-assisted neural comparison | Not built | Agree how definite rules constrain the neural experiment; compare with matched data, seeds, and budgets without replacing baseline or chat. |
 | Deliberate, reversible galaxy split/merge operations | Discussed; not built | Define identity, provenance, membership, and undo behavior. |
 | Shell-to-shell connectors on a real parent-child promotion | Awaiting qualifying candidate | Observe a real promotion; temporary browser validation has passed. |
 | Memory capture and graph refresh | Ongoing | Keep memory updates independent of selective training and watch for capture or refresh failures. |
