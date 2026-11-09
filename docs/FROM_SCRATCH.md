@@ -2,6 +2,10 @@
 
 ## Goal And Boundary
 
+Application checkpoints use [patch/minor/major versioning](VERSIONING.md) and
+the [versioned session log](SESSION_LOG.md). Model generations, rulesets, and
+neural run identifiers remain separate from application versions.
+
 We are building the learning calculations ourselves, rather than calling a
 model service or using a machine-learning library. The first milestone is a
 small relevance learner: given a question and a memory, estimate how useful

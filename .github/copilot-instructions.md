@@ -33,6 +33,8 @@ This project is a local chat-memory and visualization prototype.
 
 ## Editing guidance
 
+- For delivered code/documentation checkpoints, follow `docs/VERSIONING.md`: increment patch for fixes/maintenance, minor for features, or major for breaking changes/approved stable release. Keep both package manifests and the newest `docs/SESSION_LOG.md` entry synchronized, including the actual session ID, changes, validation, and limitations. Do this before commit/sync/push; do not bump for every memory capture or push-only operation.
+
 - Coach the user in plain language at each milestone: explain what changed, why, what a test proves, and what it does not prove. Keep docs/FROM_SCRATCH.md current and give small, concrete ways the user can contribute.
 - Historical memory is searchable, not automatically approved training data. Preserve the explicit content-hashed memory/query review gate; review records are user declarations, not legal clearance.
 - Update `README.md` and the memory graph when behavior changes.

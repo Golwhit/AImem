@@ -1,12 +1,15 @@
 {
   "name": "desktop-to-phone-push-poc",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
+    "version:check": "node scripts/check-version.mjs",
+    "test:version": "node --test scripts/check-version.test.mjs",
     "dev": "concurrently -k \"npm:dev:server\" \"npm:dev:client\"",
     "dev:server": "node server/index.js",
     "dev:client": "vite",
+    "prebuild": "npm run version:check",
     "build": "vite build",
     "preview": "vite preview",
     "start": "node server/index.js"

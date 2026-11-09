@@ -2,6 +2,7 @@
 
 import json
 import re
+from html import escape
 from itertools import combinations
 from pathlib import Path
 
@@ -245,11 +246,13 @@ HTML = r"""<!doctype html>
     .event strong { color: #e8eefc; }
     body.sidebar-collapsed aside { display: none; }
     footer { color: #687896; font-size: 10px; padding: 14px 4px 0; line-height: 1.5; }
+    .version-badge { position: fixed; right: 10px; bottom: 8px; z-index: 20; padding: 3px 6px; border-radius: 4px; background: #10182b; color: #8795af; font-size: 10px; line-height: 1.3; pointer-events: none; }
     @media (max-width: 850px) { .workspace { grid-template-columns: 1fr; } aside { display: grid; grid-template-columns: 1fr 1fr; } aside > :last-child { grid-column: 1 / -1; } .graph-head { flex-wrap: wrap; } .graph-actions { margin-left: auto; } }
     @media (max-width: 560px) { body { padding: 24px 12px; } .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); } .stat { padding: 8px 10px; } .stat-value { font-size: 18px; } aside { display: flex; } svg { min-height: 265px; } }
   </style>
 </head>
 <body>
+<span class="version-badge" aria-label="Application version __APP_VERSION__">v__APP_VERSION__</span>
 <main>
   <header>
     <nav class="graph-nav" aria-label="App navigation">
@@ -1360,7 +1363,8 @@ def main() -> None:
     state_path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     graph_json = json.dumps(data, separators=(",", ":"))
     graph_json = graph_json.replace("&", "\\u0026").replace("<", "\\u003c").replace(">", "\\u003e")
-    html = HTML.replace("__GRAPH_DATA__", graph_json)
+    version = json.loads(Path(__file__).with_name("package.json").read_text(encoding="utf-8"))["version"]
+    html = HTML.replace("__APP_VERSION__", escape(version, quote=True)).replace("__GRAPH_DATA__", graph_json)
     output = Path(__file__).with_name("memory_graph.html")
     output.write_text(html, encoding="utf-8")
     print(

@@ -4,6 +4,10 @@ A proof-of-concept PWA that sends a web push notification from a desktop browser
 
 Ongoing work and discussion topics are tracked in the
 [project backlog](docs/TASKS.md).
+Application versions follow the [versioning policy](docs/VERSIONING.md);
+the [versioned session log](docs/SESSION_LOG.md) records each checkpoint.
+The memory graph displays its generated application version in a small
+bottom-right badge. Regenerate the graph after a version bump.
 
 ## What it does
 

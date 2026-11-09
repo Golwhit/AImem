@@ -156,6 +156,7 @@ class ClusterTests(unittest.TestCase):
         ]}
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
+            (root / "package.json").write_text(json.dumps({"version": "0.2.0"}), encoding="utf-8")
             memory_path = root / "chat_memory.json"
             memory_path.write_text(json.dumps(transcript), encoding="utf-8")
             with patch.object(generate_html_graph, "__file__", str(root / "generate_html_graph.py")):
@@ -169,6 +170,8 @@ class ClusterTests(unittest.TestCase):
             self.assertEqual({node["domain"] for node in latest}, {"memory"})
             self.assertTrue(any(link["kind"] == "transition" for link in snapshot["links"]))
             self.assertIn(cluster_id, (root / "memory_graph.html").read_text(encoding="utf-8"))
+            self.assertIn('aria-label="Application version 0.2.0">v0.2.0</span>',
+                          (root / "memory_graph.html").read_text(encoding="utf-8"))
             persisted = json.loads(memory_path.read_text(encoding="utf-8"))
             self.assertEqual(persisted["cycles"], 1)
             self.assertEqual(len(persisted["messages"]), len(messages))
