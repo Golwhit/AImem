@@ -272,9 +272,11 @@ app.post('/api/send-push', async (req, res) => {
 // ─── Chat API (mirrors /api/respond but for direct chat) ─────────────────────
 
 app.post('/api/chat', async (req, res) => {
-  const userMessage = String(req.body?.message || '').trim();
+  const rawUserMessage = String(req.body?.message || '');
+  const userMessage = rawUserMessage.trim();
   const includeInGenerator = req.body?.include_in_generator === true;
-  if (!userMessage || userMessage.length > 2000) {
+  const includeLab = req.body?.include_lab === true;
+  if (!userMessage || rawUserMessage.length > 2000) {
     res.status(400).json({ error: 'Missing message' });
     return;
   }
@@ -288,8 +290,18 @@ app.post('/api/chat', async (req, res) => {
     let mode = 'memory-excerpts';
     let responseSource = 'local-retrieval';
     let generated = null;
+    let lab = null;
+    let labError = null;
+    if (includeLab) {
+      try {
+        lab = await runGenerator('lab', { prompt: rawUserMessage, max_chars: 320 });
+      } catch (error) {
+        console.error('Model lab error:', error);
+        labError = error.message;
+      }
+    }
     if (generatorStatus.ready) {
-      generated = await runGenerator('generate-selected', { prompt: userMessage, max_chars: 320 });
+      generated = lab?.old_response || await runGenerator('generate-selected', { prompt: userMessage, max_chars: 320 });
       if (generated.text) {
         aiResponse = generated.text;
         mode = 'local-character-ngram';
@@ -299,7 +311,7 @@ app.post('/api/chat', async (req, res) => {
     let generatorLearning = { added: false, reason: includeInGenerator ? 'not_added' : 'opted_out' };
     if (includeInGenerator) {
       try {
-        generatorLearning = await runGenerator('ingest-chat-prompt', { text: userMessage });
+        generatorLearning = await runGenerator('ingest-chat-prompt', { text: rawUserMessage });
       } catch (error) {
         generatorLearning = { added: false, reason: 'error', message: error.message };
       }
@@ -308,12 +320,25 @@ app.post('/api/chat', async (req, res) => {
     const saved = await appendMemoryExchange({ user: userMessage, assistant: aiResponse, userTopics: [], assistantTopics, sessionId: req.body?.sessionId, source: responseSource });
     const recent = saved.snapshot.nodes.filter(node => node.kind === 'message' && node.created_cycle === saved.snapshot.cycles);
 
-    res.json({ reply: aiResponse, model: generated?.model || retrieval.model, generation: generated?.generation ?? retrieval.generation, mode, selection: generated?.selection || null, training_sources: generated?.training_sources || [], generator_learning: generatorLearning, response_source_id: best?.id || null, memories: retrieval.results,
+    res.json({ reply: aiResponse, model: generated?.model || retrieval.model, generation: generated?.generation ?? retrieval.generation, mode, selection: generated?.selection || null, training_sources: generated?.training_sources || [], generator_learning: generatorLearning, lab, lab_error: labError, response_source_id: best?.id || null, memories: retrieval.results,
       prompt_memory_id: recent.find(node => node.role === 'You')?.id,
       response_memory_id: recent.find(node => node.role === 'Assistant')?.id });
   } catch (err) {
     console.error('Chat error:', err);
     res.status(500).json({ error: 'Failed to process chat' });
+  }
+});
+
+app.get('/api/model-lab/:recordId', async (req, res) => {
+  if (!/^[a-f0-9]{64}$/.test(req.params.recordId)) {
+    res.status(400).json({ error: 'Invalid lab record identifier' });
+    return;
+  }
+  try {
+    const record = await fs.readFile(path.join(rootDir, '.data', 'model-lab', `${req.params.recordId}.json`), 'utf8');
+    res.type('json').send(record);
+  } catch (error) {
+    res.status(error.code === 'ENOENT' ? 404 : 500).json({ error: error.message });
   }
 });
 

@@ -61,18 +61,19 @@ def apply_graph_domains(data: dict, transcript: dict) -> None:
             continue
         parent = cluster["parent_domain"]
         parent_id = "parent-domain-" + parent
-        if parent_id not in nodes_by_id:
+        if parent != "evaluation" and parent_id not in nodes_by_id:
             parent_node = {"id": parent_id, "kind": "topic", "content": "Domain: " + parent.title(), "domain": parent, "importance": 0.6, "feedback": {"helpful": 0, "corrections": 0, "weak": 0, "recalls": 0}}
             data["nodes"].append(parent_node)
             nodes_by_id[parent_id] = parent_node
         hub_id = cluster_id + "-hub"
-        data["nodes"].append({"id": hub_id, "kind": "topic", "content": "Topic: " + cluster["label"], "domain": cluster_id, "parent_domain": parent, "importance": 0.7, "feedback": {"helpful": 0, "corrections": 0, "weak": 0, "recalls": 0}})
-        data["links"].append({"source": hub_id, "target": parent_id, "kind": "parent", "strength": 0.5})
+        hub = {"id": hub_id, "kind": "topic", "content": "Topic: " + cluster["label"], "domain": cluster_id, "parent_domain": cluster_id if parent == "evaluation" else parent, "importance": 0.7, "feedback": {"helpful": 0, "corrections": 0, "weak": 0, "recalls": 0}}
+        data["nodes"].append(hub)
+        nodes_by_id[hub_id] = hub
+        if parent != "evaluation":
+            data["links"].append({"source": hub_id, "target": parent_id, "kind": "parent", "strength": 0.5})
         for node in list(data["nodes"]):
             if node.get("kind") == "message" and node.get("domain") == cluster_id:
                 data["links"].append({"source": node["id"], "target": hub_id, "kind": "hub", "strength": 0.5})
-
-
 def subject_for_message(message: dict) -> str:
     tokens = set(re.findall(r"[a-z0-9]+", message.get("text", "").lower()))
     topics = set(message.get("topics", []))
@@ -203,5 +204,7 @@ def update_clusters(transcript: dict) -> dict[str, dict]:
         if active_cluster:
             message["domain"] = active_cluster
             message["cluster_id"] = active_cluster
+            if message["parent_domain"] == "evaluation" and clusters[active_cluster]["parent_domain"] == "evaluation":
+                message["parent_domain"] = active_cluster
     transcript["clusters"] = clusters
     return clusters

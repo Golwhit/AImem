@@ -211,7 +211,227 @@ complexity. The suitably licensed viewer may remain in use. Topic-cluster
 promotion still follows its existing rules; the relevance learner does not
 reorganize topics.
 
+## English Seed Experiment
+
+The separate `seed_life.py` experiment begins translating the concepts from
+the neighboring LLM From Scratch project into this project. Layer 0 describes
+the initial building blocks in which life is possible; possibility alone does
+not mean life exists. Layer 1 only excludes known impossibilities; it does not
+prove grammar or meaning. The combined assessment reports `alive`, `dead`, or
+`maybe` and a separate `layer_zero_eligible` flag. These are names for model
+states, not claims about biological life or consciousness.
+
+The current Layer 0 seed list is `</>A`, `</>I`, `</>I `, `</>A `,
+` a `, ` A `, and ` I `, with the displayed spaces significant. The `</>`
+marker is carried over from the earlier project as a provisional boundary
+representation; its precise meaning and punctuation rules still need
+discussion. This is the agreed initial list, not a claim that every possible
+punctuation primitive has been enumerated. The seven-form list and current
+exclusions are deliberately limited for this experiment: outside forms cannot live in this
+seed universe, even when collected for review. Review is not admission to
+Layer 0. Additional layers are not a prerequisite for future integration.
+
+The combined assessment recognizes the last five forms above as alive. The bare `</>A` and
+`</>I` are `maybe`: on their own they are not alive, but more information may
+make them viable. A lowercase ` i ` anywhere in the assessed text is dead, as
+is any run of three identical consecutive characters, including whitespace.
+An assessed response beginning `</>I.` is also dead, even if further text
+follows: the current seed rule does not treat `I.` alone at the start as a
+viable sentence or thought. ` I.` remains `maybe`, since it may appear at the
+end of a thought such as `or I.`. The fragment ` A, ` remains `maybe`, since
+it can occur in a larger sentence such as `vitamin A, which supports vision`.
+Other punctuation, including the end of `area.` or `area. `, remains unresolved.
+Character identity is exact, so mixed-case characters are not silently treated
+as identical. A dead rule takes precedence; all other unrecognized input is
+`maybe`, not automatically alive or dead. An alive result only recognizes an
+exact seed form; it is not a verdict on a larger sentence.
+For example, `hello` is `maybe` for extraction review but has
+`layer_zero_eligible: false`, so it is not eligible for life. `</>I` is
+`maybe` with `layer_zero_eligible: true`, but is not yet alive. ` I ` is
+eligible and alive. Merely surviving the Layer 1 exclusions never admits
+outside text or marks an incomplete seed alive.
+
+Run `python3 seed_life.py ' I '` or `python3 seed_life.py '</>I'` to inspect
+the result and reason. Run `python3 -m unittest test_seed_life` for the seed
+examples. These tests check the agreed rules, not language understanding or
+training improvement. A useful next contribution is checking the existing
+seed cases and their eligibility without expanding either frozen layer.
+
+The explicitly approved `seed-life-v4` addition excludes terminus + one English
+consonant + literal space, in either case. Source offset zero supplies this
+context; leading spaces retain their existing whitespace-boundary meaning.
+Interior occurrences are not excluded by this rule. Initial `t.`, a consonant
+without a following space, and multi-letter words are not covered. Layer 0 is
+unchanged. This is a rule of the restrictive seed universe, not a universal
+claim about initials, symbols, or all English writing.
+
+The manual extraction experiment runs with
+`python3 seed_extraction.py path/to/review-text.txt`. It reads a selected
+nonempty UTF-8 text file of up to 50,000 characters, preserving case,
+whitespace, and line endings, and examines every overlapping 1–3 character
+window. It groups known living windows, known dead windows, and `maybe`
+windows separately. Unknown windows are saved for review, not discarded or
+approved for training. Dead windows are recorded separately and do not enter
+the unknown review list. An occurrence's offset is a zero-based Python Unicode
+character index into the exact source; the saved absolute source path and
+SHA-256 of the original bytes identify its provenance. Repeating an extraction
+of the same source content replaces that source's record; changed content is
+kept as a separate record. Each pattern now includes `layer_zero_eligible`.
+The `seed-life-v2` record identifies this output change; older ruleset records
+are retained unchanged, and repeat extraction replaces only the matching
+path, content hash, and ruleset. The queue is
+`.data/seed-extraction-review.json` and may contain sensitive fragments and
+paths. New records also retain the exact full source text so context can be
+reconstructed; older records may contain only fragments. Assessment is per window; a dead larger
+configuration does not automatically make each smaller window dead. The
+`</>I.` rule is longer than three characters, so it is not detected by these
+windows. Source offset zero now supplies terminus context for an initial `A`,
+`I`, `A `, or `I `, matching the existing terminus seed forms without changing
+the stored text or its offsets. An initial `A ` or `I ` is eligible and alive;
+the bare initial letter is eligible but still `maybe`. Identical interior
+fragments remain separately collected for review and independently ineligible.
+Newlines and paragraph boundaries do not infer new termini. Records under
+`seed-life-v3` distinguish this boundary-aware extraction; earlier records
+remain unchanged.
+
+Run `python3 -m unittest test_seed_life test_seed_extraction` to check seed
+and extraction examples. These tests do not establish training performance.
+Normal memory updates remain independent of extraction and training approval.
+Manual extraction does not change the transcript, graph, or model weights.
+
+### Chat Lab: Separate And Combined Comparisons
+
+The chat comparison toggle requests a `model_lab.py` report before the current
+prompt is trained. The chat displays exactly two extraction panels above the
+generation comparison: old-model context/next-character captures and combined
+layer captures. Both are visible by default; layer captures are grouped into
+alive, review, and dead, with exact positions and eligibility. The downloadable
+report retains the more detailed intermediate comparisons described below.
+Extraction compares the same raw 1–3 character windows
+unfiltered, through Layer 0 eligibility alone, through Layer 1 exclusions alone,
+and through both. The actual old generator extraction is shown separately:
+whitespace-normalized four-character contexts and next-character counts, not a
+claim that the old model used the new window extractor. All unknown windows and
+positions remain inspectable. Layer 1's lack of an exclusion is not proof of
+life. The longer `</>I.` exclusion remains outside this window-sized comparison.
+
+Generation compares the existing four-candidate, scorer-selected generator,
+a rule sampler that concatenates complete living captures from this prompt,
+and layers-first generation. The rule sampler is not a trained new model and
+its concatenation is not certified as a valid sentence. Combined generation
+protects the earliest living capture as the opening. For a source-start capture,
+it looks up that opening with the existing start markers. For an interior seed
+shorter than four characters, it samples a corpus context ending in that seed,
+weighted by transition counts, then continues with normal four-character
+transitions. This explicit suffix backoff only exists in the combined lab
+mode. It does not change standalone generation. A missing capture, missing
+context, or end marker is reported without an unrelated fallback.
+
+All modes receive the same 320-character maximum. Their equal-length view is
+cropped to the shortest actual output; no text is padded or repeated to pretend
+the old model reached the budget. Full outputs, actual counts, and shortfalls
+are shown alongside that view. No common output is claimed if any mode produces
+none. The existing model's full output remains the ordinary chat response;
+the lab does not replace it with an experimental continuation.
+
+Each comparison is persisted under `.data/model-lab/` with exact prompt,
+generation, checkpoint/scorer hashes, ruleset, deterministic random seed,
+captures, and outputs, and can be downloaded from chat. This preserves the
+pre-training snapshot even if opted-in training subsequently advances the
+model. It does not remove prior exposure to earlier prompts. Reading or
+generating a comparison does not train either model; recorded experimental
+outputs are not automatically fed back into training. A comparison failure
+is visibly reported independently of normal chat capture.
+
+Tests check separate extraction shapes, exact source-start and interior
+handoffs, protected prefixes, reproducibility, equal displayed lengths, honest
+shortfalls, empty/unavailable modes, checkpoint preservation, persistence,
+download routes, and pre-training ordering. These comparisons expose behavior;
+they do not establish improvement, understanding, or a separately learned
+seed model.
+
+Lab version 3 replaces the version 2 append experiment with an aligned overlay
+on the old-model response. A captured living ` I ` can correct a matching ` i `,
+and ` A ` can correct ` a `. A living source-start `I ` or `A ` only supports
+the corresponding lowercase response-start correction. Letters inside words,
+different letters, punctuation boundaries, and unsupported cases are untouched.
+This overlay policy does not add rules to either frozen layer. Each changed
+character records its output offset, before/after values, and supporting exact
+source capture and offset. Spaces and full output length remain unchanged,
+including at the character budget. No matching correction or no old output is
+explicitly reported; no blocks are appended. All four modes participate in
+the equal-length view. The whole response is not certified as living or true.
+Saved version 1 and 2 records retain their original modes and are not rewritten.
+
+Lab version 4 extends the overlay only for that newly approved consonant-opening
+exclusion. It uses the earliest living source-start `A ` or `I ` capture from
+the current input to replace the dead initial consonant. It does not substitute
+an interior ` I ` capture or invent a new opening. If no supporting capture
+exists, it preserves the old response and visibly reports the dead opening as
+unresolved. Replacement provenance includes the Layer 1 reason and exact source
+offset. Output length, spaces, and all other old-model characters are preserved
+apart from the existing supported case corrections. Version 3 records and
+older extraction rulesets remain unchanged. The ordinary chat reply remains the
+old model output; this repair is in the fourth lab comparison.
+
+### Alongside Integration With Current Training
+
+New approved generator documents and opted-in chat prompts now invoke the same
+extractor before the generator checkpoint is updated. This is alongside
+analysis, not a seed eligibility gate on the existing model: the generator
+still learns from its full approved, whitespace-normalized text. Layer 0 and
+Layer 1 uses only the explicitly agreed exclusions. No further layers, new learned representation, or
+generation constraint were introduced.
+
+The separate `.data/seed-training-review.json` queue records exact source text,
+character positions, original content hash, and a `generator://documents/`
+source identifier. Provenance includes the generator document ID, normalized
+training hash, title, source, and rights note. Unknowns remain in review,
+known dead windows are separate, and eligibility does not constitute training
+approval. Approval of the original text for the current generator is not
+approval of extracted patterns for a future seed model.
+
+The API and Chat/Generation views report alongside counts for active corpus
+sources and how many older documents have not been extracted. Existing
+checkpoints remain readable without backfilling, retraining, or changing their
+generation number. Removing a generator document removes its contribution from
+active counts but preserves review records for provenance. A review record
+alone does not prove a model update succeeded: it is written before the model.
+If extraction fails, the error is surfaced and the model is not updated.
+The chat endpoint reports training errors independently and continues saving
+the exchange. Original submissions are limited to 50,000 characters, including
+whitespace, so exact-text extraction has a bounded input.
+
+Tests cover exact text and hashes, exclusion/review separation, unchanged
+transition calculations, legacy checkpoints, failure reporting, and both HTTP
+submission paths. They demonstrate wiring and preservation of behavior, not
+better generation. A concrete next contribution is submitting a small original
+text through Generation and checking its extraction counts against the queue.
+
+The experiment does not import the earlier project's dictionary-derived
+filters or datasets. Standalone extraction does not train or normalize text.
+The dictionary's provenance and permissions require review before any reuse.
+Before using the layers to restrict training, define how states compose, how
+boundaries and punctuation work, what to do with `maybe`, and how to measure
+results against the existing generator using appropriately reviewed examples.
+The existing content-hashed review gate remains in place.
+
 ## Lesson 6: A Domain Can Grow Subtopics
+
+Promotion out of Under evaluation moves the member user turns and their
+associated replies into the promoted galaxy, without retaining evaluation as
+their parent. The graph omits the evaluation-parent tether, not links between
+individual memories. Memory pairs remain linked even if one endpoint is still
+under evaluation: a sequence or similarity link is not galaxy membership.
+Links to other galaxies and non-evaluation parent relationships remain.
+Historical transcript links and the cluster's
+origin metadata are preserved for provenance; regeneration applies the same
+display separation without deleting memories or approving training.
+Parent-child links are drawn as solid, thicker green lines between the circular
+galaxy shells, rather than between their internal hubs. Hover text identifies
+which galaxy grew from which. Cross-galaxy memory connections retain their
+dashed styling; Under evaluation receives no parent connector. This is visual
+only and does not change membership, merge galaxies, or train weights.
 
 The graph can now look for related user contributions inside an existing domain,
 such as AI memory. It removes broad parent words and conversational filler from

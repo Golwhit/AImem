@@ -1,6 +1,7 @@
 import json
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 from original_generator import CharacterGenerator
@@ -53,6 +54,67 @@ class CharacterGeneratorTests(unittest.TestCase):
         removed = generator.remove_document(added["documents"][0]["id"])
         self.assertEqual(removed["document_count"], 0)
         self.assertFalse(generator.generate("hello", max_chars=20, seed=1)["ready"])
+
+    def test_seed_extraction_runs_alongside_without_filtering_training(self):
+        text = "I keep a note.  i iii\r\n"
+        generator = CharacterGenerator(self.root)
+        generator.add_document(text=text, acknowledge_review=True)
+        document = generator.state["documents"][0]
+        self.assertEqual(document["text"], "I keep a note. i iii")
+        self.assertEqual(generator.state["transitions"], generator._rebuild(
+            [{key: value for key, value in document.items() if key != "seed_extraction"}], 1,
+        )["transitions"])
+        queue = json.loads((self.root / ".data" / "seed-training-review.json").read_text())
+        record = queue["sources"][0]
+        self.assertEqual(record["text"], text)
+        self.assertEqual(record["provenance"]["document_id"], document["id"])
+        self.assertEqual(record["provenance"]["training_sha256"], document["sha256"])
+        self.assertNotEqual(record["sha256"], document["sha256"])
+        self.assertIn("iii", [item["text"] for item in record["dead"]])
+        self.assertNotIn("iii", [item["text"] for item in record["review"]])
+        self.assertTrue(any(item["text"] == "I " and item["offsets"] == [0] for item in record["alive"]))
+        status = CharacterGenerator(self.root).status()["seed_extraction"]
+        self.assertFalse(status["restricts_training"])
+        self.assertEqual(status["document_count"], 1)
+        self.assertGreater(status["counts"]["maybe"], 0)
+        generator.remove_document(document["id"])
+        self.assertEqual(generator.status()["seed_extraction"]["document_count"], 0)
+        self.assertTrue((self.root / ".data" / "seed-training-review.json").exists())
+
+    def test_unapproved_or_duplicate_text_does_not_extract(self):
+        generator = CharacterGenerator(self.root)
+        queue = self.root / ".data" / "seed-training-review.json"
+        with self.assertRaises(ValueError):
+            generator.add_document(text="I keep a note.", acknowledge_review=False)
+        self.assertFalse(queue.exists())
+        generator.add_document(text="I keep a note.", acknowledge_review=True)
+        before = queue.read_bytes()
+        with self.assertRaises(ValueError):
+            generator.add_document(text="I keep a note.", acknowledge_review=True)
+        self.assertEqual(before, queue.read_bytes())
+
+    def test_extraction_failure_does_not_change_model(self):
+        generator = CharacterGenerator(self.root)
+        with patch("original_generator.extract_text", side_effect=OSError("queue unwritable")):
+            with self.assertRaisesRegex(OSError, "queue unwritable"):
+                generator.add_document(text="I keep a note.", acknowledge_review=True)
+        self.assertFalse(generator.path.exists())
+        self.assertEqual(generator.state["generation"], 0)
+
+    def test_old_checkpoints_remain_unprocessed_until_new_submission(self):
+        generator = CharacterGenerator(self.root)
+        generator.add_document(text="An older approved document.", acknowledge_review=True)
+        del generator.state["documents"][0]["seed_extraction"]
+        generator._save(generator.state)
+        queue = self.root / ".data" / "seed-training-review.json"
+        before = queue.read_bytes()
+        restored = CharacterGenerator(self.root)
+        self.assertEqual(restored.status()["seed_extraction"]["unprocessed_document_count"], 1)
+        self.assertEqual(queue.read_bytes(), before)
+        restored.ingest_chat_prompt(" I keep a new note.  ")
+        records = json.loads(queue.read_text())["sources"]
+        self.assertEqual(records[-1]["text"], " I keep a new note.  ")
+        self.assertEqual(restored.status()["seed_extraction"]["document_count"], 1)
 
     def test_chat_prompt_ingestion_is_opt_in_idempotent_and_provenanced(self):
         generator = CharacterGenerator(self.root)

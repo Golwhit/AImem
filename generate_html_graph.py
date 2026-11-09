@@ -156,7 +156,7 @@ HTML = r"""<!doctype html>
     .edge.cross-domain { stroke: #fda4af; stroke-dasharray: 2 8; opacity: .07; }
     .edge.transition { stroke: #fda4af; stroke-dasharray: 3 6; opacity: .35; }
     .edge.transition.created { opacity: .9; }
-    .edge.parent { stroke: #6ee7b7; stroke-dasharray: 6 3; opacity: .65; }
+    .edge.parent { stroke: #6ee7b7; stroke-dasharray: none; opacity: .8; }
     .learner-values { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; margin: 12px 0; font-size: 12px; }
     .learner-values dt { color: var(--muted); overflow-wrap: anywhere; }
     .learner-values dd { margin: 0; font-variant-numeric: tabular-nums; }
@@ -814,21 +814,32 @@ function render() {
   const edges = el("g");
   const focus = makeFocusSet();
   state.links.forEach(link => {
-    const a = positions[link.source], b = positions[link.target];
+    let a = positions[link.source], b = positions[link.target];
     const active = (state.active[link.source] || 0) > 0.05 && (state.active[link.target] || 0) > 0.05;
     const dimmed = focus.size > 0 && !(focus.has(link.source) && focus.has(link.target));
     const sourceDomain = state.nodes.find(node => node.id === link.source)?.domain || "memory";
     const targetDomain = state.nodes.find(node => node.id === link.target)?.domain || "memory";
+    if (link.kind === "parent") {
+      if (sourceDomain === "evaluation" || targetDomain === "evaluation") return;
+      const sourceLayout = domainLayouts.get(sourceDomain);
+      const targetLayout = domainLayouts.get(targetDomain);
+      const dx = targetLayout.center.x - sourceLayout.center.x;
+      const dy = targetLayout.center.y - sourceLayout.center.y;
+      const distance = Math.hypot(dx, dy);
+      if (distance === 0) return;
+      a = {x: sourceLayout.center.x + dx / distance * sourceLayout.radius, y: sourceLayout.center.y + dy / distance * sourceLayout.radius};
+      b = {x: targetLayout.center.x - dx / distance * targetLayout.radius, y: targetLayout.center.y - dy / distance * targetLayout.radius};
+    }
     const crossDomain = sourceDomain !== targetDomain;
     const created = createdIds.has(link.source) || createdIds.has(link.target) || link.created_cycle === state.cycles;
     edges.append(el("line", {
       x1: a.x, y1: a.y, x2: b.x, y2: b.y,
       class: `edge ${link.kind || "sequence"}${created ? " created" : ""}${active ? " recalled" : ""}${dimmed ? " dimmed" : ""}${crossDomain ? " cross-domain" : ""}`,
-      "stroke-width": 0.25 + link.strength * 1,
+      "stroke-width": link.kind === "parent" ? 2 : 0.25 + link.strength * 1,
       "data-link": `${link.source}-${link.target}`
     }));
     const relation = link.kind === "similarity" ? "Related wording"
-      : link.kind === "parent" ? "Subtopic of parent domain (not shared core membership)"
+      : link.kind === "parent" ? `${domainLayouts.get(sourceDomain).label} grew from ${domainLayouts.get(targetDomain).label} (separate membership; visual relationship only)`
       : link.kind === "transition" ? "Subject transition (not core membership)"
       : link.kind === "topic" ? "Shared topic" : "Adjacent turn";
     edges.lastChild.append(el("title", {}, `${relation}: ${link.strength.toFixed(2)}`));

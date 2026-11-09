@@ -2,6 +2,9 @@
 
 A proof-of-concept PWA that sends a web push notification from a desktop browser to a phone browser, then lets the phone reply back to the same server state.
 
+Ongoing work and discussion topics are tracked in the
+[project backlog](docs/TASKS.md).
+
 ## What it does
 
 - Registers the phone as a push subscription.
@@ -51,6 +54,15 @@ This starts the API server on `http://localhost:3001` and the Vite client on `ht
 
 ## Local memory graph
 
+When a galaxy is promoted out of Under evaluation, its member memories and
+associated replies move with it. Its parent tether to Under evaluation is
+removed. Memory-to-memory links remain, including pairs whose other endpoint
+is still under evaluation; those links do not confer galaxy membership.
+Connections to other galaxies and original transcript provenance remain.
+Parent-child galaxy relationships use solid green shell-to-shell connectors,
+with hover labels identifying the child and parent. Cross-galaxy memory links
+remain dashed. This styling does not change membership or learning weights.
+
 The conversation memory prototype stores its transcript in `chat_memory.json` and renders it in `memory_graph.html`. The browser view now keeps its learning overlay in a backend graph-state file served from the local API, so helpful, correction, and weak-link feedback survives refreshes without depending on browser `localStorage`. The graph page also polls that backend snapshot, so it refreshes itself when the stored memory state changes. Use the search box to rank memories by query, click a node to open the selected-memory panel, hide that selected-memory section from the graph header if you want it out of the way, and hide the entire right menu with the button above the graph if you want the graph to use the full workspace. The feedback buttons teach the graph which memories should matter more. To add a conversation exchange and advance one persistent decay cycle:
 
 ```bash
@@ -65,6 +77,101 @@ python update_chat_memory.py \
 This updates the local transcript and saved graph weights, then regenerates the HTML visualization and backend graph-state snapshot. Links combine turn order, manually supplied topic tags, sparse TF-IDF word similarity (up to two strongest text matches per message), and topic hub nodes that cluster related memories. The graph uses different line styles for those relationship types. The browser view also lets you reinforce or down-rank a memory interactively, and that feedback persists through the backend graph-state file. Search now uses our own word/phrase overlap calculations and a feedback-trained relevance model; if the server is unavailable, the page falls back to the viewer's lexical ranking.
 
 ## Locally Trained Miniature Model
+
+An isolated English seed experiment explores Layer 0 possibilities and Layer 1
+life/death rules before connecting them to training. It preserves exact
+whitespace and returns `alive`, `dead`, or `maybe`:
+Each result also reports `layer_zero_eligible`: a reviewable `maybe` outside
+the frozen seven-form Layer 0 is not eligible for life. Layer 1 only excludes;
+passing its exclusions does not confer life or training approval.
+
+```bash
+python3 seed_life.py ' I '
+python3 seed_life.py ' i '
+python3 seed_life.py '</>I'
+```
+
+See [Building Our Learning Core](docs/FROM_SCRATCH.md#english-seed-experiment)
+for the agreed rules and open questions. This experiment does not change model
+weights, memories, or the graph.
+
+For a manual extraction experiment on a UTF-8 text file, run:
+
+```bash
+python3 seed_extraction.py path/to/review-text.txt
+```
+
+It saves unrecognized 1–3 character windows for review in
+`.data/seed-extraction-review.json`, with source hashes and character offsets.
+Known-dead windows are recorded separately, not added to the review queue.
+Each saved pattern carries its Layer 0 eligibility separately from review
+status. Older extraction records are preserved under their original ruleset.
+At source offset zero, `A ` and `I ` use terminus context and are eligible;
+identical interior fragments remain separately collected for review.
+This does not train a model or interrupt normal memory updates. The queue
+contains fragments and source paths, so treat it as potentially sensitive.
+
+Seed extraction now also runs **alongside current generator training** for new
+approved documents and opted-in chat prompts. Exact submitted text and pattern
+positions are saved in `.data/seed-training-review.json`, with source metadata
+and both original-text and normalized-training hashes. The Chat and Generation
+views show extraction counts. Unknowns remain unapproved for seed training;
+dead patterns are separate. The existing generator still trains on the full
+approved text, including patterns outside the frozen seed universe.
+Existing corpus documents are not automatically reprocessed. A queue-write
+failure is reported and prevents that submission's model update; normal chat
+memory capture still proceeds with the training error reported. Review records
+are retained when a generator source is removed, but no longer counted as active
+corpus extraction. These queues now retain full source text: treat them as
+sensitive local data, not just pattern summaries.
+
+### Chat comparison lab
+
+Chat enables a pre-training lab comparison by default (toggle below the prompt).
+It shows two extraction panels, visible above generation: the old generator's
+normalized four-character context/next-character captures and the combined
+Layer 0 + Layer 1 raw pattern captures. Layer captures show alive, review, and
+dead groups with exact source positions and eligibility. Full downloadable
+records also retain unfiltered windows and each layer's separate assessment.
+
+Generation is shown separately for the existing generator, a rule-based
+captured-seed block sampler (not a new trained model), and layers-first
+generation. The combined mode protects the earliest living captured seed as
+an opening and asks the existing generator for a continuation. Source-start
+captures use start context; interior captures use an explicitly labeled
+suffix-context backoff. No match or no capture is reported, not replaced with
+unrelated generation. Only the opening is confirmed by the layers, not the
+whole continuation or the concatenated layers-only output.
+
+Each mode has a 320-character budget. The main comparison crops all three to
+the shortest actual output so displayed lengths match without padding; actual
+lengths, shortfalls, and full outputs remain visible. Zero common length is
+reported when a mode cannot produce anything. The ordinary chat reply remains
+the existing generator's full response (or the existing retrieval fallback).
+All comparisons precede training on that submission, but earlier submissions
+may already be in the corpus. Exact comparison records are saved in
+`.data/model-lab/` and downloadable from chat, including prompt, checkpoint and
+scorer hashes, ruleset, seed, and generated outputs. Treat them as sensitive.
+These records and experimental outputs are not automatically training data.
+
+A fourth generation mode uses the old-model response as its base and overlays
+only aligned corrections supported by living captures. Captured ` I ` can
+correct ` i `; initial captured `I ` or `A ` can correct the corresponding
+lowercase opening, and captured ` A ` can correct matching ` a `.
+Other text, spaces, and output length remain unchanged. No seed blocks are
+appended or forced into unrelated words. Each correction shows its output
+offset and supporting input capture/offset. No match is explicitly reported.
+This is not a trained new model or proof that the combined text is viable.
+Older saved three-mode and append-mode records retain their historical display.
+
+Layer 1 also excludes a terminus followed by one English consonant (either case)
+and a literal space. Lab version 4 repairs that initial consonant in the overlay
+using an actual living source-start `A ` or `I ` capture from the current input.
+It preserves the remaining text and length and records the exclusion and capture.
+Without that capture it reports the dead opening as unresolved, not repaired.
+Interior consonants and initial `t.` are not covered by this rule. Extraction
+uses the source-start context and records these exclusions under `seed-life-v4`;
+older ruleset records remain intact. Layer 0's seven possibilities are unchanged.
 
 **Generation is an early from-scratch prototype.** The app's Generation tab
 trains a character n-gram model only from text you explicitly approve there.

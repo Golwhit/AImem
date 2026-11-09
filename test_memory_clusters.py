@@ -173,10 +173,64 @@ class ClusterTests(unittest.TestCase):
             self.assertEqual(persisted["cycles"], 1)
             self.assertEqual(len(persisted["messages"]), len(messages))
             self.assertIn(cluster_id, persisted["clusters"])
-            self.assertTrue(any(link.get("kind") == "parent" for link in snapshot["links"]))
-            self.assertTrue(any(node["id"] == "parent-domain-evaluation" for node in snapshot["nodes"]))
-            hubs = [node for node in snapshot["nodes"] if node["id"] in ("parent-domain-evaluation", cluster_id + "-hub")]
+            self.assertFalse(any(node["id"] == "parent-domain-evaluation" for node in snapshot["nodes"]))
+            hubs = [node for node in snapshot["nodes"] if node["id"] == cluster_id + "-hub"]
             self.assertTrue(all(isinstance(node["feedback"], dict) for node in hubs))
+
+    def test_promoted_evaluation_galaxy_keeps_memory_pairs_without_parent_tether(self):
+        messages = []
+        for index in range(5):
+            messages.extend([
+                {"id": f"u{index}", "role": "You", "text": "orchids greenhouse humidity watering", "topics": [], "session_id": str(index % 3)},
+                {"id": f"a{index}", "role": "Assistant", "text": "Related reply", "topics": []},
+            ])
+        messages.extend([
+            {"id": "evaluation", "role": "You", "text": "unclassified"},
+            {"id": "food", "role": "You", "text": "pizza dinner"},
+        ])
+        original_links = [
+            {"source": "u0", "target": "evaluation", "kind": "similarity"},
+            {"source": "evaluation", "target": "a0", "kind": "sequence"},
+            {"source": "u0", "target": "food", "kind": "similarity"},
+        ]
+        transcript = {"messages": messages, "links": original_links.copy()}
+        for _ in range(2):
+            clusters = update_clusters(transcript)
+            cluster_id = next(iter(clusters))
+            self.assertTrue(clusters[cluster_id]["promoted"])
+            self.assertTrue(all(message["domain"] == cluster_id and message["parent_domain"] == cluster_id for message in messages[:10]))
+            graph = {"nodes": [
+                {"id": message["id"], "kind": "message", "domain": message["domain"]}
+                for message in messages
+            ], "links": [dict(link) for link in original_links]}
+            apply_graph_domains(graph, transcript)
+            self.assertTrue(any(link["source"] == "u0" and link["target"] == "food" for link in graph["links"]))
+            for original in original_links:
+                self.assertTrue(any(
+                    link["source"] == original["source"] and link["target"] == original["target"]
+                    for link in graph["links"]
+                ))
+            self.assertFalse(any(node["id"] == "parent-domain-evaluation" for node in graph["nodes"]))
+            self.assertEqual(sum(link["kind"] == "hub" for link in graph["links"]), 10)
+            self.assertFalse(any(link["kind"] == "parent" for link in graph["links"]))
+            self.assertEqual(transcript["links"], original_links)
+
+    def test_promoted_subtopic_keeps_non_evaluation_parent(self):
+        transcript = {"messages": [
+            {"id": f"u{index}", "role": "You", "text": "memory orchids greenhouse watering", "session_id": str(index % 3)}
+            for index in range(5)
+        ]}
+        clusters = update_clusters(transcript)
+        cluster_id = next(iter(clusters))
+        graph = {"nodes": [
+            {"id": message["id"], "kind": "message", "domain": message["domain"]}
+            for message in transcript["messages"]
+        ], "links": []}
+        apply_graph_domains(graph, transcript)
+        self.assertIn(
+            {"source": cluster_id + "-hub", "target": "parent-domain-memory", "kind": "parent", "strength": 0.5},
+            graph["links"],
+        )
 
 
 if __name__ == "__main__":

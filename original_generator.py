@@ -10,6 +10,8 @@ import tempfile
 from collections import Counter
 from pathlib import Path
 
+from seed_extraction import RULESET, extract_text
+
 
 MODEL_NAME = "original-character-ngram-v1"
 ORDER = 4
@@ -168,6 +170,8 @@ class CharacterGenerator:
             raise ValueError("Document title and source must be text")
         if not isinstance(text, str):
             raise ValueError("Document text must be a string")
+        if len(text) > MAX_DOCUMENT_CHARACTERS:
+            raise ValueError(f"Original document text must not exceed {MAX_DOCUMENT_CHARACTERS} characters")
         title = title.strip() or f"Untitled source {self.state['generation'] + 1}"
         source = source.strip() or "Me"
         normalized = self._normalize(text)
@@ -195,6 +199,26 @@ class CharacterGenerator:
             "rights_reviewed": True,
             "legal_clearance": False,
         }
+        extraction = extract_text(
+            text,
+            f"generator://documents/{document['id']}",
+            self.root / ".data" / "seed-training-review.json",
+            provenance={
+                "document_id": document["id"],
+                "training_sha256": digest,
+                "title": document["title"],
+                "source": document["source"],
+                "rights_note": document["rights_note"],
+                "training_approval": "existing generator only; extracted patterns remain unapproved",
+            },
+        )
+        document["seed_extraction"] = {
+            "ruleset": RULESET,
+            "sha256": extraction["sha256"],
+            "counts": extraction["counts"],
+            "unique_unknown_patterns": extraction["unique_unknown_patterns"],
+            "layer_zero_eligible_occurrences": extraction["layer_zero_eligible_occurrences"],
+        }
         documents = [*self.state["documents"], document]
         self._save(self._rebuild(documents, self.state["generation"] + 1))
         self._capture_current_generation()
@@ -219,13 +243,14 @@ class CharacterGenerator:
         status = self.add_document(
             title="Memory chat prompt",
             source="Memory chat",
-            text=normalized,
+            text=text,
             acknowledge_review=True,
             rights_note="User opted in to local generator training for this memory-chat prompt.",
         )
         return {
             "added": True, "document_id": digest[:16],
             "generation": status["generation"],
+            "seed_extraction": self.state["documents"][-1]["seed_extraction"],
         }
 
     def remove_document(self, document_id: str) -> dict:
@@ -246,6 +271,7 @@ class CharacterGenerator:
         ]
         character_count = sum(document["characters"] for document in self.state["documents"])
         evaluation_runs = sum(len(item["runs"]) for item in self.evaluations["prompts"])
+        extracted = [document["seed_extraction"] for document in self.state["documents"] if "seed_extraction" in document]
         return {
             "model": MODEL_NAME,
             "generation": self.state["generation"],
@@ -259,6 +285,18 @@ class CharacterGenerator:
             "trained_from_scratch": True,
             "pretrained_weights": False,
             "external_calls": False,
+            "seed_extraction": {
+                "mode": "alongside",
+                "ruleset": RULESET,
+                "document_count": len(extracted),
+                "unprocessed_document_count": len(documents) - len(extracted),
+                "counts": {
+                    status: sum(item["counts"][status] for item in extracted)
+                    for status in ("alive", "dead", "maybe")
+                },
+                "layer_zero_eligible_occurrences": sum(item["layer_zero_eligible_occurrences"] for item in extracted),
+                "restricts_training": False,
+            },
         }
 
     def generate(self, prompt: str, max_chars: int = 320, seed: int | None = None) -> dict:
@@ -322,12 +360,19 @@ class CharacterGenerator:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=["status", "add", "remove", "generate", "generate-selected", "scorer-feedback", "scorer-status", "ingest-chat-prompt", "evaluations", "track-prompt", "rate-evaluation"])
+    parser.add_argument("command", choices=["status", "add", "remove", "generate", "generate-selected", "lab", "scorer-feedback", "scorer-status", "ingest-chat-prompt", "evaluations", "track-prompt", "rate-evaluation"])
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parent)
     args = parser.parse_args()
     payload = json.load(sys.stdin)
     generator = CharacterGenerator(args.root)
-    if args.command in {"generate-selected", "scorer-feedback", "scorer-status"}:
+    if args.command == "lab":
+        from model_lab import compare
+
+        result = compare(generator, payload.get("prompt", ""), payload.get("max_chars", 320))
+        record_id = hashlib.sha256(json.dumps(result, sort_keys=True, ensure_ascii=False).encode("utf-8")).hexdigest()
+        result["record_id"] = record_id
+        atomic_json(args.root / ".data" / "model-lab" / f"{record_id}.json", result)
+    elif args.command in {"generate-selected", "scorer-feedback", "scorer-status"}:
         from original_response_scorer import ResponseScorer
 
         scorer = ResponseScorer(args.root)

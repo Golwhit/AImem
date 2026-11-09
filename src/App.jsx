@@ -44,6 +44,7 @@ function ChatPanel({ sessionId }) {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [includeLab, setIncludeLab] = useState(true);
   const bottomRef = useRef(null);
 
   const refreshProgress = async () => {
@@ -66,8 +67,8 @@ function ChatPanel({ sessionId }) {
   }, [messages, loading]);
 
   const send = async () => {
-    const text = input.trim();
-    if (!text || loading) return;
+    const text = input;
+    if (!text.trim() || loading) return;
 
     setMessages((prev) => [...prev, { role: 'user', text }]);
     setInput('');
@@ -78,7 +79,7 @@ function ChatPanel({ sessionId }) {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text, sessionId, include_in_generator: true })
+        body: JSON.stringify({ message: text, sessionId, include_in_generator: true, include_lab: includeLab })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
@@ -90,7 +91,9 @@ function ChatPanel({ sessionId }) {
         trainingSources: data.training_sources,
         generatorLearning: data.generator_learning,
         responseId: data.response_memory_id,
-        selection: data.selection
+        selection: data.selection,
+        lab: data.lab,
+        labError: data.lab_error,
       }]);
       void refreshProgress();
     } catch (err) {
@@ -141,6 +144,13 @@ function ChatPanel({ sessionId }) {
         <a href="/?view=generation">Compare generations</a>
       </div>
       {progressError && <p className="banner banner-error">{progressError}</p>}
+      {generatorStatus?.seed_extraction && (
+        <p className="message-meta">
+          Seed layers run alongside training: {generatorStatus.seed_extraction.counts.alive} alive,
+          {' '}{generatorStatus.seed_extraction.counts.dead} dead, and {generatorStatus.seed_extraction.counts.maybe} review occurrences
+          {' '}across {generatorStatus.seed_extraction.document_count} sources. Existing training is unchanged.
+        </p>
+      )}
       {generatorStatus?.scorer && (
         <section aria-label="Response learning progress" style={{ borderBottom: '1px solid #334155', paddingBottom: 12 }}>
           <div className="generator-status">
@@ -167,6 +177,8 @@ function ChatPanel({ sessionId }) {
         {messages.map((m, i) => (
           <div key={i} style={{ alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start', maxWidth: '80%', padding: '8px 12px', borderRadius: 12, background: m.role === 'user' ? '#3b82f6' : '#2a2a3a', color: '#eee', fontSize: 14 }}>
             <div>{m.text}</div>
+            {m.lab && <ModelLab lab={m.lab} />}
+            {m.labError && <p className="banner banner-error">Comparison unavailable: {m.labError}. Memory capture and ordinary chat continued.</p>}
             {m.mode === 'local-character-ngram' && (
               <small className="message-meta">
                 Experimental local character model, generation {m.generation}.
@@ -217,13 +229,119 @@ function ChatPanel({ sessionId }) {
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && send()}
           placeholder="Enter a prompt..."
+          maxLength={2000}
           disabled={loading}
         />
         <button onClick={send} disabled={loading} className="primary">
           {loading ? '…' : 'Send'}
         </button>
       </div>
+      <label className="message-meta">
+        <input type="checkbox" checked={includeLab} onChange={(event) => setIncludeLab(event.target.checked)} />
+        {' '}Compare extraction and generation before training this prompt (local lab).
+      </label>
     </section>
+  );
+}
+
+function ModelLab({ lab }) {
+  const extractionModes = [
+    ['old_model_transitions', 'Old model extraction'],
+    ['combined', 'Layers extraction (Layer 0 + Layer 1)'],
+  ];
+  return (
+    <details className="model-lab" open>
+      <summary>Model lab · pre-training generation {lab.generation}</summary>
+      <h3>Extraction comparison</h3>
+      <p className="message-meta">
+        Exact input: {JSON.stringify(lab.prompt)}.
+        Old-model extraction shows normalized four-character contexts and next characters.
+        Layers extraction shows raw 1–3 character patterns, source offsets, and eligibility.
+        Unknowns remain for review; dead patterns are separate. Longer exclusions cannot be detected within these windows.
+      </p>
+      <div className="lab-grid">
+        {extractionModes.map(([key, title]) => (
+          <section key={key} className="evaluation-run">
+            <h4>{title}</h4>
+            <p className="message-meta">
+              {Object.entries(lab.extraction[key].reduce((counts, item) => {
+                const status = item.status || 'captured';
+                counts[status] = (counts[status] || 0) + (item.offsets?.length ?? item.count);
+                return counts;
+              }, {})).map(([status, count]) => `${status}: ${count}`).join(' · ')} occurrences.
+            </p>
+            {key === 'old_model_transitions' ? (
+              <pre className="lab-extraction">{lab.extraction[key].map(item =>
+                `${JSON.stringify(item.context)} → ${JSON.stringify(item.next)} × ${item.count}`
+              ).join('\n') || '(No transitions)'}</pre>
+            ) : (
+              ['alive', 'maybe', 'dead'].map(status => (
+                <div key={status}>
+                  <h5>{status === 'maybe' ? 'Unknown / needs review' : status === 'alive' ? 'Alive captures' : 'Known dead (not for review)'}</h5>
+                  <pre className="lab-extraction">{lab.extraction[key].filter(item => item.status === status).map(item =>
+                    `${JSON.stringify(item.text)} × ${item.offsets.length} · offsets ${item.offsets.join(', ')} · eligible: ${item.layer_zero_eligible}`
+                  ).join('\n') || '(None)'}</pre>
+                </div>
+              ))
+            )}
+          </section>
+        ))}
+      </div>
+      <h3>Generation comparison</h3>
+      <p className="message-meta">
+        Same {lab.character_budget}-character maximum per mode. Equal-length comparison: {lab.common_display_characters} characters each,
+        cropped to the shortest actual output without padding. Full outputs and shortfalls are shown below.
+        Layers-only is a captured-seed block sampler, not a trained model or proof of sentence validity.
+      </p>
+      <div className="lab-grid">
+        {[
+          ['old', 'Old model alone'],
+          ['layers', 'Layers alone (rule output)'],
+          ['combined', 'Layers first → old model continuation'],
+          ...(lab.generation_comparison.old_first ? [['old_first', lab.generation_comparison.old_first.context_mode === 'aligned_capture_overlay' ? 'Old model + aligned layer overlay' : 'Old model first → layers continuation (historical)']] : []),
+        ].map(([key, title]) => {
+          const output = lab.generation_comparison[key];
+          return (
+            <section key={key} className="evaluation-run">
+              <h4>{title}</h4>
+              <pre className="evaluation-sample">{output.display_text || '(No common output available)'}</pre>
+              <small className="message-meta">
+                Actual: {output.characters}/{lab.character_budget} characters; shortfall: {output.shortfall}.
+                {output.reason && ` ${output.reason}.`}
+              </small>
+              {key === 'combined' && <p className="message-meta">
+                Protected opening: {JSON.stringify(output.protected_prefix)}.
+                Context: {output.context_mode || 'unavailable'}. The continuation is not certified by the layers.
+              </p>}
+              {key === 'old_first' && output.context_mode === 'aligned_capture_overlay' && <>
+                <p className="message-meta">
+                  Old response remains the base. {output.replacements.length} aligned corrections; no appended text.
+                  Matching lowercase letters are corrected using living captures from this input.
+                  A dead initial consonant followed by a space can also be replaced by a captured living response-start A or I.
+                  This does not certify the whole response.
+                </p>
+                <h5>Layer replacements and supporting source offsets</h5>
+                <pre className="lab-extraction">{output.replacements.length ? JSON.stringify(output.replacements, null, 2) : '(No aligned corrections)'}</pre>
+              </>}
+              {key === 'old_first' && output.context_mode !== 'aligned_capture_overlay' && <>
+                <p className="message-meta">
+                  Preserved old-model opening: {Array.from(output.protected_prefix).length} characters.
+                  The equal-length crop may show only that opening; the appended rule output is shown separately below.
+                  Captured blocks are not certified as a valid continuation or sentence.
+                </p>
+                <h5>Layers continuation (exact spaces)</h5>
+                <pre className="evaluation-sample">{output.continuation || '(No continuation)'}</pre>
+              </>}
+              <details><summary>Full output (exact spaces)</summary><pre className="evaluation-sample">{output.text || '(No output)'}</pre></details>
+            </section>
+          );
+        })}
+      </div>
+      <small className="message-meta">
+        <a href={`/api/model-lab/${lab.record_id}`} download={`model-lab-${lab.record_id}.json`}>Download exact comparison</a>.
+        {' '}Rules: {lab.ruleset}. No lab output is automatically used for training.
+      </small>
+    </details>
   );
 }
 
@@ -384,6 +502,14 @@ function GeneratorPanel() {
         ) : <span>Loading local model status...</span>}
       </div>
 
+      {status?.seed_extraction && (
+        <p className="message-meta">
+          Seed extraction alongside training: {status.seed_extraction.counts.alive} alive,
+          {' '}{status.seed_extraction.counts.dead} dead, {status.seed_extraction.counts.maybe} review occurrences.
+          {' '}{status.seed_extraction.unprocessed_document_count} older sources have not been extracted.
+          {' '}Patterns are not automatically approved; the generator still trains on your approved text unchanged.
+        </p>
+      )}
       <form className="generator-form" onSubmit={addDocument}>
         <label>
           Document title (optional)

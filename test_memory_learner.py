@@ -285,6 +285,8 @@ class LearnerTests(unittest.TestCase):
                 'acknowledge_review': True,
             })
             self.assertEqual(trained['document_count'], 1)
+            self.assertEqual(trained['seed_extraction']['document_count'], 1)
+            self.assertFalse(trained['seed_extraction']['restricts_training'])
             tracked = request('/api/generator/evaluations', {'prompt': 'the moon'})
             evaluation = tracked['prompts'][0]
             self.assertEqual([run['generation'] for run in evaluation['runs']], [1])
@@ -294,12 +296,28 @@ class LearnerTests(unittest.TestCase):
             self.assertEqual(rated['prompts'][0]['runs'][0]['rating'], 'edit')
             generated_chat = request('/api/chat', {
                 'message': 'the moon ', 'sessionId': 'http-test', 'include_in_generator': True,
+                'include_lab': True,
             })
             self.assertEqual(generated_chat['mode'], 'local-character-ngram')
             self.assertTrue(generated_chat['reply'])
             self.assertGreater(generated_chat['selection']['candidate_count'], 0)
             self.assertEqual(generated_chat['training_sources'][0]['title'], 'Approved seed')
             self.assertTrue(generated_chat['generator_learning']['added'])
+            self.assertEqual(generated_chat["lab"]["generation"], 1)
+            self.assertEqual(generated_chat["lab"]["timing"], "before_prompt_training")
+            self.assertEqual(generated_chat["lab"]["old_response"]["text"], generated_chat["reply"])
+            lab_path = self.root / ".data" / "model-lab" / (generated_chat["lab"]["record_id"] + ".json")
+            self.assertEqual(json.loads(lab_path.read_text()), generated_chat["lab"])
+            self.assertEqual(request("/api/model-lab/" + generated_chat["lab"]["record_id"]), generated_chat["lab"])
+            with self.assertRaises(HTTPError) as invalid_lab:
+                request("/api/model-lab/not-a-record")
+            self.assertEqual(invalid_lab.exception.code, 400)
+            invalid_lab.exception.close()
+            self.assertIsNone(generated_chat["lab_error"])
+            self.assertIn('seed_extraction', generated_chat['generator_learning'])
+            extraction_records = json.loads((self.root / '.data' / 'seed-training-review.json').read_text())['sources']
+            self.assertEqual(extraction_records[-1]['text'], 'the moon ')
+            self.assertTrue(extraction_records[-1]['review'])
             generator_status = request('/api/generator')
             self.assertEqual(generator_status['document_count'], 2)
             self.assertEqual(generator_status['documents'][1]['source'], 'Memory chat')
@@ -364,6 +382,29 @@ class LearnerTests(unittest.TestCase):
             self.assertEqual(request('/api/generator')['document_count'], 4)
             unchanged = json.loads((self.root / 'chat_memory.json').read_text())
             self.assertEqual(unchanged['messages'][-1]['text'], generated_chat['reply'])
+            (self.root / '.data' / 'seed-training-review.json').write_text('{"version": 99}')
+            training_failed = request('/api/chat', {
+                'message': 'A distinct question despite a broken extraction queue.',
+                'sessionId': 'http-test', 'include_in_generator': True,
+            })
+            self.assertEqual(training_failed['generator_learning']['reason'], 'error')
+            self.assertIn('invalid extraction review queue', training_failed['generator_learning']['message'])
+            self.assertEqual(request('/api/generator')['document_count'], 4)
+            still_saved = json.loads((self.root / 'chat_memory.json').read_text())
+            self.assertEqual(len(still_saved['messages']), len(unchanged['messages']) + 2)
+            lab_directory = self.root / '.data' / 'model-lab'
+            lab_directory.rename(self.root / '.data' / 'model-lab-archive')
+            lab_directory.write_text('blocked comparison storage')
+            lab_failed = request('/api/chat', {
+                'message': 'I keep a separate comparison test.',
+                'sessionId': 'http-test', 'include_lab': True,
+            })
+            self.assertIsNone(lab_failed['lab'])
+            self.assertTrue(lab_failed['lab_error'])
+            self.assertTrue(lab_failed['reply'])
+            self.assertEqual(request('/api/generator')['document_count'], 4)
+            capture_after_lab_failure = json.loads((self.root / 'chat_memory.json').read_text())
+            self.assertEqual(len(capture_after_lab_failure['messages']), len(still_saved['messages']) + 2)
         finally:
             process.terminate()
             process.communicate(timeout=10)
