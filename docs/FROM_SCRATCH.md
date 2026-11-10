@@ -422,6 +422,48 @@ chemistry) versus *earned*; suggest where compatible joins and splits should
 happen at the word and thought levels, where only states may matter more
 than at the letter level.
 
+#### Word-level only states: one-way and opposite
+
+The next rung of the ladder (letters → words → thoughts) asks whether whole
+words have only states. `neural_word_onlies.py` reads Acts 1 in order and
+earns a **one-way** only when a word has been followed by exactly one next
+word at least *support* times (2 or 3), and an **opposite** only when a word
+has always been preceded by exactly one word. Later breaks are kept as
+mutation variants, as at the letter level. During prediction the guidance
+works on the current partial word: if the previous word has a one-way only,
+letters off that path get a lower weight (0.2 or 0.5); opposite onlies lower
+the weight of finishing a word whose required predecessor is missing. Nothing
+is forbidden. Run `cacf05e4e24648ea83d77a879da0dd89` (76 s) found:
+
+| Support | One-way | Opposite | Held on Acts 2 (one-way / opposite) |
+|---|---|---|---|
+| 2 | 7 (e.g. into→the, Holy→Spirit, were→looking/staying) | 15 (e.g. the←Holy, he←was) | 17% of 24 uses / 34% of 73 uses |
+| 3 | 2 (into→the, Holy→Spirit) | 4 | 57% of 7 uses / 43% of 28 uses |
+
+Validation loss on Acts 2 (nats per character, lower is better):
+
+| Path | 10% | 25% | 50% | 100% |
+|---|---|---|---|---|
+| Standard counting (Kneser-Ney) | 2.628 | 2.303 | 2.177 | 1.974 |
+| Layers 1/2 | 2.784 | 2.495 | 2.370 | 2.132 |
+| Letter onlies + 1/2 | 2.799 | 2.494 | 2.371 | 2.128 |
+| Word one-way + 1/2 (support 3, weight 0.2) | 2.784 | 2.495 | 2.370 | 2.132 |
+| Word opposite + 1/2 (support 2, weight 0.2) | 2.786 | 2.497 | 2.382 | 2.151 |
+| Letter + word both (support 3, weight 0.5) | 2.799 | 2.494 | 2.374 | 2.131 |
+
+**What this shows:** in one chapter, words are far freer than letters. Only
+fixed phrases lock ("Holy Spirit", "into the"); most earned word onlies are
+coincidences of small data and break on the next chapter. Word guidance
+changes loss by at most 0.0005 (noise), and opposite onlies slightly hurt.
+**What it does not show:** that word onlies are useless. With far more text,
+fixed phrases and names could earn real support, and phrase-level onlies may
+be where "thoughts" begin. It also does not tell us anything fresh: Acts 2 is
+reused development data.
+
+Ways to contribute: list phrases you believe can only exist one way (names,
+titles, set phrases), so we can test *defined* word onlies against *earned*
+ones; and describe what makes two thoughts "compatible" to join or split.
+
 ### First real-text continuation run
 
 The user explicitly authorized training on the staged Acts material after

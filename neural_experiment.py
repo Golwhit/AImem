@@ -210,6 +210,7 @@ def status(root: Path) -> dict:
     layers = path.with_name("latest-layered.json")
     proof = path.with_name("latest-proof.json")
     onlies = path.with_name("latest-onlies.json")
+    word_onlies = path.with_name("latest-word-onlies.json")
     return {
         "ready": path.exists(), "report": json.loads(path.read_text()) if path.exists() else None,
         "context_comparison": json.loads(comparison.read_text()) if comparison.exists() else None,
@@ -217,6 +218,7 @@ def status(root: Path) -> dict:
         "layered_comparison": json.loads(layers.read_text()) if layers.exists() else None,
         "proof_comparison": json.loads(proof.read_text()) if proof.exists() else None,
         "onlies_comparison": json.loads(onlies.read_text()) if onlies.exists() else None,
+        "word_onlies_comparison": json.loads(word_onlies.read_text()) if word_onlies.exists() else None,
     }
 
 

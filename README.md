@@ -294,6 +294,14 @@ non-forbidding Layer 0 guidance. They held 85–96% on Acts 2 but improved loss
 by only 0.004 at best; strict settings hurt. Saved in `.data/neural-onlies/`
 and shown on Generation. See [the record](docs/FROM_SCRATCH.md#layer-0-only-states-one-way-configurations).
 
+**Word-level only states:** `python3 neural_word_onlies.py --acknowledge-review`
+earns one-way (word always followed by one word) and opposite (word always
+preceded by one word) only states from Acts 1 and compares them as
+non-forbidding guidance. Only 2–7 forward and 4–15 opposite onlies were
+earned (e.g. "Holy→Spirit", "into→the"); they held just 17–57% on Acts 2 and
+did not change loss meaningfully (best 2.1319 vs 2.1324). See
+[the record](docs/FROM_SCRATCH.md#word-level-only-states-one-way-and-opposite).
+
 The **Generation** tab now includes a separate, from-scratch character neural
 network: four-character context, 8-value embeddings, a 16-unit tanh hidden
 layer, softmax predictions, cross-entropy loss, hand-written backpropagation,

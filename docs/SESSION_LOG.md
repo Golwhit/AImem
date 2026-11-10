@@ -11,6 +11,10 @@ Type: minor
 
 ### Changes
 
+- Added word-level only states (`neural_word_onlies.py`): one-way and opposite
+  word onlies with mutation variants; run `cacf05e4e24648ea83d77a879da0dd89`
+  found 2–7 one-way and 4–15 opposite onlies holding 17–57% on Acts 2 and no
+  meaningful loss change. Shown on Generation via `word_onlies_comparison`.
 - Added Layer 0 only states (`neural_onlies.py`): earned one-way 2–9 character
   configurations with mutation variants; run `7a445dd9bd814f20a6be10b6bf8fbd88`
   found ~1,160 states holding 85–96% on Acts 2 but no meaningful loss gain.

@@ -634,6 +634,35 @@ function OnlyStates({ report }) {
   </section>;
 }
 
+function WordOnlyStates({ report }) {
+  const rows = {};
+  report.results.forEach(item => {
+    const name = item.support === null || item.support === undefined ? item.arm
+      : `${item.arm} (support ${item.support}, off-path weight ${item.penalty})`;
+    rows[name] = { ...(rows[name] || {}), [String(item.fraction)]: item.validation_loss };
+  });
+  const key = f => String(f).includes('.') ? String(f) : `${f}.0`;
+  const fmt = value => value === null || value === undefined ? '—' : value.toFixed(4);
+  const words = list => list.map(o => `${o.word}→${o.path}${Object.keys(o.variants).length ? ' (mutated)' : ''}`).join(', ');
+  return <section className="layered-efficiency">
+    <h3>Word-level only states (one-way and opposite)</h3>
+    <p>Status: {report.status}. A word only state says one word has always been followed (forward) or preceded
+      (opposite) by exactly one word in Acts 1. Unconfirmed candidates; they guide but never forbid.
+      Acts 2 is reused development data, not a fresh test.</p>
+    {Object.entries(report.discovery).map(([support, d]) => <p key={support}>Support {support}: {d.forward.count} forward
+      ({words(d.forward.strongest.slice(0, 4))}); {d.backward.count} opposite.</p>)}
+    <table>
+      <thead><tr><th>Path</th>{report.fractions.map(f => <th key={f}>{f * 100}% of Acts 1</th>)}</tr></thead>
+      <tbody>{Object.entries(rows).map(([name, values]) => <tr key={name}>
+        <td>{name}</td>{report.fractions.map(f => <td key={f}>{fmt(values[key(f)] ?? values[String(f)])}</td>)}
+      </tr>)}</tbody>
+    </table>
+    <details><summary>How often word only states held on Acts 2</summary>
+      <pre>{JSON.stringify(report.hold_rates_on_validation, null, 2)}</pre></details>
+    <details><summary>Exact word only-state report</summary><pre>{JSON.stringify(report, null, 2)}</pre></details>
+  </section>;
+}
+
 function NeuralPanel() {
   const [report, setReport] = useState(null);
   const [comparison, setComparison] = useState(null);
@@ -641,6 +670,7 @@ function NeuralPanel() {
   const [layered, setLayered] = useState(null);
   const [proof, setProof] = useState(null);
   const [onlies, setOnlies] = useState(null);
+  const [wordOnlies, setWordOnlies] = useState(null);
   const [trainingText, setTrainingText] = useState('');
   const [heldOutText, setHeldOutText] = useState('');
   const [source, setSource] = useState('');
@@ -658,6 +688,7 @@ function NeuralPanel() {
       setLayered(data.layered_comparison);
       setProof(data.proof_comparison);
       setOnlies(data.onlies_comparison);
+      setWordOnlies(data.word_onlies_comparison);
     }).catch(err => setError(err.message));
   }, []);
 
@@ -695,6 +726,8 @@ function NeuralPanel() {
         setLayered(data.layered_comparison);
         setProof(data.proof_comparison);
         setOnlies(data.onlies_comparison);
+      setWordOnlies(data.word_onlies_comparison);
+        setWordOnlies(data.word_onlies_comparison);
       }).catch(err => setError(err.message));
     }, 3000);
     return () => clearInterval(timer);
@@ -725,6 +758,7 @@ function NeuralPanel() {
         <button disabled={busy || !approved} type="submit">{busy ? 'Training…' : 'Train separate neural experiment'}</button>
       </form>
       {error && <p className="banner banner-error">{error}</p>}
+      {wordOnlies && <WordOnlyStates report={wordOnlies} />}
       {onlies && <OnlyStates report={onlies} />}
       {proof && proof.status !== 'absent' && <LayerProof report={proof} />}
       {layered && <LayeredEfficiency report={layered} />}
