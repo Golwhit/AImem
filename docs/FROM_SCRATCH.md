@@ -383,6 +383,45 @@ Layer 1 where rules actually bite (rule-heavy or noisy text). Any new claim
 should again be frozen before a new untouched source is fetched; Acts 4–5
 are now spent as a fresh test.
 
+#### Layer 0 only states: one-way configurations
+
+The user refined Layer 0: besides impossible configurations, some
+configurations of 1–9 characters exist **only one way**, like DNA building
+blocks. Letters alone are free; as they combine, some combinations lock into
+a single path (in English, `eq` is always followed by `u`; `jec` by `t`).
+
+`neural_onlies.py` earns only states from Acts 1 in reading order. A block
+seen 3 times with one outcome becomes an only state. If later text shows a
+different outcome, the original path is **kept** and the new one recorded as a
+compatible variant (a mutation). Forward states say what must come next;
+backward states say what must come before. They are unconfirmed candidates
+and never forbid a character; off-path characters keep a reduced weight.
+
+Run `7a445dd9bd814f20a6be10b6bf8fbd88`: 572 forward (85 mutated) and 592
+backward only states, mostly 4–6 characters. On Acts 2 they held (path or
+known variant) 85–96% of the time. Mean validation loss, Acts 1 → Acts 2:
+
+| Path | 10% | 25% | 50% | 100% |
+|---|---:|---:|---:|---:|
+| Standard counting (Kneser-Ney) | 2.628 | 2.303 | 2.177 | 1.974 |
+| Layers 1/2 | 2.784 | 2.495 | 2.370 | 2.132 |
+| Only states + 1/2, off-path weight 0.5 | 2.799 | 2.494 | 2.371 | 2.128 |
+| Only states + 1/2, off-path weight 0.05 | 2.902 | 2.583 | 2.517 | 2.270 |
+| Only states + Layer 0 v2 + 1/2, weight 0.5 | 3.087 | 2.683 | 2.495 | 2.190 |
+
+**What this shows:** only states are real and mostly stable on new text, and
+they are a readable inventory of building blocks. **What it does not show:**
+better prediction. The best setting gained 0.004 (within noise, chosen on
+Acts 2), and strict settings hurt, because the 5–15% of breaks are costly
+and Layer 2 already captures most of the same regularities. One chapter
+cannot separate true onlies (spelling) from only-so-far onlies (`M→a` until
+"Moses"). No fresh test was run: Acts 4–5 are spent and Acts 3 is not read.
+
+Ways to contribute: decide which only states are *true* (defined, like
+chemistry) versus *earned*; suggest where compatible joins and splits should
+happen at the word and thought levels, where only states may matter more
+than at the letter level.
+
 ### First real-text continuation run
 
 The user explicitly authorized training on the staged Acts material after

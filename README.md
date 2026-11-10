@@ -287,6 +287,13 @@ data was enough. Layer 1 removed generated rule breaks. But standard counting
 beat every layered path (1.940), and Layer 0 (v1 and v2) still hurt loss. See
 [the proof record](docs/FROM_SCRATCH.md#proof-shaping-run-size-curve-seeds-effort-rules-and-a-fresh-test).
 
+**Layer 0 only states:** `python3 neural_onlies.py --acknowledge-review`
+earns one-way configurations (2–9 characters, forward and backward) from
+Acts 1, keeps broken ones as mutation variants, and compares them as
+non-forbidding Layer 0 guidance. They held 85–96% on Acts 2 but improved loss
+by only 0.004 at best; strict settings hurt. Saved in `.data/neural-onlies/`
+and shown on Generation. See [the record](docs/FROM_SCRATCH.md#layer-0-only-states-one-way-configurations).
+
 The **Generation** tab now includes a separate, from-scratch character neural
 network: four-character context, 8-value embeddings, a 16-unit tanh hidden
 layer, softmax predictions, cross-entropy loss, hand-written backpropagation,

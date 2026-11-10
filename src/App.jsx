@@ -609,12 +609,38 @@ function LayerProof({ report }) {
   </section>;
 }
 
+function OnlyStates({ report }) {
+  const rows = {};
+  report.results.forEach(item => {
+    const key = `${item.arm}${item.penalty === null ? '' : ` (off-path weight ${item.penalty})`}`;
+    rows[key] = { ...(rows[key] || {}), [item.fraction]: item.validation_loss };
+  });
+  const fmt = value => value === null || value === undefined ? 'infinite' : value.toFixed(4);
+  return <section className="layered-efficiency">
+    <h3>Layer 0 only states (one-way configurations)</h3>
+    <p>Status: {report.status}. Earned from Acts 1: {report.discovery.forward.count} forward
+      ({report.discovery.forward.mutated} with mutation variants) and {report.discovery.backward.count} backward
+      only states, configurations of 2–{report.max_context + 1} characters. Unconfirmed candidates; they guide but never forbid.
+      Acts 2 is reused development data, not a fresh test.</p>
+    <table>
+      <thead><tr><th>Path</th>{report.fractions.map(f => <th key={f}>{f * 100}% of Acts 1</th>)}</tr></thead>
+      <tbody>{Object.entries(rows).map(([name, values]) => <tr key={name}>
+        <td>{name}</td>{report.fractions.map(f => <td key={f}>{fmt(values[f])}</td>)}
+      </tr>)}</tbody>
+    </table>
+    <details><summary>How often only states held on Acts 2, by configuration length</summary>
+      <pre>{JSON.stringify(report.hold_rates_on_validation, null, 2)}</pre></details>
+    <details><summary>Exact only-state report</summary><pre>{JSON.stringify(report, null, 2)}</pre></details>
+  </section>;
+}
+
 function NeuralPanel() {
   const [report, setReport] = useState(null);
   const [comparison, setComparison] = useState(null);
   const [rateComparison, setRateComparison] = useState(null);
   const [layered, setLayered] = useState(null);
   const [proof, setProof] = useState(null);
+  const [onlies, setOnlies] = useState(null);
   const [trainingText, setTrainingText] = useState('');
   const [heldOutText, setHeldOutText] = useState('');
   const [source, setSource] = useState('');
@@ -631,6 +657,7 @@ function NeuralPanel() {
       setRateComparison(data.rate_comparison);
       setLayered(data.layered_comparison);
       setProof(data.proof_comparison);
+      setOnlies(data.onlies_comparison);
     }).catch(err => setError(err.message));
   }, []);
 
@@ -667,6 +694,7 @@ function NeuralPanel() {
         setRateComparison(data.rate_comparison);
         setLayered(data.layered_comparison);
         setProof(data.proof_comparison);
+        setOnlies(data.onlies_comparison);
       }).catch(err => setError(err.message));
     }, 3000);
     return () => clearInterval(timer);
@@ -697,6 +725,7 @@ function NeuralPanel() {
         <button disabled={busy || !approved} type="submit">{busy ? 'Training…' : 'Train separate neural experiment'}</button>
       </form>
       {error && <p className="banner banner-error">{error}</p>}
+      {onlies && <OnlyStates report={onlies} />}
       {proof && proof.status !== 'absent' && <LayerProof report={proof} />}
       {layered && <LayeredEfficiency report={layered} />}
       {rateComparison && <NeuralComparison comparison={rateComparison} rates />}

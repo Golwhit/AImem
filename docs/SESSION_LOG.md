@@ -11,6 +11,9 @@ Type: minor
 
 ### Changes
 
+- Added Layer 0 only states (`neural_onlies.py`): earned one-way 2–9 character
+  configurations with mutation variants; run `7a445dd9bd814f20a6be10b6bf8fbd88`
+  found ~1,160 states holding 85–96% on Acts 2 but no meaningful loss gain.
 - Added `neural_proof.py`, `neural_counting.py` and Layer 0 v2 composition:
   standard Kneser-Ney comparison, 10/25/50/100% training curve, five seeds,
   estimated operation counts, generated rule-break rates, frozen criteria and
