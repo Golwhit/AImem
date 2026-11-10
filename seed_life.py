@@ -6,7 +6,7 @@ from dataclasses import asdict, dataclass
 from typing import Literal
 
 
-# The marker comes from the earlier project; its exact meaning remains open.
+# Legacy assessment notation for an explicit source-start boundary.
 TERMINUS = "</>"
 CONSONANTS = frozenset("bcdfghjklmnpqrstvwxyzBCDFGHJKLMNPQRSTVWXYZ")
 LAYER_ZERO_SEEDS = (
@@ -25,6 +25,22 @@ ALIVE_SEEDS = frozenset((
     " A ",
     " I ",
 ))
+DOMAIN = "english-seed-experiment"
+DEVELOPMENT_VERSION = "seed-development-v1"
+RULES = (
+    {"id": "triple-identical", "domain": DOMAIN, "boundary": "anywhere",
+     "rationale": "Agreed seed-experiment exclusion, not a universal language law",
+     "excluded_example": "aaa", "surviving_example": "aa"},
+    {"id": "lowercase-i-word", "domain": DOMAIN, "boundary": "literal space on both sides",
+     "rationale": "Agreed single-letter lowercase i exclusion",
+     "excluded_example": " i ", "surviving_example": " I "},
+    {"id": "initial-i-period", "domain": DOMAIN, "boundary": "source start only",
+     "rationale": "Agreed initial I followed by period exclusion",
+     "excluded_example": "</>I.", "surviving_example": "</>I "},
+    {"id": "initial-consonant-space", "domain": DOMAIN, "boundary": "source start only",
+     "rationale": "Agreed initial single English consonant followed by literal space exclusion",
+     "excluded_example": "</>t ", "surviving_example": "</>the "},
+)
 
 
 @dataclass(frozen=True)
@@ -65,10 +81,40 @@ def assess(text: str) -> Assessment:
     if excluded is not None:
         return Assessment("dead", excluded, eligible)
     if not eligible:
-        return Assessment("maybe", "Outside frozen Layer 0; retained for review, not eligible for life", False)
+        return Assessment("maybe", "Outside current foundational seed forms; retained for developmental review, not admitted", False)
     if text in ALIVE_SEEDS:
         return Assessment("alive", "Confirmed living seed form", True)
     return Assessment("maybe", "Eligible seed; more context is needed before it is alive", True)
+
+
+def development_assessment(
+    text: str, *, at_source_start: bool, complete: bool, domain: str = DOMAIN,
+) -> dict:
+    """Keep maturity separate from exact foundation membership."""
+    if domain != DOMAIN:
+        raise ValueError(f"No Layer 1 rules are defined for domain {domain!r}")
+    if not isinstance(text, str):
+        raise TypeError("Development input must be exact text")
+    if type(at_source_start) is not bool or type(complete) is not bool:
+        raise ValueError("Source-start and completion boundaries must be explicit booleans")
+    contextual = boundary_text(text, at_source_start)
+    assessment = assess(contextual)
+    if assessment.status == "dead":
+        state = "excluded"
+    elif assessment.status == "alive":
+        state = "confirmed"
+    elif not complete:
+        state = "developing"
+    else:
+        state = "unreviewed"
+    return {
+        "state": state, "foundation_eligible": assessment.layer_zero_eligible,
+        "reason": assessment.reason if state in ("excluded", "confirmed") else
+        ("No exclusion detected; observation is incomplete, not confirmed or admitted" if not complete else
+         "No exclusion detected; completed observation needs explicit review, not automatic admission"),
+        "at_source_start": at_source_start, "complete": complete,
+        "domain": domain, "version": DEVELOPMENT_VERSION,
+    }
 
 
 def main() -> None:

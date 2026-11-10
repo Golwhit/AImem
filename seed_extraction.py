@@ -5,11 +5,11 @@ import hashlib
 import json
 from pathlib import Path
 
-from seed_life import assess, boundary_text
+from seed_life import assess, boundary_text, development_assessment
 
 
 MAX_SOURCE_CHARACTERS = 50_000
-RULESET = "seed-life-v4"
+RULESET = "seed-life-v5"
 DEFAULT_QUEUE = Path(__file__).resolve().parent / ".data" / "seed-extraction-review.json"
 
 
@@ -35,6 +35,14 @@ def extract(text: str) -> dict:
                 "text": window,
                 "offsets": offsets,
                 "layer_zero_eligible": eligible,
+                "development": [
+                    {"offsets": [offset for offset in offsets if (offset == 0) == at_start],
+                     **development_assessment(
+                        window, at_source_start=at_start, complete=False,
+                    )}
+                    for at_start in (True, False)
+                    if any((offset == 0) == at_start for offset in offsets)
+                ],
             }
             for (window, eligible), offsets in sorted(patterns.items())
         ]

@@ -59,6 +59,41 @@ class ModelLabTests(unittest.TestCase):
             self.assertEqual(result["generation_comparison"][key]["text"], "")
             self.assertIn("No living seed", result["generation_comparison"][key]["reason"])
 
+    def test_layer_two_is_read_only_and_keeps_baseline_generation(self):
+        self.generator.add_document(text="I am a note. I am a note.", acknowledge_review=True)
+        checkpoint = self.generator.path.read_bytes()
+        result = compare(self.generator, " am amount ", 40)
+        with patch("layer_two.Attraction.generate", return_value={"text": "", "reason": "test disabled"}):
+            without_evidence = compare(self.generator, " am amount ", 40)
+        for key in ("old", "layers", "combined", "old_first"):
+            self.assertEqual(result["generation_comparison"][key]["text"], without_evidence["generation_comparison"][key]["text"])
+        self.assertEqual(result["layer_two"]["source_sha256"], result["prompt_sha256"])
+        self.assertEqual(result["version"], 7)
+        self.assertEqual(checkpoint, self.generator.path.read_bytes())
+        self.assertFalse((self.root / ".data" / "layer-two.json").exists())
+
+    def test_admission_and_revocation_affect_future_lab_only(self):
+        from seed_development import DevelopmentRegistry
+
+        result = compare(self.generator, "am amount", 20)
+        record_id = "a" * 64
+        directory = self.root / ".data" / "model-lab"
+        directory.mkdir(parents=True)
+        record = directory / f"{record_id}.json"
+        record.write_text(json.dumps(result))
+        payload = {"record_id": record_id, "offset": 0, "size": 2, "action": "admit",
+                   "rationale": "Fixture review", "acknowledge_lab_only": True}
+        registry = DevelopmentRegistry(self.root)
+        registry.decide(payload)
+        admitted = compare(self.generator, "unrelated query", 20)
+        self.assertEqual(admitted["generation_comparison"]["layers"]["text"], "am")
+        self.assertFalse(admitted["generation_comparison"]["layers"]["attraction_metrics"]["layer_one_violation"])
+        self.assertFalse(result["development"]["registry"]["events"])
+        self.assertFalse(json.loads(record.read_text())["development"]["registry"]["events"])
+        registry.decide({**payload, "action": "revoke"})
+        self.assertEqual(compare(self.generator, "unrelated query", 20)["generation_comparison"]["layers"]["text"], "")
+        self.assertFalse(self.generator.path.exists())
+
     def test_missing_model_context_retains_prefix_without_unrelated_continuation(self):
         self.generator.add_document(text="Hello from training.", acknowledge_review=True)
         result = compare(self.generator, "I keep a note.", 40)
@@ -99,7 +134,7 @@ class ModelLabTests(unittest.TestCase):
             result = compare(self.generator, "I test and I go.", 40)
         outputs = result["generation_comparison"]
         output = outputs["old_first"]
-        self.assertEqual(len(outputs), 4)
+        self.assertEqual(len(outputs), 6)
         self.assertEqual(output["base_text"], outputs["old"]["text"])
         self.assertEqual(output["text"], "I test and I go.")
         self.assertEqual(len(output["text"]), len(outputs["old"]["text"]))

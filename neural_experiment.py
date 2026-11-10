@@ -22,24 +22,29 @@ SYNTHETIC_HELD = "ab " * 20
 
 
 class NeuralModel:
-    def __init__(self, characters: list[str], seed: int = 17):
+    def __init__(self, characters: list[str], seed: int = 17, *, context: int = CONTEXT):
+        if type(context) is not int or not 1 <= context <= 128:
+            raise ValueError("Context must be an integer from 1 to 128 characters")
+        self.context = context
         self.characters = characters
         self.tokens = {char: index + 2 for index, char in enumerate(characters)}
         self.size = len(characters) + 2  # Boundary and unknown are distinct tokens.
         rng = random.Random(seed)
         self.weights = {
             "embedding": [rng.uniform(-0.2, 0.2) for _ in range(self.size * EMBEDDING)],
-            "hidden": [rng.uniform(-0.2, 0.2) for _ in range(CONTEXT * EMBEDDING * HIDDEN)],
+            "hidden": [rng.uniform(-0.2, 0.2) for _ in range(self.context * EMBEDDING * HIDDEN)],
             "hidden_bias": [0.0] * HIDDEN,
             "output": [rng.uniform(-0.2, 0.2) for _ in range(HIDDEN * self.size)],
             "output_bias": [0.0] * self.size,
         }
 
     def examples(self, text: str) -> list[tuple[list[int], int]]:
-        tokens = [0] * CONTEXT + [self.tokens.get(char, 1) for char in text]
-        return [(tokens[i - CONTEXT:i], tokens[i]) for i in range(CONTEXT, len(tokens))]
+        tokens = [0] * self.context + [self.tokens.get(char, 1) for char in text]
+        return [(tokens[i - self.context:i], tokens[i]) for i in range(self.context, len(tokens))]
 
-    def forward(self, context: list[int]) -> tuple[list[float], list[float], list[float]]:
+    def forward(
+        self, context: list[int], *, output_prior: list[float] | None = None,
+    ) -> tuple[list[float], list[float], list[float]]:
         w = self.weights
         x = [w["embedding"][token * EMBEDDING + d] for token in context for d in range(EMBEDDING)]
         hidden = [
@@ -50,13 +55,26 @@ class NeuralModel:
             w["output_bias"][k] + sum(hidden[j] * w["output"][j * self.size + k] for j in range(HIDDEN))
             for k in range(self.size)
         ]
+        if output_prior is not None:
+            if len(output_prior) != self.size or any(
+                not math.isfinite(value) or value < 0 for value in output_prior
+            ) or not any(output_prior):
+                raise ValueError("Output prior must have one finite nonnegative weight per token and positive mass")
+            logits = [
+                value + math.log(prior) if prior else -math.inf
+                for value, prior in zip(logits, output_prior)
+            ]
         maximum = max(logits)
         exponentials = [math.exp(value - maximum) for value in logits]
         total = sum(exponentials)
         return x, hidden, [value / total for value in exponentials]
 
-    def loss_and_gradients(self, context: list[int], target: int) -> tuple[float, dict[str, list[float]]]:
-        x, hidden, probabilities = self.forward(context)
+    def loss_and_gradients(
+        self, context: list[int], target: int, *, output_prior: list[float] | None = None,
+    ) -> tuple[float, dict[str, list[float]]]:
+        if output_prior is not None and 0 <= target < len(output_prior) and output_prior[target] == 0:
+            raise ValueError("Cannot train a target excluded by the output prior")
+        x, hidden, probabilities = self.forward(context, output_prior=output_prior)
         loss = -math.log(max(probabilities[target], 1e-300))
         delta = probabilities[:]
         delta[target] -= 1
@@ -83,9 +101,20 @@ class NeuralModel:
     def loss(self, examples: list[tuple[list[int], int]]) -> float:
         return sum(-math.log(max(self.forward(context)[2][target], 1e-300)) for context, target in examples) / len(examples)
 
+    def update(
+        self, context: list[int], target: int, *, learning_rate: float = RATE,
+        output_prior: list[float] | None = None,
+    ) -> None:
+        if type(learning_rate) not in (int, float) or not math.isfinite(learning_rate) or learning_rate <= 0:
+            raise ValueError("Learning rate must be a finite positive number")
+        _, gradients = self.loss_and_gradients(context, target, output_prior=output_prior)
+        for name, values in self.weights.items():
+            for index, gradient in enumerate(gradients[name]):
+                values[index] -= learning_rate * gradient
+
     def sample(self, prompt: str, length: int = 120) -> str:
         rng = random.Random(23)
-        context = ([0] * CONTEXT + [self.tokens.get(char, 1) for char in prompt])[-CONTEXT:]
+        context = ([0] * self.context + [self.tokens.get(char, 1) for char in prompt])[-self.context:]
         output = []
         for _ in range(length):
             probabilities = self.forward(context)[2]
@@ -98,6 +127,12 @@ class NeuralModel:
 def train_experiment(payload: dict, root: Path) -> dict:
     if not isinstance(payload, dict):
         raise ValueError("Neural training request must be a JSON object")
+    if payload.get("automated_synthetic") is True:
+        if payload.get("synthetic") is not True:
+            raise ValueError("Automated rounds currently support synthetic diagnostics only")
+        from neural_rounds import run_rounds
+
+        return run_rounds(root)
     synthetic = payload.get("synthetic") is True
     train = SYNTHETIC_TRAIN if synthetic else payload.get("training_text")
     held = SYNTHETIC_HELD if synthetic else payload.get("held_out_text")
@@ -130,10 +165,7 @@ def train_experiment(payload: dict, root: Path) -> dict:
     measure(0)
     for step in range(1, steps + 1):
         context, target = rng.choice(training)
-        _, gradients = model.loss_and_gradients(context, target)
-        for name, values in model.weights.items():
-            for i, gradient in enumerate(gradients[name]):
-                values[i] -= RATE * gradient
+        model.update(context, target)
         if step % 100 == 0 or step == steps:
             measure(step)
     if not all(math.isfinite(value) for values in model.weights.values() for value in values):
@@ -173,7 +205,17 @@ def train_experiment(payload: dict, root: Path) -> dict:
 
 def status(root: Path) -> dict:
     path = root / ".data" / "neural-experiments" / "latest.json"
-    return {"ready": path.exists(), "report": json.loads(path.read_text()) if path.exists() else None}
+    comparison = path.with_name("latest-context.json")
+    rates = path.with_name("latest-rate.json")
+    layers = path.with_name("latest-layered.json")
+    proof = path.with_name("latest-proof.json")
+    return {
+        "ready": path.exists(), "report": json.loads(path.read_text()) if path.exists() else None,
+        "context_comparison": json.loads(comparison.read_text()) if comparison.exists() else None,
+        "rate_comparison": json.loads(rates.read_text()) if rates.exists() else None,
+        "layered_comparison": json.loads(layers.read_text()) if layers.exists() else None,
+        "proof_comparison": json.loads(proof.read_text()) if proof.exists() else None,
+    }
 
 
 def main() -> None:

@@ -390,6 +390,22 @@ app.get('/api/learner-status', async (req, res) => {
   catch (error) { res.status(500).json({ error: error.message }); }
 });
 
+app.get('/api/development', async (req, res) => {
+  try {
+    res.json(await runGenerator('status', {}, path.join(rootDir, 'seed_development.py')));
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/development/decisions', async (req, res) => {
+  try {
+    res.json(await runGenerator('decide', req.body, path.join(rootDir, 'seed_development.py')));
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
 app.get('/api/neural', async (req, res) => {
   try {
     res.json(await runGenerator('status', {}, path.join(rootDir, 'neural_experiment.py')));

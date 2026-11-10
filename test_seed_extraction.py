@@ -40,6 +40,16 @@ class SeedExtractionTests(unittest.TestCase):
                 groups = extract(text)
                 self.assertFalse(any(item["layer_zero_eligible"] for items in groups.values() for item in items))
 
+    def test_development_metadata_does_not_change_foundation_admission(self):
+        groups = extract("t am I ")
+        unknown = next(item for item in groups["maybe"] if item["text"] == "am")
+        self.assertFalse(unknown["layer_zero_eligible"])
+        self.assertEqual(unknown["development"][0]["state"], "developing")
+        self.assertFalse(unknown["development"][0]["complete"])
+        self.assertEqual(unknown["development"][0]["offsets"], [2])
+        dead = next(item for item in groups["dead"] if item["text"] == "t ")
+        self.assertEqual(dead["development"][0]["state"], "excluded")
+
     def test_windows_keep_exact_text_offsets_and_separate_dead(self):
         groups = extract(" I  i iii")
         by_status = {

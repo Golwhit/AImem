@@ -7,7 +7,7 @@ Ongoing work and discussion topics are tracked in the
 Application versions follow the [versioning policy](docs/VERSIONING.md);
 the [versioned session log](docs/SESSION_LOG.md) records each checkpoint.
 The memory graph displays its generated application version in a small
-bottom-right badge. Regenerate the graph after a version bump.
+bottom-right badge inside the galaxy canvas. Regenerate the graph after a version bump.
 
 ## What it does
 
@@ -84,6 +84,209 @@ This updates the local transcript and saved graph weights, then regenerates the 
 
 ### Neural weight lab
 
+**Automated mechanics run:** **Run 50 synthetic rounds (5,000 updates)** uses
+three original synthetic seed/pattern passages, never memories or the old
+generator corpus. Each round is 100 SGD updates on training text only.
+Validation is measured at round 0 and every round; fixed-prompt samples are
+saved at rounds 0, 10, 20, 30, 40, and 50. The final test is evaluated once,
+after round 50, with no early stopping or checkpoint selection. Related
+synthetic patterns make this a mechanics check, not independent generalization.
+
+Layer 2 counts are built **once** from training text and saved with descriptive
+validation/final-test scores; repeating neural updates does not create new
+Layer 2 observations. In this baseline runner they are not combined with the neural predictor;
+the separate full-layer experiment below does connect them to learning.
+Generated samples are never fed back into training. Layer 0/1 rules and
+developmental admissions are unchanged.
+
+The latest report is shown in Generation and restored on refresh. Each round
+has a weights/report checkpoint under
+`.data/neural-experiments/<run_id>/round-XX.json`; the usual run checkpoint
+and latest report are also saved. Round 0 is the initial state. An ordinary
+training failure surfaces explicitly and marks the latest report failed while
+retaining earlier checkpoints. Abrupt process termination may leave a
+`running` report; no automatic recovery/resume is implemented. Refresh to see
+persisted progress if the request disconnects. The small fixed synthetic run
+uses the existing 30-second API budget; it is not a general background trainer.
+
+CLI equivalent: `python3 neural_rounds.py`. Without explicit continuation flags,
+this starts a new independent 50-round run.
+
+**Real-text Acts run:** with the locally staged dataset and explicit approval,
+`python3 neural_rounds.py --acts --acknowledge-review` uses Acts 1 for training,
+Acts 2 for validation, and Acts 3 for a single final test. It verifies source,
+text, and rights-record hashes before training. The original source is the
+public-domain World English Bible from eBible.org; its trademark conditions
+are recorded in the manifest. Generated samples are model output, **not
+scripture or the World English Bible**.
+
+Real chapter runs exceed the API's 30-second budget, so run this command from
+the terminal, not the synthetic training button. Generation displays the
+latest saved result; after loading a running report it polls every three
+seconds until completion/failure. Without `--resume-run`, each invocation starts fresh. Chapter splits
+avoid direct passage reuse but share subject, vocabulary and style; prediction
+loss is not a test of fact recall or understanding. Unknown validation/test
+characters map to the unknown token and are reported, not silently added to
+the training vocabulary. The staged manifest remains an immutable collection
+record; each training checkpoint carries its own approval and provenance.
+
+To continue a completed Acts run rather than restart:
+`python3 neural_rounds.py --acts --acknowledge-review --resume-run <run_id> --additional-rounds 100`.
+This validates the parent vocabulary, weights, dataset hashes and training
+configuration, restores weights, and reconstructs the original SGD draw position.
+A new child run preserves the parent unchanged, records its hash, and uses
+cumulative round/step numbers. Up to 100 additional rounds are allowed per
+invocation. Acts 3 is **not retested**: its earlier score is recorded as
+historical, not a fresh final-test measurement. Validation remains monitoring
+data. The UI shows the parent lineage and absence of a new final test.
+
+**Controlled context comparison:** run
+`python3 neural_context.py --acknowledge-review` offline to compare fresh
+4-, 16-, and 32-character models on the same approved Acts 1/2 split.
+All three process the same 5,000 target positions in the same order, with
+character tokenization, batch size 1, learning rate 0.1, embedding size 8,
+hidden size 16, and fixed initialization/training/sampling seeds.
+Training/validation loss is measured initially and every 500 updates.
+The three identical prompts include a 64-character training prefix so longer
+contexts can use more prompt history; samples remain 120 characters at
+temperature 1. Generated samples are never training data.
+
+Longer contexts also add parameters and change initialization of later weight
+groups, so this is a context-plus-capacity comparison, not a pure context-only
+ablation. It uses one seed and reused validation, not proof of understanding.
+Acts 3 text is neither read nor evaluated. No model is automatically selected
+or installed, and Layer 0/1/2 policies and existing runs remain unchanged.
+Generation shows a separate polling comparison table, samples and loss
+histories. Reports persist at `.data/neural-experiments/latest-context.json`
+and `<run_id>/report.json`; weights, exact texts and provenance are saved at
+`<run_id>/context-N/step-XXXXX.json`. This does not overwrite the ordinary
+`latest.json` report. Abrupt termination may leave `running`; ordinary numeric
+or I/O failures propagate and attempt to record `failed`. There is no automatic
+resume for comparisons.
+
+To repeat the context comparison at a smaller fixed rate:
+`python3 neural_context.py --learning-rate 0.03 --acknowledge-review`.
+The rate is validated and saved in the report and every checkpoint; default
+context comparisons still use 0.1. Do not combine `--learning-rate` with
+`--learning-rates` (which varies the rate instead of context).
+The latest-context pointer/display moves to the new run; previous reports and
+weights remain unchanged under their original run IDs.
+
+The repeat at 0.03 completed: validation loss was 2.6582 / 2.8046 / 2.9100
+for contexts 4 / 16 / 32. All improved over their 0.1 counterparts, but the
+four-character model still performed best at the fixed 5,000-update budget.
+Outputs remain garbled; no model was automatically installed.
+
+The first comparison completed 5,000 updates per model. Validation loss
+(lower is better) was 2.8241 / 3.2384 / 3.3811 for contexts 4 / 16 / 32.
+Larger context did not help under the unchanged settings; all outputs remain
+garbled. This is not evidence that longer context is inherently worse.
+See [the experiment record](docs/FROM_SCRATCH.md#controlled-character-context-comparison)
+for training losses, limitations and verification.
+
+**Controlled learning-rate comparison:** run
+`python3 neural_context.py --learning-rates --acknowledge-review` to compare
+0.1, 0.03 and 0.01 at a fixed four-character context. All three models have
+1,978 parameters, identical starting weights and the same 5,000 target draws.
+Only update size changes; batch size, tokenization, seeds and sample prompts
+remain fixed. Losses, samples and checkpoints are saved every 500 steps.
+Acts 3 text is neither read nor evaluated. Reused Acts 2 validation is tuning
+data, not a fresh test, and one seed/short budget cannot identify the best
+learning rate for every training duration or prove understanding.
+
+Generation shows a separate polling learning-rate table alongside prior
+context results and the ordinary run. Reports persist at
+`.data/neural-experiments/latest-rate.json` and `<run_id>/report.json`;
+checkpoints use `<run_id>/rate-R/step-XXXXX.json` and store the learning
+rate with weights, texts and provenance. Existing reports/models are not
+replaced or selected automatically. Comparisons share the same training
+runner and failure/persistence behavior.
+
+The first rate comparison completed: validation loss was 2.8241 / 2.6582 /
+2.9080 for rates 0.1 / 0.03 / 0.01. Rate 0.03 improved prediction under this
+fixed budget; all generated samples remain garbled. It is not automatically
+installed as a new default. See [the rate experiment record](docs/FROM_SCRATCH.md#controlled-learning-rate-comparison).
+
+**Full developmental learning and effort:** run
+`python3 neural_efficiency.py --acknowledge-review` offline for the isolated
+0/1/2 experiment. This is a new, explicit experimental numerical mapping of
+the agreed layer roles, not a claim that earlier standalone neural runs used
+the layers or that the mapping is proven.
+
+- Layer 0 preserves all seven foundation forms and their existing maturity.
+  Approved training observations introduce **unconfirmed** primitive/candidate
+  blocks of 1–4 characters, shortest first. Longer blocks require both
+  overlapping subblocks. A known foundation/candidate suffix gets availability
+  weight 1; an unseen suffix retains 0.05 exploration, not a death verdict.
+- Layer 1 applies the existing scoped exclusions before normalizing predictions.
+- Layer 2 builds training-only attraction once. Its character probabilities
+  retain 0.05 uniform exploration. These weights and Layer 0 availability
+  multiply into neural probabilities **during cross-entropy and gradients**.
+  This is not just post-generation filtering.
+
+Controls are the unchanged neural baseline, full 0/1/2, each single layer
+removed, and layers alone without neural weight updates. Neural arms use
+identical initial weights and 5,000 identical target draws at context 4/rate
+0.03. Removing Layer 1 also removes its veto on candidate construction.
+Every arm reads all training text: zero gradient updates is not zero learning
+work. The report counts candidate/context observations, layer state bytes,
+preparation/update CPU and wall time, evaluation and checkpoint time, and
+first measured match to this run's baseline final validation loss.
+Repeated evaluations cache fixed priors; prediction timing alone is not
+uncached serving latency. Samples compute priors at each character.
+
+All original validation characters remain in evaluation. If a target is
+forbidden, full-text loss is infinite (JSON `null`), with coverage and every
+blocked offset reported; no filtered score can count as a threshold match.
+Training rule conflicts are counted and skipped without source repair.
+The complete texts, source hashes and candidate ledger remain in the run.
+This tests prediction/effort, not agent competence or understanding.
+
+The user explicitly approved isolated candidate growth. These candidates do
+not become confirmed forms, change the permanent admission registry, or
+approve other sources. Acts 3 text is not read. Acts 2 is reused monitoring
+data, not an untouched test. Generated samples are never training evidence.
+Neither ordinary chat nor any saved baseline is replaced.
+
+Generation polls a separate full-layer report with quality/effort tables,
+coverage, samples, raw history and exact policy. It persists at
+`.data/neural-experiments/latest-layered.json` and `<run_id>/report.json`.
+Each arm stores `evidence.json` with exact texts/ledger/provenance and
+`step-XXXXX.json` with weights and results. Reports distinguish ordinary
+numeric/I/O failures from completion; interruption can leave `running`.
+There is no automatic resume or checkpoint selection.
+
+First integrated run: full 0/1/2 reached the baseline's 2.6582 validation
+target **before neural updates**, after building the layers. Its preparation
+took about 0.452 s versus baseline preparation+5,000 updates at 2.586 s on
+this machine. All paths still read the entire training chapter. Final full
+loss was 2.6389; layers alone scored 2.6360. Coverage was 100%, not a score
+improvement from hiding rejected text. Timing is descriptive and includes
+additional layer construction, not a universal speed claim.
+
+The ablations also found a limitation: removing the **current numerical
+Layer 0 penalty** improved validation to 2.1276. That mapping needs review;
+this is not evidence that the foundation concept should be removed.
+Layer 1's effect was tiny on this corpus, and full-path neural updates added
+little beyond the learned count prior. Output remains garbled, not a viable
+agent. See [the full result and costs](docs/FROM_SCRATCH.md#first-integrated-result).
+
+**Proof-shaping run:** `python3 neural_proof.py develop --acknowledge-review`,
+then `preregister --run-id <id>`, `stage-fresh`, and `evaluate-fresh
+--acknowledge-review`. It compares 10 paths (neural baseline, neural+layers,
+counts-only layers, Layer 0 v1/v2, and a from-scratch standard Kneser-Ney
+counting model) across 10/25/50/100% of Acts 1 and five seeds, with estimated
+operation counts and generated rule-break rates. Criteria are frozen before
+Acts 4–5 are retrieved into `.data/acts-fresh-staged/`; the fresh test runs once.
+Results persist in `.data/neural-proof/` and
+`.data/neural-experiments/latest-proof.json`; Generation shows them.
+
+Result: Layer 2 counting matched and beat the neural baseline on fresh Acts 4–5
+(2.095 vs 2.547) at about 0.07% of its estimated operations, and 25% of the
+data was enough. Layer 1 removed generated rule breaks. But standard counting
+beat every layered path (1.940), and Layer 0 (v1 and v2) still hurt loss. See
+[the proof record](docs/FROM_SCRATCH.md#proof-shaping-run-size-curve-seeds-effort-rules-and-a-fresh-test).
+
 The **Generation** tab now includes a separate, from-scratch character neural
 network: four-character context, 8-value embeddings, a 16-unit tanh hidden
 layer, softmax predictions, cross-entropy loss, hand-written backpropagation,
@@ -99,7 +302,7 @@ and explicit approval for this neural use. Existing corpus approvals, memories,
 and chat prompts are **not** automatically reused. Approval is a user
 declaration, not legal clearance.
 
-Each run starts from deterministic fresh weights and saves its own checkpoint.
+Each UI training run starts from deterministic fresh weights and saves its own checkpoint.
 The report shows trainable/changed parameters, steps, processed target tokens,
 initial/final samples, and training/held-out loss at step 0 and every 100 steps.
 Held-out text does not update weights or determine the vocabulary; unknown
@@ -118,7 +321,113 @@ python3 neural_experiment.py status
 python3 -m unittest -q test_neural_experiment
 ```
 
+### Layer 2: attraction evidence
+
+New chat lab comparisons include a separate **Layer 2 attraction evidence**
+section (introduced in lab schema v5). It measures exact overlapping 2–4-character patterns
+in the current prompt, preserving spaces, case, and zero-based source offsets.
+`am`, ` am`, `am `, and ` am ` are different observations. Three-character
+contexts can distinguish word completion from continuation without declaring
+a whole longer word understood.
+
+For each pattern, count / context occurrences estimates forward likelihood.
+Context occurrences at source end remain in the denominator as non-character
+outcomes, rather than disappearing and inflating attraction. Source-start
+offsets are explicit; no synthetic marker characters or cross-source windows
+are inserted into this evidence.
+
+Pairs also report forward and backward likelihoods: “a is always followed by
+m” and “m is always preceded by a” are separate claims. Both must hold for a
+mutual observed-always pair. This means **only in this source**, even at support
+one, not a universal rule. Counts and Wilson 95% lower bounds are provided;
+the bounds assume independent trials, which overlapping or repeated text does
+not supply. Missing patterns are unknown, not impossible.
+
+Lab schema v6 adds two experimental generation modes alongside the four
+existing baselines:
+
+- **Layer 2 alone + Layer 1 exclusions:** sample prompt-local character
+  probabilities without requiring a captured living seed.
+- **Old model + Layer 2 next-character scoring:** weight each available old
+  four-character-context transition by its Layer 2 attraction before sampling.
+
+Both operate **outside Layer 0 admission**, explicitly not an expansion of
+its seven forms. Both reject every next character that would trigger a known
+Layer 1 exclusion. If all options are excluded, they stop and say why, rather
+than return forbidden text or silently fall back.
+
+The Layer 2 distribution starts with prompt character frequencies and blends
+one-, two-, then three-character contexts using `support / (support + 2)`.
+Observed source ends are possible stop outcomes. Old-model scoring uses
+`old_count * (0.05 + attraction_probability)`, preserving an explicit small
+weight for old candidates unseen in the prompt. No matching old context means
+stop, not an unrelated restart. New modes share seed/budget, with sampling
+traces, candidate weights, rejected options, and stop reasons downloadable.
+
+Each card reports equality to old output, prompt-fit negative log likelihood,
+adjacency support, and detected Layer 1 violations. **These are descriptive,
+not independent accuracy or improvement measures.** Lower prompt-fit loss may
+mean imitation, not better answers. Baselines retain their algorithms; the
+aligned overlay is a narrow A/I/initial-consonant edit, not reversed model
+execution, so it will often equal old output. Identical results are not forced
+to differ.
+
+There is still no persistent attraction model or neural update. Reports persist
+in downloadable lab records, not training checkpoints. Existing corpus
+approvals do not authorize a new Layer 2 model. Ordinary chat still saves the
+old response; the two new samples are lab-only. Older lab reports retain their
+original modes.
+
 ### Seed rules and existing generator
+
+#### Developmental review and composition
+
+The original seven Layer 0 forms remain the small foundation, not a claim that
+all other configurations are universally impossible. `seed-life-v5` retains
+the old alive/dead/maybe extraction groups and adds separate developmental
+metadata: **developing** for an incomplete observation, **unreviewed** for a
+completed unknown, **confirmed** for an exact living foundation form, and
+**excluded** for a known violation. Foundation membership is still a separate
+field. Completing unknown text does not confirm it; frequency does not admit it.
+
+Lab v7 replaces the old seed-block-only card with **Developmental layers:
+blocks → exclusions → attraction**. It uses living captures from this prompt
+and explicitly admitted blocks, checks the entire proposed join against Layer 1,
+then ranks surviving blocks with Layer 2 prompt attraction. It preserves
+start-only seed placement. Existing saved lab records are not rewritten.
+The old-model continuation/overlay and the two outside-admission experimental
+modes remain distinct comparisons, not promises of fully admitted output.
+
+In a new Chat lab, open **Review a building block for lab generation**:
+
+1. Select an exact 1–4-character pattern by zero-based Unicode character offset
+   and length in the saved prompt. Review its exact preview.
+2. Provide a rationale and choose defer, admit, or revoke.
+3. Explicitly acknowledge lab-only use. The backend verifies the saved source
+   hash, checks the candidate boundary and two characters of surrounding
+   composition context on each side, and refuses admission on a known exclusion.
+4. Run a new comparison. Admissions retain their observed source-start or
+   interior placement; deferring or revoking removes them from future generation.
+   The existing report remains a historical snapshot, not a live preview.
+
+These are mechanical exclusion checks, not proof of meaning, safety, rights,
+or universal composability. Each later generated join is checked again. A
+revocation does not erase prior evidence or saved outputs.
+
+The append-only decision history is local in `.data/seed-development.json`.
+It retains exact source text/hash, saved lab ID, offsets, tests, rule version,
+domain, rationale, and timestamps; treat it as potentially sensitive. Reports
+save the registry snapshot/hash and selected block provenance for reproducibility.
+Admissions **do not change Layer 0, approve training, feed the neural model,
+or update ordinary chat/memory**. No patterns are admitted automatically.
+
+Layer 1's scope is `english-seed-experiment`; source start, literal spaces,
+and observation completion are explicit. It does not infer a new source from
+a newline or sentence punctuation. Its catalog records rationale, boundary
+conditions and examples; unsupported domains fail explicitly, rather than
+silently inherit English seed exclusions. `t` while developing is not `t `
+at source start. A source end, a word boundary, and a generation budget stop
+do not establish grammatical completion.
 
 An isolated English seed experiment explores Layer 0 possibilities and Layer 1
 life/death rules before connecting them to training. It preserves exact

@@ -172,6 +172,10 @@ class ClusterTests(unittest.TestCase):
             self.assertIn(cluster_id, (root / "memory_graph.html").read_text(encoding="utf-8"))
             self.assertIn('aria-label="Application version 0.2.0">v0.2.0</span>',
                           (root / "memory_graph.html").read_text(encoding="utf-8"))
+            html = (root / "memory_graph.html").read_text(encoding="utf-8")
+            canvas = html.split('<div class="galaxy-canvas">', 1)[1].split('</div>', 1)[0]
+            self.assertIn('id="graph"', canvas)
+            self.assertIn('class="version-badge"', canvas)
             persisted = json.loads(memory_path.read_text(encoding="utf-8"))
             self.assertEqual(persisted["cycles"], 1)
             self.assertEqual(len(persisted["messages"]), len(messages))

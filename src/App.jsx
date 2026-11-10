@@ -279,7 +279,7 @@ function ModelLab({ lab }) {
                 <div key={status}>
                   <h5>{status === 'maybe' ? 'Unknown / needs review' : status === 'alive' ? 'Alive captures' : 'Known dead (not for review)'}</h5>
                   <pre className="lab-extraction">{lab.extraction[key].filter(item => item.status === status).map(item =>
-                    `${JSON.stringify(item.text)} × ${item.offsets.length} · offsets ${item.offsets.join(', ')} · eligible: ${item.layer_zero_eligible}`
+                    `${JSON.stringify(item.text)} × ${item.offsets.length} · offsets ${item.offsets.join(', ')} · eligible: ${item.layer_zero_eligible}${item.development ? ` · development: ${[...new Set(item.development.map(value => value.state))].join(', ')}` : ''}`
                   ).join('\n') || '(None)'}</pre>
                 </div>
               ))
@@ -287,6 +287,27 @@ function ModelLab({ lab }) {
           </section>
         ))}
       </div>
+      {lab.development && <DevelopmentReview lab={lab} />}
+      {lab.layer_two && <section aria-label="Layer 2 attraction evidence">
+        <h3>Layer 2 · Attraction evidence (not training)</h3>
+        <p className="message-meta">
+          Exact overlapping 2–4-character patterns from this prompt only. Scores are not permission.
+          “Always” means observed in this source, not a universal rule. Source ends count as alternatives.
+        </p>
+        <h4>Observed-always pairs</h4>
+        <pre className="lab-extraction">{JSON.stringify(
+          lab.layer_two.pairs.filter(pair => pair.always_followed_in_source || pair.always_preceded_in_source),
+          null, 2
+        )}</pre>
+        <details><summary>All attraction evidence, counts, offsets and uncertainty</summary>
+          <pre className="lab-extraction">{JSON.stringify(lab.layer_two, null, 2)}</pre>
+        </details>
+        <p className="message-meta">
+          Forward: next character given the left character. Backward: preceding character given the right.
+          Unknown pairs have no evidence, not zero permission. Statistical bounds assume independent
+          observations; repeated or overlapping text weakens that interpretation.
+        </p>
+      </section>}
       <h3>Generation comparison</h3>
       <p className="message-meta">
         Same {lab.character_budget}-character maximum per mode.{' '}
@@ -294,14 +315,21 @@ function ModelLab({ lab }) {
           ? `Equal-length comparison: ${lab.common_display_characters} characters each, cropped to the shortest actual output without padding.`
           : 'Equal-length comparison unavailable because at least one mode produced no text. Available full outputs are shown below at their actual lengths; these are not an equal-length comparison.'}
         {' '}Full outputs and shortfalls are shown below.
-        Layers-only is a captured-seed block sampler, not a trained model or proof of sentence validity.
+        {lab.development
+          ? ' Developmental layers generation uses foundation/admitted blocks, whole-join Layer 1 checks, then Layer 2 attraction. Admission is not training approval or sentence correctness.'
+          : ' Layers-only is a captured-seed block sampler, not a trained model or proof of sentence validity.'}
+        {lab.layer_two_generation && ' The two new Layer 2 modes can generate without a living seed: experimental outside Layer 0 admission, with known Layer 1 exclusions enforced. They use this prompt only, not persistent training.'}
       </p>
       <div className="lab-grid">
         {[
           ['old', 'Old model alone'],
-          ['layers', 'Layers alone (rule output)'],
-          ['combined', 'Layers first → old model continuation'],
+          ['layers', lab.development ? 'Developmental layers: blocks → exclusions → attraction' : 'Layers 0/1 alone (rule output)'],
+          ['combined', 'Layers 0/1 first → old model continuation'],
           ...(lab.generation_comparison.old_first ? [['old_first', lab.generation_comparison.old_first.context_mode === 'aligned_capture_overlay' ? 'Old model + aligned layer overlay' : 'Old model first → layers continuation (historical)']] : []),
+          ...(lab.generation_comparison.layer_two ? [
+            ['layer_two', 'Layer 2 alone + Layer 1 exclusions (experimental)'],
+            ['old_layer_two', 'Old model + Layer 2 next-character scoring (experimental)'],
+          ] : []),
         ].map(([key, title]) => {
           const output = lab.generation_comparison[key];
           return (
@@ -316,6 +344,23 @@ function ModelLab({ lab }) {
                 Actual: {output.characters}/{lab.character_budget} characters; shortfall: {output.shortfall}.
                 {output.reason && ` ${output.reason}.`}
               </small>
+              {key === 'layers' && output.context_mode === 'developmental_blocks' && <details>
+                <summary>Developmental block choices and composition checks</summary>
+                <pre className="lab-extraction">{JSON.stringify({
+                  policy: output.policy, assessment: output.assessment, trace: output.trace,
+                }, null, 2)}</pre>
+              </details>}
+              {output.attraction_metrics && <p className="message-meta">
+                {output.identical_to_old ? 'Identical to old output.' : 'Different from old output.'}
+                {' '}Prompt-fit loss: {output.attraction_metrics.prompt_attraction_nll?.toFixed(4) ?? 'not scored (empty)'}.
+                {' '}Supported next characters: {output.attraction_metrics.supported_next_characters}/{output.attraction_metrics.scored_characters}.
+                {' '}Layer 1 violation: {output.attraction_metrics.layer_one_violation || 'none detected'}.
+                {' '}These are descriptive checks, not held-out improvement or sentence correctness.
+              </p>}
+              {(key === 'layer_two' || key === 'old_layer_two') && <details>
+                <summary>Layer 2 sampling and excluded candidates</summary>
+                <pre className="lab-extraction">{JSON.stringify({policy: output.policy, trace: output.trace}, null, 2)}</pre>
+              </details>}
               {key === 'combined' && <p className="message-meta">
                 Protected opening: {JSON.stringify(output.protected_prefix)}.
                 Context: {output.context_mode || 'unavailable'}. The continuation is not certified by the layers.
@@ -326,6 +371,7 @@ function ModelLab({ lab }) {
                   Matching lowercase letters are corrected using living captures from this input.
                   A dead initial consonant followed by a space can also be replaced by a captured living response-start A or I.
                   This does not certify the whole response.
+                  {' '}This is a narrow edit pass, not reversed model execution; no supported match means identical output is expected.
                 </p>
                 <h5>Layer replacements and supporting source offsets</h5>
                 <pre className="lab-extraction">{output.replacements.length ? JSON.stringify(output.replacements, null, 2) : '(No aligned corrections)'}</pre>
@@ -352,8 +398,223 @@ function ModelLab({ lab }) {
   );
 }
 
+function DevelopmentReview({ lab }) {
+  const [offset, setOffset] = useState('0');
+  const [size, setSize] = useState('2');
+  const [action, setAction] = useState('defer');
+  const [rationale, setRationale] = useState('');
+  const [acknowledged, setAcknowledged] = useState(false);
+  const [status, setStatus] = useState(lab.development.registry);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
+  const preview = Array.from(lab.prompt).slice(Number(offset), Number(offset) + Number(size)).join('');
+
+  useEffect(() => {
+    fetch('/api/development').then(async response => {
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+      setStatus(data);
+    }).catch(err => setError(err.message));
+  }, []);
+
+  const decide = async event => {
+    event.preventDefault();
+    setBusy(true);
+    setError('');
+    setNotice('');
+    try {
+      const response = await fetch('/api/development/decisions', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          record_id: lab.record_id, offset: Number(offset), size: Number(size),
+          action, rationale, acknowledge_lab_only: acknowledged,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+      setStatus(data);
+      setNotice('Review saved. Run a new comparison to use the current registry; this saved report is unchanged.');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+  return <section aria-label="Developmental pattern review">
+    <h3>Development: capture → review → test → admit</h3>
+    <p className="message-meta">Input: {lab.development.input_assessment.state}.
+      {' '}{lab.development.input_assessment.reason}.
+      Incomplete fragments are developing; complete unknowns are unreviewed.
+      Neither means dead, admitted, or trained. Rules apply only to the English seed experiment.</p>
+    <details><summary>Review a building block for lab generation</summary>
+      <p className="message-meta">
+        Select 1–4 exact characters from this saved prompt. Admission tests the observed boundary
+        and surrounding joins. Start-only and interior-only placement are retained.
+        Every later composition is checked again. Rationale is a user declaration, not legal clearance.
+      </p>
+      <form className="generator-form" onSubmit={decide}>
+        <label>Source offset (zero-based characters)<input type="number" min="0" max={Array.from(lab.prompt).length - 1} required value={offset} onChange={event => setOffset(event.target.value)} /></label>
+        <label>Pattern length<input type="number" min="1" max="4" required value={size} onChange={event => setSize(event.target.value)} /></label>
+        <p>Exact selection: <code>{JSON.stringify(preview)}</code></p>
+        <label>Decision<select value={action} onChange={event => setAction(event.target.value)}>
+          <option value="defer">Defer / needs more evidence</option>
+          <option value="admit">Admit for developmental lab generation</option>
+          <option value="revoke">Revoke admission</option>
+        </select></label>
+        <label>Review rationale<textarea required maxLength={1000} value={rationale} onChange={event => setRationale(event.target.value)} /></label>
+        <label><input required type="checkbox" checked={acknowledged} onChange={event => setAcknowledged(event.target.checked)} />
+          I reviewed the exact source. This decision permits lab generation only, not training, and does not change Layer 0.
+        </label>
+        <button disabled={busy || !acknowledged} type="submit">{busy ? 'Saving review…' : 'Save developmental review'}</button>
+      </form>
+      {notice && <p className="message-meta">{notice}</p>}
+      <h4>Current review decisions (not this report’s historical snapshot)</h4>
+      <pre className="lab-extraction">{JSON.stringify(status, null, 2)}</pre>
+    </details>
+    {error && <p className="banner banner-error">{error}</p>}
+  </section>;
+}
+
+function NeuralComparison({ comparison, rates = false }) {
+  const title = rates ? 'Learning rate comparison' : 'Character context comparison';
+  const label = model => rates ? `Rate ${model.learning_rate}` : `${model.context}-character context`;
+  const key = model => rates ? model.learning_rate : model.context;
+  return <section className={rates ? 'rate-comparison' : 'context-comparison'}>
+    <h3>{title}</h3>
+    <p>Status: {comparison.status}. Each model: {comparison.steps_per_model.toLocaleString()} target
+      examples, batch size {comparison.batch_size}.
+      {rates ? ' Context: 4 characters.' : ` Learning rate: ${comparison.learning_rate}.`}
+      {' '}Final test evaluations: {comparison.final_test_evaluations}.</p>
+    {comparison.error && <p className="banner banner-error">{comparison.error}</p>}
+    <table>
+      <thead><tr><th>{rates ? 'Learning rate' : 'Context'}</th><th>Parameters</th><th>Steps</th><th>Training loss</th><th>Validation loss</th></tr></thead>
+      <tbody>{comparison.models.map(model => {
+        const last = model.history[model.history.length - 1];
+        return <tr key={key(model)}>
+          <td>{rates ? model.learning_rate : `${model.context} characters`}</td><td>{model.parameter_count.toLocaleString()}</td>
+          <td>{model.steps}</td><td>{last?.training_loss.toFixed(4) ?? 'pending'}</td>
+          <td>{last?.held_out_loss.toFixed(4) ?? 'pending'}</td>
+        </tr>;
+      })}</tbody>
+    </table>
+    <p>{comparison.evaluation_note}</p>
+    {comparison.models.map(model => <details key={key(model)}>
+      <summary>{label(model)}: samples and loss history</summary>
+      {model.samples.map(sample => <div key={sample.prompt}>
+        <p>Continuation after <code>{JSON.stringify(sample.prompt)}</code>:</p>
+        <pre className="generator-sample">{sample.text}</pre>
+      </div>)}
+      <pre>{JSON.stringify(model.history, null, 2)}</pre>
+    </details>)}
+    <details><summary>Exact {rates ? 'learning rate' : 'context'} comparison report</summary><pre>{JSON.stringify(comparison, null, 2)}</pre></details>
+  </section>;
+}
+
+function LayeredEfficiency({ report }) {
+  const loss = metric => metric ? (metric.loss === null ? `infinite (${metric.blocked_targets} blocked)` : metric.loss.toFixed(4)) : 'pending';
+  return <section className="layered-efficiency">
+    <h3>Full Layer 0/1/2 learning and effort</h3>
+    <p>Status: {report.status}. Context {report.context}; learning rate {report.learning_rate};
+      {' '}{report.steps_per_neural_arm.toLocaleString()} target draws per neural arm.
+      {' '}Baseline target validation loss: {report.target_validation_loss?.toFixed(4) ?? 'pending'}.
+      {' '}Final test evaluations: {report.final_test_evaluations}.</p>
+    {report.error && <p className="banner banner-error">{report.error}</p>}
+    <table>
+      <thead><tr><th>Path</th><th>Neural parameters</th><th>Updates</th><th>Training loss</th><th>Validation loss</th><th>Validation coverage</th></tr></thead>
+      <tbody>{report.models.map(model => {
+        const last = model.history[model.history.length - 1];
+        return <tr key={model.name}>
+          <td>{model.name}</td><td>{model.parameter_count.toLocaleString()}</td><td>{model.gradient_updates}</td>
+          <td>{loss(last?.training)}</td><td>{loss(last?.validation)}</td>
+          <td>{last ? `${(last.validation.coverage * 100).toFixed(2)}%` : 'pending'}</td>
+        </tr>;
+      })}</tbody>
+    </table>
+    <h4>Work to first measured match</h4>
+    <p>Every path reads all {report.training_characters} training characters. Zero gradient updates is
+      not zero learning work: layer construction and source observations still count.
+      Timing on this shared machine is diagnostic, not a general speed benchmark.</p>
+    <table>
+      <thead><tr><th>Path</th><th>Updates at match</th><th>Preparation + updates (seconds)</th><th>CPU seconds at match</th><th>End-to-end at match (seconds)</th></tr></thead>
+      <tbody>{report.models.map(model => <tr key={model.name}>
+        <td>{model.name}</td><td>{model.first_match?.gradient_updates ?? 'not reached'}</td>
+        <td>{model.first_match?.training_work_seconds.toFixed(3) ?? '—'}</td>
+        <td>{model.first_match?.training_work_cpu_seconds.toFixed(3) ?? '—'}</td>
+        <td>{model.first_match?.end_to_end_seconds.toFixed(3) ?? '—'}</td>
+      </tr>)}</tbody>
+    </table>
+    <p>{report.evaluation_note}</p>
+    {report.models.map(model => <details key={model.name}>
+      <summary>{model.name}: samples, observations, conflicts and history</summary>
+      <p>{model.candidate_count} unconfirmed candidates; {model.layer_zero_window_observations} Layer 0
+        window observations; {model.layer_two_context_observations} Layer 2 context observations.
+        {' '}{model.skipped_rule_conflicts} sampled targets blocked by rules.
+        {' '}{model.layer_state_json_bytes.toLocaleString()} serialized bytes of layer evidence.</p>
+      {model.samples.map(item => <div key={item.prompt}>
+        <p>After <code>{JSON.stringify(item.prompt)}</code>; exclusion: {item.layer_one_violation ?? 'none detected'}.</p>
+        <pre className="generator-sample">{item.text}</pre>
+      </div>)}
+      <pre>{JSON.stringify(model.history, null, 2)}</pre>
+    </details>)}
+    <details><summary>Exact policy and efficiency report</summary><pre>{JSON.stringify(report, null, 2)}</pre></details>
+  </section>;
+}
+
+function LayerProof({ report }) {
+  const fmt = (value, digits = 4) => value === null || value === undefined ? '—' : value.toFixed(digits);
+  const summary = report.summary;
+  const fresh = report.fresh_evaluation;
+  const verdicts = fresh?.verdicts;
+  const yes = value => value === true ? 'met' : value === false ? 'not met' : '—';
+  const key = fraction => Number.isInteger(fraction) ? fraction.toFixed(1) : String(fraction);
+  return <section className="layered-efficiency">
+    <h3>Can the layers be proven? Size curve, seeds, effort, rules and fresh test</h3>
+    <p>Status: {report.status}. {report.result_count ?? 0} runs: {report.arms?.length} paths ×
+      {' '}{report.fractions?.length} training sizes × {report.seeds?.length} seeds.
+      {' '}Baseline (neural, 100% of Acts 1) mean validation: {fmt(summary?.baseline_100_mean_validation)}.
+      {' '}Primary layered path (cheapest within 0.02 nats of the best on validation, chosen before fresh data):
+      {' '}{report.preregistration?.primary_arm ?? 'not yet registered'}.</p>
+    {report.error && <p className="banner banner-error">{report.error}</p>}
+    {summary && <table>
+      <thead><tr><th>Path</th>{report.fractions.map(f => <th key={f}>{f * 100}% data: validation mean (range)</th>)}
+        <th>Training operations at 100%</th><th>Training CPU s at 100%</th><th>Rule breaks / 1,000 generated</th>
+        {fresh && <th>Fresh Acts 4–5 loss</th>}</tr></thead>
+      <tbody>{Object.entries(summary.arms).map(([name, rows]) => <tr key={name}>
+        <td>{name}</td>
+        {report.fractions.map(f => {
+          const v = rows[key(f)]?.validation;
+          return <td key={f}>{v ? `${fmt(v.mean)} (${fmt(v.min, 3)}–${fmt(v.max, 3)})` : 'infinite/blocked'}</td>;
+        })}
+        <td>{Math.round(rows['1.0']?.training_operations.mean ?? 0).toLocaleString()}</td>
+        <td>{fmt(rows['1.0']?.training_cpu_seconds.mean, 3)}</td>
+        <td>{fmt(rows['1.0']?.rule_violations_per_1000.mean, 2)}</td>
+        {fresh && <td>{fmt(verdicts?.fresh_loss?.[name]?.['1.0'])}</td>}
+      </tr>)}</tbody>
+    </table>}
+    {report.preregistration && <details open={!fresh}>
+      <summary>Pre-registered success criteria (frozen {report.preregistration.created_at})</summary>
+      <ul>{Object.entries(report.preregistration.criteria).map(([key, text]) => <li key={key}><strong>{key}</strong>: {text}
+        {verdicts && verdicts[key] !== undefined && <> — <em>{typeof verdicts[key] === 'object' ? JSON.stringify(verdicts[key]) : yes(verdicts[key])}</em></>}
+      </li>)}</ul>
+    </details>}
+    <p>Operations are formula-based estimates (each multiply-add, table update/read or rule lookup counts as 1).
+      Counts-only paths are deterministic, so their seed repeats only change generation sampling.
+      Generated text is not scripture or the World English Bible. Lower loss is not understanding.</p>
+    {report.examples?.map(item => <details key={item.arm}>
+      <summary>{item.arm}: sample (seed 1, 100% data)</summary>
+      {item.samples.map(sample => <pre key={sample.prompt} className="generator-sample">{sample.prompt}{sample.text}</pre>)}
+    </details>)}
+    <details><summary>Exact proof report</summary><pre>{JSON.stringify(report, null, 2)}</pre></details>
+  </section>;
+}
+
 function NeuralPanel() {
   const [report, setReport] = useState(null);
+  const [comparison, setComparison] = useState(null);
+  const [rateComparison, setRateComparison] = useState(null);
+  const [layered, setLayered] = useState(null);
+  const [proof, setProof] = useState(null);
   const [trainingText, setTrainingText] = useState('');
   const [heldOutText, setHeldOutText] = useState('');
   const [source, setSource] = useState('');
@@ -366,10 +627,14 @@ function NeuralPanel() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
       setReport(data.report);
+      setComparison(data.context_comparison);
+      setRateComparison(data.rate_comparison);
+      setLayered(data.layered_comparison);
+      setProof(data.proof_comparison);
     }).catch(err => setError(err.message));
   }, []);
 
-  const train = async (synthetic) => {
+  const train = async (synthetic, automated = false) => {
     setBusy(true);
     setError('');
     try {
@@ -377,7 +642,7 @@ function NeuralPanel() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          synthetic, training_text: trainingText, held_out_text: heldOutText,
+          synthetic, automated_synthetic: automated, training_text: trainingText, held_out_text: heldOutText,
           source, acknowledge_review: approved
         })
       });
@@ -391,12 +656,30 @@ function NeuralPanel() {
     }
   };
 
+  useEffect(() => {
+    if (![report, comparison, rateComparison, layered, proof].some(item => item?.status === 'running')) return;
+    const timer = setInterval(() => {
+      fetch('/api/neural').then(async response => {
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+        setReport(data.report);
+        setComparison(data.context_comparison);
+        setRateComparison(data.rate_comparison);
+        setLayered(data.layered_comparison);
+        setProof(data.proof_comparison);
+      }).catch(err => setError(err.message));
+    }, 3000);
+    return () => clearInterval(timer);
+  }, [report?.status, comparison?.status, rateComparison?.status, layered?.status, proof?.status]);
+
   return (
     <section className="hero-card generator-panel neural-panel" style={{ marginTop: 24 }}>
       <h2>Neural weight lab</h2>
-      <p>Tiny from-scratch character MLP. Each run starts fresh; it does not replace chat,
-        import memories, or update the old generator. Layer rules are not applied to this baseline.</p>
+      <p>Tiny from-scratch character MLP. UI training starts fresh; offline continuation is explicit. It does not replace chat,
+        import memories, or update the old generator. The separate full-layer experiment below
+        applies developmental priors during learning; the original UI training remains an unconstrained baseline.</p>
       <button disabled={busy} onClick={() => train(true)}>Run synthetic learning check</button>
+      <button disabled={busy} onClick={() => train(true, true)}>Run 50 synthetic rounds (5,000 updates)</button>
       <form className="generator-form" onSubmit={event => { event.preventDefault(); train(false); }}>
         <label>New training text (8–2000 characters)
           <textarea required minLength={8} maxLength={2000} value={trainingText} onChange={event => setTrainingText(event.target.value)} />
@@ -414,8 +697,19 @@ function NeuralPanel() {
         <button disabled={busy || !approved} type="submit">{busy ? 'Training…' : 'Train separate neural experiment'}</button>
       </form>
       {error && <p className="banner banner-error">{error}</p>}
+      {proof && proof.status !== 'absent' && <LayerProof report={proof} />}
+      {layered && <LayeredEfficiency report={layered} />}
+      {rateComparison && <NeuralComparison comparison={rateComparison} rates />}
+      {comparison && <NeuralComparison comparison={comparison} />}
       {report && <>
         <h3>{report.synthetic ? 'Synthetic mechanics check' : 'Approved-text experiment'} progress</h3>
+        {(report.automated_rounds || report.automated_synthetic) && <p>
+          Status: {report.status}. Rounds: {report.rounds_completed}/{report.rounds_planned}.
+          {' '}Final test loss: {report.final_test_loss?.toFixed(4) ?? 'not evaluated in this run'}.
+          {report.parent_run_id && ` Continued from ${report.parent_run_id}; prior test is not reused as a fresh evaluation.`}
+          {' '}Layer 2 counts built once from training text; no generated text is used for training.
+          {report.error && ` Run error: ${report.error}`}
+        </p>}
         <p>{report.trainable_parameters.toLocaleString()} trainable parameters;
           {' '}{report.changed_parameters.toLocaleString()} changed;
           {' '}{report.steps} steps / {report.processed_target_tokens} target tokens processed.</p>
@@ -433,6 +727,10 @@ function NeuralPanel() {
         <pre className="generator-sample">{report.initial_sample}</pre>
         <p>After training:</p>
         <pre className="generator-sample">{report.sample}</pre>
+        {report.fixed_prompt_samples && <details>
+          <summary>Fixed-prompt samples every 10 rounds</summary>
+          <pre>{JSON.stringify(report.fixed_prompt_samples, null, 2)}</pre>
+        </details>}
         <details><summary>Exact progress report</summary><pre>{JSON.stringify(report, null, 2)}</pre></details>
       </>}
     </section>

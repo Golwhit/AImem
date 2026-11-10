@@ -309,6 +309,27 @@ class LearnerTests(unittest.TestCase):
             lab_path = self.root / ".data" / "model-lab" / (generated_chat["lab"]["record_id"] + ".json")
             self.assertEqual(json.loads(lab_path.read_text()), generated_chat["lab"])
             self.assertEqual(request("/api/model-lab/" + generated_chat["lab"]["record_id"]), generated_chat["lab"])
+            self.assertEqual(request("/api/development")["events"], [])
+            generator_before_review = (self.root / ".data/original-generator.json").read_bytes()
+            memory_before_review = (self.root / "chat_memory.json").read_bytes()
+            decision = {
+                "record_id": generated_chat["lab"]["record_id"], "offset": 0, "size": 2,
+                "action": "admit", "rationale": "Original HTTP fixture; lab-only block review",
+                "acknowledge_lab_only": True,
+            }
+            admitted = request("/api/development/decisions", decision)
+            self.assertEqual(admitted["candidates"][0]["action"], "admit")
+            self.assertFalse(admitted["candidates"][0]["training_approved"])
+            revoked = request("/api/development/decisions", {**decision, "action": "revoke"})
+            self.assertEqual(revoked["candidates"][0]["action"], "revoke")
+            self.assertEqual(len(request("/api/development")["events"]), 2)
+            with self.assertRaises(HTTPError) as invalid_review:
+                request("/api/development/decisions", {**decision, "acknowledge_lab_only": False})
+            self.assertEqual(invalid_review.exception.code, 400)
+            invalid_review.exception.close()
+            self.assertEqual(generator_before_review, (self.root / ".data/original-generator.json").read_bytes())
+            self.assertEqual(memory_before_review, (self.root / "chat_memory.json").read_bytes())
+            self.assertEqual(json.loads(lab_path.read_text()), generated_chat["lab"])
             with self.assertRaises(HTTPError) as invalid_lab:
                 request("/api/model-lab/not-a-record")
             self.assertEqual(invalid_lab.exception.code, 400)

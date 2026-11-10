@@ -6,20 +6,12 @@ import random
 from typing import TYPE_CHECKING
 
 from seed_extraction import RULESET, extract
-from seed_life import boundary_text, exclusion_reason
+from seed_life import boundary_text, exclusion_reason, development_assessment
+from layer_two import Attraction
+from seed_development import DevelopmentRegistry, compose_blocks
 
 if TYPE_CHECKING:
     from original_generator import CharacterGenerator
-
-
-def sample_blocks(captures: list[tuple[int, str]], budget: int, seed: int) -> str:
-    rng = random.Random(seed)
-    text = ""
-    while True:
-        fitting = [block for _, block in captures if len(text) + len(block) <= budget]
-        if not fitting:
-            return text
-        text += rng.choice(fitting)
 
 
 def overlay_captures(text: str, captures: list[tuple[int, str]]) -> tuple[str, list[dict]]:
@@ -121,7 +113,6 @@ def compare(generator: "CharacterGenerator", prompt: str, budget: int = 320) -> 
         if item["layer_zero_eligible"]
     ]
     captures.sort()
-    layers_text = sample_blocks(captures, budget, seed)
 
     protected = captures[0][1] if captures else ""
     combined_text = protected
@@ -172,7 +163,6 @@ def compare(generator: "CharacterGenerator", prompt: str, budget: int = 320) -> 
         old_first_reason = ""
     outputs = {
         "old": {"text": old["text"], "reason": "" if old["text"] else "Existing generator is not ready", "selection": old.get("selection")},
-        "layers": {"text": layers_text, "reason": "" if layers_text else "No living seed was captured"},
         "combined": {
             "text": combined_text, "reason": reason, "protected_prefix": protected,
             "context_mode": context_mode,
@@ -185,13 +175,45 @@ def compare(generator: "CharacterGenerator", prompt: str, budget: int = 320) -> 
             "context_mode": "aligned_capture_overlay",
         },
     }
+    attraction = Attraction(prompt)
+    registry = DevelopmentRegistry(generator.root).status()
+    blocks = [
+        {"text": block, "placement": "start" if offset == 0 and block in ("A ", "I ") else "any",
+         "source": "foundation_capture", "source_offset": offset}
+        for offset, block in captures
+    ]
+    blocks.extend({
+        "text": event["text"], "placement": event["placement"],
+        "source": "developmental_admission", "candidate_id": event["candidate_id"],
+        "event_id": event["event_id"],
+    } for event in registry["candidates"] if event["action"] == "admit")
+    outputs["layers"] = compose_blocks(blocks, budget, seed, attraction)
+    outputs["layer_two"] = attraction.generate(budget, seed)
+    outputs["old_layer_two"] = attraction.generate(budget, seed, generator.state["transitions"])
+    for item in outputs.values():
+        item["attraction_metrics"] = attraction.metrics(item["text"])
+        item["identical_to_old"] = item["text"] == old["text"]
     common_length = min(len(item["text"]) for item in outputs.values())
     for item in outputs.values():
         item["characters"] = len(item["text"])
         item["display_text"] = item["text"][:common_length]
         item["shortfall"] = budget - len(item["text"])
     return {
-        "version": 4, "ruleset": RULESET, "prompt": prompt,
+        "version": 7, "ruleset": RULESET, "prompt": prompt,
+        "development": {
+            "input_assessment": development_assessment(prompt, at_source_start=True, complete=True),
+            "registry": registry,
+            "blocks": blocks,
+            "policy": "Review decisions apply only to future comparisons; saved reports keep their original registry snapshot.",
+        },
+        "layer_two": attraction.report,
+        "layer_two_generation": {
+            "version": "prompt-attraction-generation-v1",
+            "policy": "Experimental outside Layer 0 admission; known Layer 1 exclusions enforced; prompt-local only.",
+            "blending": "Unigram base, then contexts of length 1, 2, 3 with support/(support+2) interpolation.",
+            "old_scoring": "Old four-character transition count times (0.05 + Layer 2 probability), then Layer 1 rejection and sampling.",
+            "comparison_note": "New modes share a seed and budget. Baselines retain their algorithms. Different output or lower prompt-fit loss does not prove improvement.",
+        },
         "prompt_sha256": hashlib.sha256(prompt.encode("utf-8")).hexdigest(),
         "checkpoint_sha256": checkpoint_hash, "generation": generator.state["generation"],
         "scorer_generation": scorer.state["generation"], "seed": seed,
