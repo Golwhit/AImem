@@ -4,6 +4,41 @@ Newest application checkpoint first. Entries map delivered versions to the
 session that produced them; historical conversation memory remains separate.
 See [versioning policy](VERSIONING.md) for bump and release rules.
 
+## 0.4.0 - 2026-11-10
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: minor
+
+### Changes
+
+- Added strict skeletons (`neural_skeletons.py`, `test_neural_skeletons.py`):
+  hidden/missing-letter patterns that only one possible word fits. Layer 0 is
+  SCOWL plus learning words plus regular forms, with names and hidden first
+  letters handed on. A single pre-registered locked run on WEB Bible books gave
+  1 wrong in 560,404 checks (bound 8.5e-6, target 1e-5 met). Added
+  `THIRD_PARTY_NOTICES.md`, `licenses/`, the `skeletons_comparison` status key
+  and a UI panel.
+- Added strict and light layers (`neural_strict.py`, `test_neural_strict.py`):
+  the strict layer claims only whole, confirmed words/phrases and spells chosen
+  words whole (0 wrong claims by construction, 79% of letters, 49% fewer reading
+  decisions on Acts 27). Fixed patterns moved to a light weighting layer (loss
+  1.6787 → 1.6638). Run `477fc8c644cc441bba970c2da375b424`, shown via `strict_comparison`.
+- Added fixed patterns (`neural_patterns.py`, `test_neural_patterns.py`):
+  1–9 character triggers with forced continuations, used for skip-reading and
+  whole-span generation. Fetched public-domain Acts 6–27 (learning) and Acts 28
+  (locked, after pre-registration). After a development check the user revised
+  the setup to support 10 and ≥10% coverage at ≥95% correct. On Acts 28, tested once:
+  19.1% coverage (met) and 94.1% correct (not met); 6.9% fewer reading decisions.
+  Shown on Generation via `patterns_comparison`.
+
+### Validation and limitations
+
+- 122 targeted Python tests passed; production build and version check passed.
+- Frozen skeleton code matches the pre-registration hash. Both recorded locked
+  criteria met; checks within a word are correlated, and this is one translation,
+  not general-English or runtime speed evidence.
+- The new panels report experiments; live training/generation integration is next.
+
 ## 0.3.0 - 2026-11-09
 
 Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`

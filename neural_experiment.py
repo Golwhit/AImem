@@ -211,6 +211,9 @@ def status(root: Path) -> dict:
     proof = path.with_name("latest-proof.json")
     onlies = path.with_name("latest-onlies.json")
     word_onlies = path.with_name("latest-word-onlies.json")
+    patterns = path.with_name("latest-patterns.json")
+    strict = path.with_name("latest-strict.json")
+    skeletons = path.with_name("latest-skeletons.json")
     return {
         "ready": path.exists(), "report": json.loads(path.read_text()) if path.exists() else None,
         "context_comparison": json.loads(comparison.read_text()) if comparison.exists() else None,
@@ -219,6 +222,9 @@ def status(root: Path) -> dict:
         "proof_comparison": json.loads(proof.read_text()) if proof.exists() else None,
         "onlies_comparison": json.loads(onlies.read_text()) if onlies.exists() else None,
         "word_onlies_comparison": json.loads(word_onlies.read_text()) if word_onlies.exists() else None,
+        "patterns_comparison": json.loads(patterns.read_text()) if patterns.exists() else None,
+        "strict_comparison": json.loads(strict.read_text()) if strict.exists() else None,
+        "skeletons_comparison": json.loads(skeletons.read_text()) if skeletons.exists() else None,
     }
 
 

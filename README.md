@@ -302,6 +302,38 @@ earned (e.g. "Holy→Spirit", "into→the"); they held just 17–57% on Acts 2 a
 did not change loss meaningfully (best 2.1319 vs 2.1324). See
 [the record](docs/FROM_SCRATCH.md#word-level-only-states-one-way-and-opposite).
 
+**Fixed patterns (only chains):** `python3 neural_patterns.py stage|develop|preregister|stage-locked|evaluate-locked`
+learns triggers of 1–9 characters that were followed by exactly the same
+characters every time they appeared (at least 10 times) in public-domain
+Acts 1, 2, 4–27. In reading it skips the characters a pattern supplies; in
+generation it writes the whole continuation as one decision. On untouched
+Acts 28, tested once, patterns correctly supplied 19.1% of the characters (target
+10%, met), but only 94.1% of what they claimed was right (target 95%, not
+met). Reading needed 6.9% fewer decisions. Source chapters, hashes and the
+pre-registration are saved in `.data/acts-patterns-staged/`,
+`.data/acts-patterns-locked/` and `.data/neural-patterns/`. See
+[the record](docs/FROM_SCRATCH.md#fixed-patterns-only-chains-for-fast-reading-and-generation).
+
+**Strict and light layers:** `python3 neural_strict.py --acknowledge-review`
+splits that idea in two. The strict layer ("if it sees this, it is this")
+claims a known word or phrase only after confirming the whole unit in the text,
+and in generation spells a chosen word out whole. It never guesses a word from
+its start, so it makes 0 wrong claims by construction. On Acts 27 (development)
+it recognized 79% of letters and saved 49% of reading decisions; 166 new words
+were handed to other layers. The light layer gives the 94–95% fixed patterns
+weight only, which lowered Kneser-Ney loss from 1.679 to 1.664. See
+[the record](docs/FROM_SCRATCH.md#strict-layer-and-light-pattern-layer).
+
+**Strict skeletons:** `python3 neural_skeletons.py stage|develop|preregister|evaluate-locked`
+tests partial patterns with hidden or missing letters (`th*t`→that) that only one
+possible word fits. Layer 0's list of possible words is the SCOWL word list
+(notice in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)), the learning words,
+and their regular forms. Names and hidden first letters are handed to other layers.
+On public-domain Bible books locked away until a single pre-registered run, strict
+skeletons were wrong 1 time in 560,404 checks (95% upper bound 8.5e-6, under the
+1-in-100,000 target). This holds for one Bible translation only. See
+[the record](docs/FROM_SCRATCH.md#strict-skeletons-hidden-or-missing-letters-that-resolve-one-way).
+
 The **Generation** tab now includes a separate, from-scratch character neural
 network: four-character context, 8-value embeddings, a 16-unit tanh hidden
 layer, softmax predictions, cross-entropy loss, hand-written backpropagation,

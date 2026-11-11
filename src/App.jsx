@@ -663,6 +663,91 @@ function WordOnlyStates({ report }) {
   </section>;
 }
 
+function FixedPatterns({ report }) {
+  const pct = value => value === null || value === undefined ? '—' : `${(value * 100).toFixed(1)}%`;
+  const reading = (label, part) => part && <tr key={label}><td>{label}</td>
+    <td>{part.discovery.patterns}</td><td>{pct(part.reading.coverage)}</td>
+    <td>{pct(part.reading.character_accuracy)}</td><td>{pct(part.reading.decisions_saved_fraction)}</td></tr>;
+  const locked = report.locked?.status === 'completed' ? report.locked : null;
+  const shown = locked || report.development;
+  return <section className="layered-efficiency">
+    <h3>Fixed patterns (only chains) for fast reading and generation</h3>
+    <p>A fixed pattern is a 1–9 character trigger that, every time it appeared at least {report.support} times in
+      approved Acts text, was followed by exactly the same characters. Reading skips the characters a pattern
+      supplies; generation writes the whole continuation as one decision. Patterns are earned evidence from one
+      book, not proof that a sequence can only exist one way.</p>
+    <table>
+      <thead><tr><th>Check</th><th>Patterns</th><th>Correctly supplied</th><th>Correct when claimed</th><th>Decisions saved</th></tr></thead>
+      <tbody>
+        {reading('Development: learn Acts 1, 2, 4–26 → Acts 27', report.development)}
+        {reading('Locked once: learn Acts 1, 2, 4–27 → Acts 28', locked)}
+      </tbody>
+    </table>
+    {locked && <p>Pre-registered verdicts: {Object.entries(locked.verdicts).map(([name, v]) =>
+      `${name} ${v.met ? 'met' : 'not met'} (${pct(v.value)} vs ${pct(v.target)})`).join('; ')}.</p>}
+    {report.preregistration?.revision && <p>Revision: {report.preregistration.revision}</p>}
+    {shown && <p>Most useful patterns: {shown.reading.top_patterns.slice(0, 10)
+      .map(item => `${item.trigger.replace('\n', '¶')}→${item.continuation}`).join(', ')}</p>}
+    {shown && <details><summary>Generation samples (counts plus patterns; not scripture)</summary>
+      {shown.generation.map(item => <p key={item.prompt}>{pct(item.decisions_saved_fraction)} decisions saved,
+        {' '}{item.macros} patterns used: <code>{item.text.slice(0, 160)}</code></p>)}</details>}
+    <details><summary>Exact fixed-pattern report</summary><pre>{JSON.stringify(report, null, 2)}</pre></details>
+  </section>;
+}
+
+function StrictLayers({ report }) {
+  const pct = value => `${(value * 100).toFixed(1)}%`;
+  const r = report.strict.reading;
+  return <section className="layered-efficiency">
+    <h3>Strict layer (if it sees this, it is this) and light pattern layer</h3>
+    <p>Strict: a known word, or a phrase seen at least {report.strict.discovery.phrase_support} times, is claimed only after
+      the whole unit is confirmed in the text, so it never guesses a word from its start. Light: the earlier
+      94–95% patterns only add weight to counts. Development check on Acts {report.held_chapter}; no fresh claim.</p>
+    <table><tbody>
+      <tr><td>Units learned</td><td>{report.strict.discovery.words} words, {report.strict.discovery.phrases} phrases</td></tr>
+      <tr><td>Strict wrong claims</td><td>{r.strict_wrong_claims} of {r.strict_claims} (by construction)</td></tr>
+      <tr><td>Letters recognized whole</td><td>{pct(r.letter_coverage)}</td></tr>
+      <tr><td>Reading decisions saved</td><td>{pct(r.decisions_saved_fraction)}</td></tr>
+      <tr><td>Unknown words handed to other layers</td><td>{r.unknown_words}</td></tr>
+    </tbody></table>
+    <table>
+      <thead><tr><th>Light layer weight</th><th>Loss on Acts {report.held_chapter}</th><th>Pattern guesses right / wrong</th></tr></thead>
+      <tbody>{report.light.results.map(row => <tr key={String(row.weight)}><td>{String(row.weight)}</td>
+        <td>{row.validation_loss.toFixed(4)}</td><td>{row.fired ? `${row.fired.right} / ${row.fired.wrong || 0}` : '—'}</td></tr>)}</tbody>
+    </table>
+    <details><summary>Generation samples (word counts plus strict spelling; not scripture)</summary>
+      {report.strict.generation.map(item => <p key={item.prompt}>{pct(item.decisions_saved_fraction)} decisions saved,
+        {' '}{item.misspelled_words} misspelled: <code>{item.text.slice(0, 160)}</code></p>)}</details>
+    <details><summary>Exact strict-layer report</summary><pre>{JSON.stringify(report, null, 2)}</pre></details>
+  </section>;
+}
+
+function SkeletonLayer({ report }) {
+  const rate = value => value.toExponential(1);
+  const rows = [['Development books', report.development], ['Locked books (once)', report.locked]]
+    .filter(([, run]) => run && run.by_support && run.by_support[String(report.support)]);
+  const locked = report.locked && report.locked.verdicts;
+  const examples = rows.length ? rows[rows.length - 1][1].by_support[String(report.support)].discovery.strict_examples.hidden1 : [];
+  return <section className="layered-efficiency">
+    <h3>Strict skeletons (letters hidden or missing, only one word fits)</h3>
+    <p>A skeleton such as <code>th*t</code> is strict only when exactly one word in the Layer 0 list of possible words
+      (the SCOWL word list, its regular forms, and the learning text) fits it, the word was seen at least {report.support} times,
+      it is not a name, and its first letter is visible. Target: wrong at most 1 in 100,000 checks. Bible text only; not general English.</p>
+    {locked && <p>Locked verdicts: observed {rate(locked.K1_observed.value)} ({locked.K1_observed.met ? 'met' : 'not met'}),
+      95% upper bound {rate(locked.K2_bound.value)} ({locked.K2_bound.met ? 'met' : 'not met'}).</p>}
+    <table>
+      <thead><tr><th>Run</th><th>Strict checks</th><th>Wrong</th><th>95% upper bound</th><th>Words with a strict skeleton</th></tr></thead>
+      <tbody>{rows.map(([name, run]) => {
+        const strict = run.by_support[String(report.support)].held_check.strict;
+        return <tr key={name}><td>{name}</td><td>{strict.checks}</td><td>{strict.wrong}</td><td>{rate(strict.upper_95)}</td>
+          <td>{strict.word_occurrences_with_a_strict_hidden1_skeleton} of {strict.word_occurrences}</td></tr>;
+      })}</tbody>
+    </table>
+    <p>Examples: {examples.slice(0, 10).map(item => `${item.skeleton} → ${item.word}`).join(', ')}</p>
+    <details><summary>Exact skeleton report</summary><pre>{JSON.stringify({ criteria: report.criteria, preregistration: report.preregistration, locked: report.locked && report.locked.verdicts }, null, 2)}</pre></details>
+  </section>;
+}
+
 function NeuralPanel() {
   const [report, setReport] = useState(null);
   const [comparison, setComparison] = useState(null);
@@ -671,6 +756,9 @@ function NeuralPanel() {
   const [proof, setProof] = useState(null);
   const [onlies, setOnlies] = useState(null);
   const [wordOnlies, setWordOnlies] = useState(null);
+  const [patterns, setPatterns] = useState(null);
+  const [strict, setStrict] = useState(null);
+  const [skeletonReport, setSkeletonReport] = useState(null);
   const [trainingText, setTrainingText] = useState('');
   const [heldOutText, setHeldOutText] = useState('');
   const [source, setSource] = useState('');
@@ -689,6 +777,9 @@ function NeuralPanel() {
       setProof(data.proof_comparison);
       setOnlies(data.onlies_comparison);
       setWordOnlies(data.word_onlies_comparison);
+      setPatterns(data.patterns_comparison);
+      setStrict(data.strict_comparison);
+      setSkeletonReport(data.skeletons_comparison);
     }).catch(err => setError(err.message));
   }, []);
 
@@ -726,8 +817,10 @@ function NeuralPanel() {
         setLayered(data.layered_comparison);
         setProof(data.proof_comparison);
         setOnlies(data.onlies_comparison);
-      setWordOnlies(data.word_onlies_comparison);
         setWordOnlies(data.word_onlies_comparison);
+        setPatterns(data.patterns_comparison);
+        setStrict(data.strict_comparison);
+        setSkeletonReport(data.skeletons_comparison);
       }).catch(err => setError(err.message));
     }, 3000);
     return () => clearInterval(timer);
@@ -758,6 +851,9 @@ function NeuralPanel() {
         <button disabled={busy || !approved} type="submit">{busy ? 'Training…' : 'Train separate neural experiment'}</button>
       </form>
       {error && <p className="banner banner-error">{error}</p>}
+      {skeletonReport && <SkeletonLayer report={skeletonReport} />}
+      {strict && <StrictLayers report={strict} />}
+      {patterns && <FixedPatterns report={patterns} />}
       {wordOnlies && <WordOnlyStates report={wordOnlies} />}
       {onlies && <OnlyStates report={onlies} />}
       {proof && proof.status !== 'absent' && <LayerProof report={proof} />}

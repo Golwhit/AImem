@@ -464,6 +464,198 @@ Ways to contribute: list phrases you believe can only exist one way (names,
 titles, set phrases), so we can test *defined* word onlies against *earned*
 ones; and describe what makes two thoughts "compatible" to join or split.
 
+#### Fixed patterns (only chains) for fast reading and generation
+
+**The idea (user):** a pattern that can exist only one way does not need to be
+predicted. When reading new text, the model should recognize it and skip it.
+When generating, once the model chooses the start of the pattern, it should
+write the rest at once instead of predicting one character at a time. This is
+not a dictionary of unique words. A pattern can sit inside a word, cross a
+space, or run into punctuation.
+
+**What `neural_patterns.py` does:** for every block of 1–9 characters
+(the *trigger*) seen at least *support* times in the learning text, it checks
+whether every occurrence was followed by exactly the same characters. If so,
+the longest shared run (up to 24 characters) is the *continuation*. A longer
+trigger is kept only if it extends its shorter version. Reading uses the
+longest trigger that matches: a correct continuation is skipped as one
+decision; a wrong one costs one normal step. Generation uses counts
+(Kneser-Ney) for normal steps and emits continuations whole.
+
+**More source text:** Acts 6–27 were fetched from the same public-domain WEB
+pages (eBible.org) with raw and text hashes. Verses the translation leaves
+empty (8:37, 15:34, 24:7) are skipped and recorded. The rights page differed
+from the earlier snapshot only in its generation date. Acts 3 is still never
+read. Acts 28 was locked and fetched only after pre-registration.
+
+**What happened, in order:**
+
+1. The user chose: learn from Acts 6–27, lock 28, support 50, success = at
+   least 25% coverage at 95% correct.
+2. Development (learn 1, 2, 4–26 → check 27, run
+   `4f84e153b69c4d38ac0d85486184f8d5`): only 76 patterns, 3.4% coverage at
+   98.4% correct. Every support/exception setting tried stayed under 25% at 95%.
+3. Before Acts 28 was fetched, the user revised: support 10, target ≥10%
+   coverage at ≥95% correct. The revision is written into the pre-registration.
+4. Development again (run `3744728e5ad743a394928115855cb3c6`): 1,127
+   patterns, 12.9% coverage, 94.5% correct, 3.9% fewer decisions.
+5. Locked test, once (learn 1, 2, 4–27, 117,198 characters → Acts 28, 4,259
+   characters, 1,171 patterns):
+
+| Measure | Acts 28 | Target |
+|---|---|---|
+| Characters patterns supplied correctly | 19.1% | ≥10% (met) |
+| Correct when a pattern claimed characters | 94.1% (51 wrong of 863) | ≥95% (not met) |
+| Whole patterns right | 95.0% (493 of 519) | — |
+| Reading decisions saved | 6.9% | — |
+| Generation decisions saved (5 samples) | 4.7–11.3% | — |
+
+Examples that fired on Acts 28: `cerni→ng `, `tog→ether`, ` our f→ather`,
+`hems→elves`, `e Ho→ly Spirit`, `peo→ple`, `¶Whe→n `. The longest learned:
+`mandi→ng officer`, `hig→h priest`, `resu→rrection`.
+
+**What this shows:** fixed patterns are real and cheap. Lookup is a dictionary
+probe, not a prediction, and almost a fifth of an unseen chapter was supplied
+by them. They are mostly word endings and set phrases ("Holy Spirit",
+"commanding officer").
+**What it does not show:** that patterns are safe to trust blindly. About 6%
+of claimed characters were wrong, because "seen 10 times one way" is evidence,
+not proof that a sequence can only exist one way. Decisions saved (6.9%) are
+much lower than coverage (19.1%), because most continuations are only 1–3
+characters and each still costs one decision. All text is one book, so this is
+not general-language evidence. Acts 28 is now spent.
+
+Ways to contribute: point out the wrong-claim cases you consider "really
+fixed" versus coincidences. Suggest patterns you know are always the same
+(names, titles, set phrases) so we can compare *defined* patterns with
+*earned* ones. And decide whether a pattern should fire only when the model
+is confident it has started that word or phrase, which would trade coverage
+for accuracy.
+
+#### Strict layer and light pattern layer
+
+**The idea (user):** an only layer should be about 99.999% accurate: "if the
+model sees this, then it is this." Lighter weighting belongs in another layer.
+
+**Why the fixed patterns could not be that layer:** they guess the rest of a
+word from its start. Every miss on Acts 27 was a new word that began like a
+known one (`ffic→e` on "difficulty", `r I→ ` on "Italy"). Counting can't prove
+99.999% either: n sightings with no exception only bound the error at about
+3/n, so it would take roughly 300,000 sightings per pattern.
+
+**What `neural_strict.py` does:**
+
+- **Strict layer:** units are learned words, plus phrases of 2–4 words seen at
+  least 5 times. When reading, a unit is claimed only when the text at a word
+  start *is* the whole unit, ending at a word boundary. It is recognized with
+  one decision and skipped; anything unknown goes to the other layers. When
+  generating, a soft word-count layer chooses the next word (with a
+  Layer-1-style rule: no word directly after a word, no double spaces), and the
+  strict layer spells it out whole.
+- **Light layer:** the earlier fixed patterns (support 10) only add weight
+  `(support+1)/(support+2)` to their guessed character, mixed with Kneser-Ney
+  counts. They are never certain and never forbid.
+
+**Development result** (learn Acts 1, 2, 4–26 → Acts 27, run
+`477fc8c644cc441bba970c2da375b424`; Acts 27 was already used, so this is not a
+fresh test):
+
+| Measure | Result |
+|---|---|
+| Strict wrong claims | 0 of 699 (by construction) |
+| Letters recognized whole | 79.0% (1,054 characters came from multi-word phrases) |
+| Reading decisions saved | 49.0% |
+| New words handed on | 166 (names like Adramyttium, Euroclydon; new forms like Hoisting) |
+| Generation: decisions saved, misspellings | 53–61%, 0 |
+| Loss: counts only → counts + light patterns | 1.6787 → 1.6638 (rule of succession; 0.9 gives 1.6607) |
+
+**What this shows:** a strict layer can be 100% right if it only *recognizes*
+or *spells* units that have already been identified. It still removes about
+half the work of reading, and spelling a chosen word costs one decision instead
+of one per letter. The light patterns help counting a little when used as
+weight instead of certainty.
+**What it does not show:** that it understands or chooses well. Generated
+word order is still nonsense; choosing the right word is the soft layers' job,
+and they are weak. The 0 wrong claims prove the bookkeeping, not prediction.
+New words (about 4% of words here) always need the other layers.
+
+Ways to contribute: decide whether user-defined onlies (names, titles, set
+phrases) should be added to the strict layer, and how much evidence a phrase
+needs before it is a strict unit rather than a light weight.
+
+#### Strict skeletons: hidden or missing letters that resolve one way
+
+Idea (user): some patterns are not whole words, such as `th*t` or `a*d th*t`, yet
+in practice resolve to only one thing. The strict version should be wrong
+about 1 in 100,000 times or less. `neural_skeletons.py` tests this with three
+skeleton kinds:
+- **hidden1:** one letter hidden (`th*t`).
+- **hidden2:** two letters hidden.
+- **dropped1:** one letter missing (`tht`).
+
+**Layer 0, the possible:** the SCOWL word list (permissive license, notice kept
+in [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)), plus every learning
+word, plus regular forms of those words. A skeleton is **strict** only when:
+- exactly one possible word fits it;
+- that word was seen at least 5 times;
+- the word is not a name;
+- the first letter is visible.
+
+A skeleton that only the learning text resolves (`sa*d`→said, even though
+"sand" exists) is **light**: weight, not certainty. Phrase skeletons are light
+unless every hidden letter is already forced.
+
+**Data:** the whole public-domain WEB Bible, split by book before any analysis.
+- Learn: 2.1M characters.
+- Develop: 16 books, 1.0M characters.
+- Locked: 15 books, 0.85M characters, read once.
+
+Generated text must not be called WEB or scripture.
+
+**What development taught (learn → develop):**
+- Counting alone failed (`sa*d` was "sand" in the shipwreck chapter). The
+  dictionary plus support rule gave 587 wrong in 1.16M checks (5e-4).
+- Nearly every error was a **name** (`se*ah` Selah/Serah, `*aal` Baal/Gaal).
+  Names are an open class that no list can complete. Fixes:
+  - A word capitalized in most of its uses is never strict.
+  - A skeleton showing a capital letter is handed on, not claimed.
+  - A closing quote is no longer part of a word.
+- Result: 12 wrong in 979k (1.2e-5). The rest were regular forms missing from
+  the word list (revealer, scoffer, unstained) and names whose hidden first
+  letter hid the capital (`*hav*` Ahava).
+- Fix A: list regular forms (-s, -ed, -er, -ing, un-, re-, -ies…) as possible.
+  These over-generate on purpose, so they can only veto a strict claim.
+- Fix B: never claim when the first letter is hidden.
+- With A+B: 0 wrong in 658k checks. The user chose A+B before the locked run.
+
+**Locked result (pre-registered, run once, support 5):**
+
+| | Development | Locked books |
+|---|---|---|
+| Strict checks | 658,347 | 560,404 |
+| Wrong | 0 | 1 (`rbel`→rebel was the name Arbel) |
+| Observed rate (K1 ≤ 1e-5) | 0 | 1.8e-6 — met |
+| 95% upper bound (K2 ≤ 1e-5) | 4.6e-6 | 8.5e-6 — met |
+| Words with a strict hidden-letter skeleton | 66,572 of 154,634 | 55,349 of 129,012 |
+
+**What this shows:** in this text, a large set of partial patterns (about
+13,900 one-hidden-letter skeletons for 3,200 words) can be treated as "if it
+sees this, it is this" at the 1-in-100,000 level. That covers about 43% of word
+occurrences, and the pre-registered test on unseen books agreed.
+**What it does not show:**
+- That it holds for general English, modern text, or other translations: all
+  of this is one Bible translation.
+- That it can never be wrong. One locked error remains, and the dropped-first-
+  letter case hides names the same way a hidden first letter does. Fixing it
+  now would need new untouched text, because the locked books are spent.
+- Checks from the same word occurrence are related, so the word-level count (1
+  of 129,012) is a fair second view.
+
+Ways to contribute:
+- Choose new, untouched text (with rights checked) for the next locked test.
+- Decide whether a dropped first letter should also be handed on.
+- Collect real "only one way" phrases you know, to test against the word rules.
+
 ### First real-text continuation run
 
 The user explicitly authorized training on the staged Acts material after
