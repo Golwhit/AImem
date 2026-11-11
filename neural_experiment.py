@@ -1,4 +1,4 @@
-"""Isolated character MLP: standard-library forward pass, backpropagation and SGD."""
+"""Isolated character/unit MLP: standard-library forward pass, backpropagation and SGD."""
 
 import argparse
 import hashlib
@@ -127,6 +127,11 @@ class NeuralModel:
 def train_experiment(payload: dict, root: Path) -> dict:
     if not isinstance(payload, dict):
         raise ValueError("Neural training request must be a JSON object")
+    use_units = payload.get("skeleton_units", False)
+    if type(use_units) is not bool:
+        raise ValueError("Skeleton units must be a boolean")
+    if use_units and (payload.get("synthetic") is True or payload.get("automated_synthetic") is True):
+        raise ValueError("Skeleton units require reviewed training text, not the synthetic baseline")
     if payload.get("automated_synthetic") is True:
         if payload.get("synthetic") is not True:
             raise ValueError("Automated rounds currently support synthetic diagnostics only")
@@ -151,13 +156,23 @@ def train_experiment(payload: dict, root: Path) -> dict:
     steps = payload.get("steps", 300)
     if type(steps) is not int or not 1 <= steps <= 1000:
         raise ValueError("Training steps must be an integer from 1 to 1000")
-    model = NeuralModel(sorted(set(train)))
-    training = model.examples(train)
-    validation = model.examples(held)
+    codec = None
+    vocabulary = set(train)
+    if use_units:
+        from neural_skeleton_runtime import END, UnitCodec, load_bank
+
+        codec = UnitCodec.from_bank(load_bank(root), train)
+        if not codec.units:
+            raise ValueError("No confirmed skeleton units occur in this training text; use the character baseline")
+        vocabulary |= set(codec.units) | {END}
+    model = NeuralModel(sorted(vocabulary))
+    training = codec.examples(model, train) if codec else model.examples(train)
+    validation = codec.examples(model, held) if codec else model.examples(held)
     rng = random.Random(19)
     history = []
     initial = {name: values[:] for name, values in model.weights.items()}
-    initial_sample = model.sample(train[:CONTEXT])
+    initial_generation = codec.sample(model, train[:CONTEXT]) if codec else None
+    initial_sample = initial_generation["text"] if initial_generation else model.sample(train[:CONTEXT])
 
     def measure(step: int) -> None:
         history.append({"step": step, "training_loss": model.loss(training), "held_out_loss": model.loss(validation)})
@@ -172,8 +187,10 @@ def train_experiment(payload: dict, root: Path) -> dict:
         raise ArithmeticError("Non-finite neural weights; checkpoint not saved")
     if not all(math.isfinite(row[key]) for row in history for key in ("training_loss", "held_out_loss")):
         raise ArithmeticError("Non-finite neural loss; checkpoint not saved")
+    generation = codec.sample(model, train[:CONTEXT]) if codec else None
     report = {
-        "version": 1, "run_id": uuid4().hex, "model": "original-character-mlp-v1",
+        "version": 1, "run_id": uuid4().hex,
+        "model": "original-unit-character-mlp-v1" if codec else "original-character-mlp-v1",
         "created_at": datetime.now(timezone.utc).isoformat(),
         "synthetic": synthetic, "source": source, "legal_clearance": False,
         "parameter_count": sum(map(len, model.weights.values())),
@@ -186,17 +203,36 @@ def train_experiment(payload: dict, root: Path) -> dict:
         "training_sha256": hashlib.sha256(train.encode()).hexdigest(),
         "held_out_sha256": hashlib.sha256(held.encode()).hexdigest(),
         "history": history, "sample_prompt": train[:CONTEXT],
-        "initial_sample": initial_sample, "sample": model.sample(train[:CONTEXT]),
+        "initial_sample": initial_sample, "sample": generation["text"] if generation else model.sample(train[:CONTEXT]),
         "learning_rate": RATE, "initialization_seed": 17, "training_seed": 19,
         "layer_policy": "Unconstrained neural baseline; Layer 0/1 rules are unchanged and not applied here.",
         "evaluation_note": "Synthetic repetition checks mechanics only, not generalization." if synthetic else
         "Held-out text receives no gradient updates. Author must ensure meaningful separation; substring checks do not prove independence.",
+        "loss_unit": "mixed unit/character decision (including end marker)" if codec else "character",
     }
+    if codec:
+        report["layer_policy"] = (
+            "Opt-in lossless whole-word skeleton units plus character fallback; the neural model learns and chooses "
+            "both. Unit boundaries are enforced during generation. No speculative prefix completion."
+        )
+        report["evaluation_note"] += (
+            " The bank was learned from prior Bible learn/develop text: new held-out text is not necessarily "
+            "unseen by that bank. Mixed-token loss is not directly comparable to character-baseline loss. "
+            "Fewer encoded targets do not by themselves prove faster training or better responses."
+        )
+        report["unit_runtime"] = {
+            "bank": codec.provenance, "units": len(codec.units),
+            "training": codec.reading(train), "held_out": codec.reading(held),
+            "initial_generation": initial_generation, "generation": generation,
+            "training_targets_per_pass": len(training), "held_out_targets": len(validation),
+        }
     checkpoint = {
         "report": report, "characters": model.characters, "weights": model.weights,
         "training_text": train, "held_out_text": held,
         "approval": "synthetic diagnostic" if synthetic else "explicit user declaration for this neural experiment",
     }
+    if codec:
+        checkpoint["unit_codec"] = codec.snapshot()
     directory = root / ".data" / "neural-experiments"
     atomic_json(directory / f"{report['run_id']}.json", checkpoint)
     atomic_json(directory / "latest.json", report)
@@ -225,16 +261,57 @@ def status(root: Path) -> dict:
         "patterns_comparison": json.loads(patterns.read_text()) if patterns.exists() else None,
         "strict_comparison": json.loads(strict.read_text()) if strict.exists() else None,
         "skeletons_comparison": json.loads(skeletons.read_text()) if skeletons.exists() else None,
+        "skeleton_runtime": {
+            "available": (root / ".data/neural-skeletons/runtime-bank.json").exists(),
+            "build_command": "python3 neural_skeleton_runtime.py build",
+        },
     }
+
+
+def generate_checkpoint(payload: dict, root: Path) -> dict:
+    if not isinstance(payload, dict):
+        raise ValueError("Neural generation request must be a JSON object")
+    run_id = payload.get("run_id")
+    prompt = payload.get("prompt", "")
+    length = payload.get("length", 120)
+    if not isinstance(run_id, str) or len(run_id) != 32 or any(char not in "0123456789abcdef" for char in run_id):
+        raise ValueError("Provide a saved neural run ID")
+    if not isinstance(prompt, str) or len(prompt) > 1000:
+        raise ValueError("Prompt must be text of at most 1000 characters")
+    if type(length) is not int or not 1 <= length <= 500:
+        raise ValueError("Generation length must be an integer from 1 to 500 characters")
+    path = root / ".data/neural-experiments" / f"{run_id}.json"
+    if not path.exists():
+        raise ValueError("Unknown neural run")
+    checkpoint = json.loads(path.read_text())
+    report = checkpoint["report"]
+    if report["model"] not in ("original-character-mlp-v1", "original-unit-character-mlp-v1"):
+        raise ValueError("This checkpoint does not support live generation")
+    model = NeuralModel(checkpoint["characters"], context=report["context"])
+    model.weights = checkpoint["weights"]
+    if report["model"] == "original-unit-character-mlp-v1":
+        from neural_skeleton_runtime import UnitCodec
+
+        snapshot = checkpoint["unit_codec"]
+        codec = UnitCodec(snapshot["units"], snapshot["provenance"])
+        generation = codec.sample(model, prompt, length=length)
+    else:
+        generation = {"text": model.sample(prompt, length=length), "decisions": length,
+                      "unit_occurrences": 0, "note": "Unconstrained character baseline."}
+    return {"run_id": run_id, "prompt": prompt, **generation}
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=["status", "train"])
+    parser.add_argument("command", choices=["status", "train", "generate"])
     args = parser.parse_args()
     root = Path(__file__).resolve().parent
     try:
-        result = status(root) if args.command == "status" else train_experiment(json.load(sys.stdin), root)
+        if args.command == "status":
+            result = status(root)
+        else:
+            action = train_experiment if args.command == "train" else generate_checkpoint
+            result = action(json.load(sys.stdin), root)
     except (ValueError, ArithmeticError, OSError) as error:
         print(str(error), file=sys.stderr)
         raise SystemExit(1) from error

@@ -656,6 +656,56 @@ Ways to contribute:
 - Decide whether a dropped first letter should also be handed on.
 - Collect real "only one way" phrases you know, to test against the word rules.
 
+#### Live skeleton units in neural training and generation
+
+The frozen experiment remains unchanged. `neural_skeleton_runtime.py build`
+exports a checksummed reusable bank from **learn + develop only**, never the
+locked books. It records source, input hashes, dictionary hash, and the frozen
+experiment's code hash. The local export contains 42,984 hidden-letter patterns
+for 3,201 words. Dropped-letter patterns are not used in this runtime.
+
+On the Generation tab, enable **Use live skeleton units for training and
+generation**. The existing review/rights form still applies. No historical
+memory or other generator's corpus is automatically imported.
+
+1. Select at most 128 bank-backed units actually present in the new approved
+   training text. Held-out text cannot add units or output vocabulary.
+2. Recognize a unit only after the **entire lowercase word matches exactly**.
+   Do not guess missing letters or change the submitted text. Other text stays
+   individual characters, preserving case, punctuation, and spaces.
+3. Give the from-scratch MLP those units and characters as output tokens. It
+   learns their embeddings and output weights through the existing backpropagation.
+   A four-token context can now contain units, not just four characters.
+4. The neural model chooses what to emit. A chosen unit is spelled out in one
+   output step; character fallback remains available. Whole-unit boundaries are
+   enforced, a partial prompt remains character-level, and a character budget
+   never cuts a whole-unit emission in half.
+5. Save the exact selected-unit map and bank provenance with the weights.
+   `/api/neural/generate` and the saved-checkpoint UI control restore that map
+   without retraining or requiring the current global bank.
+
+**Mechanics check, not a fresh accuracy test:** an original repeated test fixture
+had 240 input characters and 132 encoded targets (45% fewer, excluding the end
+marker). After 300 updates, a saved model generated 120 characters with 66
+decisions, including 18 complete units. Reloading reproduced the same output.
+The output still contained bad word choices and character fragments.
+
+**Limits:** fewer sequence positions are not proof of lower wall-clock cost:
+the larger output vocabulary also costs work. Updates stay at the requested
+step count. Mixed-token loss includes an end marker and is not directly
+comparable to character-baseline loss. The bank already contains prior Bible
+learning/development evidence, so a new held-out input is not automatically
+unseen by the bank. Full-word confirmation proves lossless bookkeeping, not
+the statistical accuracy of resolving arbitrary missing letters.
+
+The default remains the character baseline. This is a working neural integration,
+not replacement of the chat engine, permanent memory admission, online continual
+learning, or a new general-English accuracy claim.
+
+Ways to contribute: use the same newly approved training text in both modes,
+inspect whole-unit emissions and unknown-character fallback, and suggest new
+untouched evaluation text before comparing response quality or timed full passes.
+
 ### First real-text continuation run
 
 The user explicitly authorized training on the staged Acts material after

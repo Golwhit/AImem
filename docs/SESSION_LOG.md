@@ -4,6 +4,39 @@ Newest application checkpoint first. Entries map delivered versions to the
 session that produced them; historical conversation memory remains separate.
 See [versioning policy](VERSIONING.md) for bump and release rules.
 
+## 0.5.0 - 2026-11-10
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: minor
+
+### Changes
+
+- Added `neural_skeleton_runtime.py`: checksummed learn/develop-only bank,
+  exact-confirmed unit encoding, and boundary-safe unit/character generation.
+  Frozen experiment code and locked evaluation are unchanged.
+- Wired opt-in units into the actual MLP training, vocabulary, embeddings,
+  gradient updates, samples, checkpoints, and Generation UI. Character baseline
+  remains default; no memory/corpus reuse or chat-engine replacement.
+- Added saved-checkpoint generation via `/api/neural/generate` and the UI.
+  Checkpoints carry selected units and bank provenance, so reload does not
+  depend on the mutable global bank.
+
+### Validation and limitations
+
+- 128 targeted Python tests passed, including HTTP routes; production build,
+  version metadata test, server syntax check, and Pylance syntax checks passed.
+- Regenerated the memory graph from the preserved transcript.
+- Focused runtime tests cover lossless encoding, fallback, word boundaries,
+  no held-out vocabulary/weight influence, bank integrity and learn/develop-only
+  construction, and generation after removing the global bank.
+- Browser/API smoke check: a saved model generated 120 characters with 66
+  decisions, including 18 complete units; invalid run IDs return HTTP 400.
+- Original repeated-fixture check: 45% fewer encoded input targets, not a
+  wall-clock speed or response-quality claim. Mixed-token loss is not directly
+  comparable to character loss; arbitrary held-out text may overlap bank evidence.
+- Runtime excludes dropped-letter claims. Known units are full-word-confirmed,
+  not speculative prefix completions or proof of general-English onlies.
+
 ## 0.4.0 - 2026-11-10
 
 Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`

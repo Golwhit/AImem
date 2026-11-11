@@ -243,6 +243,18 @@ class LearnerTests(unittest.TestCase):
                 with urlopen(Request(base + path, data=data, headers={"Content-Type": "application/json"}), timeout=30) as response:
                     return json.load(response)
 
+            neural = request("/api/neural/train", {"synthetic": True, "steps": 5})
+            saved_neural = request("/api/neural/generate", {
+                "run_id": neural["run_id"], "prompt": neural["sample_prompt"],
+            })
+            self.assertEqual(saved_neural["text"], neural["sample"])
+            self.assertEqual(saved_neural["unit_occurrences"], 0)
+            self.assertFalse(request("/api/neural")["skeleton_runtime"]["available"])
+            with self.assertRaises(HTTPError) as bad_neural:
+                request("/api/neural/generate", {"run_id": "../bad"})
+            self.assertEqual(bad_neural.exception.code, 400)
+            bad_neural.exception.close()
+
             self.assertFalse(request("/api/learner-status")["pretrained_weights"])
             generator_status = request("/api/generator")
             self.assertFalse(generator_status["pretrained_weights"])

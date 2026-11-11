@@ -759,6 +759,10 @@ function NeuralPanel() {
   const [patterns, setPatterns] = useState(null);
   const [strict, setStrict] = useState(null);
   const [skeletonReport, setSkeletonReport] = useState(null);
+  const [runtimeBank, setRuntimeBank] = useState(null);
+  const [useUnits, setUseUnits] = useState(false);
+  const [generationPrompt, setGenerationPrompt] = useState('');
+  const [liveGeneration, setLiveGeneration] = useState(null);
   const [trainingText, setTrainingText] = useState('');
   const [heldOutText, setHeldOutText] = useState('');
   const [source, setSource] = useState('');
@@ -780,6 +784,7 @@ function NeuralPanel() {
       setPatterns(data.patterns_comparison);
       setStrict(data.strict_comparison);
       setSkeletonReport(data.skeletons_comparison);
+      setRuntimeBank(data.skeleton_runtime);
     }).catch(err => setError(err.message));
   }, []);
 
@@ -792,12 +797,32 @@ function NeuralPanel() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           synthetic, automated_synthetic: automated, training_text: trainingText, held_out_text: heldOutText,
-          source, acknowledge_review: approved
+          source, acknowledge_review: approved, skeleton_units: !synthetic && useUnits
         })
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
       setReport(data);
+      setLiveGeneration(null);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const generate = async () => {
+    setBusy(true);
+    setError('');
+    try {
+      const response = await fetch('/api/neural/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ run_id: report.run_id, prompt: generationPrompt })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+      setLiveGeneration(data);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -829,9 +854,9 @@ function NeuralPanel() {
   return (
     <section className="hero-card generator-panel neural-panel" style={{ marginTop: 24 }}>
       <h2>Neural weight lab</h2>
-      <p>Tiny from-scratch character MLP. UI training starts fresh; offline continuation is explicit. It does not replace chat,
-        import memories, or update the old generator. The separate full-layer experiment below
-        applies developmental priors during learning; the original UI training remains an unconstrained baseline.</p>
+      <p>Tiny from-scratch MLP with a character baseline and optional live skeleton units.
+        UI training starts fresh; saved checkpoints can generate without retraining.
+        This does not replace chat, import memories, or update the old generator.</p>
       <button disabled={busy} onClick={() => train(true)}>Run synthetic learning check</button>
       <button disabled={busy} onClick={() => train(true, true)}>Run 50 synthetic rounds (5,000 updates)</button>
       <form className="generator-form" onSubmit={event => { event.preventDefault(); train(false); }}>
@@ -844,6 +869,14 @@ function NeuralPanel() {
         <label>Provenance and rights note
           <input required maxLength={500} value={source} onChange={event => setSource(event.target.value)} />
         </label>
+        <label><input type="checkbox" checked={useUnits} disabled={busy || !runtimeBank?.available}
+          onChange={event => setUseUnits(event.target.checked)} />
+          Use live skeleton units for training and generation (opt-in)
+        </label>
+        <p>{runtimeBank === null ? 'Loading skeleton bank status…' : runtimeBank.available
+          ? 'Bank ready: approved Bible learning/development text only. Complete matching words become single neural tokens; unknowns remain characters. The neural model still chooses what to say.'
+          : `Bank unavailable. Build locally with ${runtimeBank.build_command}, then reload.`}
+          {' '}Baseline remains character-only. Unit loss is not directly comparable to character loss.</p>
         <label><input type="checkbox" required checked={approved} onChange={event => setApproved(event.target.checked)} />
           I have reviewed these texts and authorize their use in this neural experiment.
           This declaration is not legal clearance. Full texts and weights are saved locally.
@@ -880,12 +913,36 @@ function NeuralPanel() {
             <td>{row.step}</td><td>{row.training_loss.toFixed(4)}</td><td>{row.held_out_loss.toFixed(4)}</td>
           </tr>)}</tbody>
         </table>
-        <p>{report.evaluation_note} Loss is mean negative log probability per character; lower is better.</p>
+        <p>{report.evaluation_note} Loss is mean negative log probability per {report.loss_unit || 'character'}; lower is better within the same tokenization.</p>
+        {report.unit_runtime && <section>
+          <h3>Live skeleton unit use</h3>
+          <p>{report.unit_runtime.units} units selected from this training text.
+            {' '}{report.unit_runtime.training.decisions_saved} fewer encoded training targets
+            ({(100 * report.unit_runtime.training.decisions_saved_fraction).toFixed(1)}%).
+            {' '}{report.unit_runtime.training_targets_per_pass} targets per full pass, including the end marker;
+            actual updates remain {report.steps}.</p>
+          <p>Generated sample: {report.unit_runtime.generation.unit_occurrences} whole-unit emissions,
+            {' '}{report.unit_runtime.generation.character_steps} character emissions.
+            Fewer decisions do not prove a wall-clock speedup, understanding, or correct responses.</p>
+          <details><summary>Runtime provenance and counts</summary><pre>{JSON.stringify(report.unit_runtime, null, 2)}</pre></details>
+        </section>}
         <p>Continuation after <code>{JSON.stringify(report.sample_prompt)}</code>:</p>
         <p>Before training:</p>
         <pre className="generator-sample">{report.initial_sample}</pre>
         <p>After training:</p>
         <pre className="generator-sample">{report.sample}</pre>
+        {['original-character-mlp-v1', 'original-unit-character-mlp-v1'].includes(report.model) && <form
+          className="generator-form" onSubmit={event => { event.preventDefault(); generate(); }}>
+          <label>Prompt for saved neural checkpoint
+            <input maxLength={1000} value={generationPrompt} onChange={event => setGenerationPrompt(event.target.value)} />
+          </label>
+          <button type="submit" disabled={busy}>Generate from saved neural checkpoint</button>
+          {liveGeneration && <div>
+            <pre className="generator-sample">{liveGeneration.text || '(model chose end of output)'}</pre>
+            <p>{liveGeneration.decisions} decisions; {liveGeneration.unit_occurrences} whole-unit emissions.
+              {' '}{liveGeneration.note}</p>
+          </div>}
+        </form>}
         {report.fixed_prompt_samples && <details>
           <summary>Fixed-prompt samples every 10 rounds</summary>
           <pre>{JSON.stringify(report.fixed_prompt_samples, null, 2)}</pre>

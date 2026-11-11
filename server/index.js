@@ -422,6 +422,14 @@ app.post('/api/neural/train', async (req, res) => {
   }
 });
 
+app.post('/api/neural/generate', async (req, res) => {
+  try {
+    res.json(await runGenerator('generate', req.body, path.join(rootDir, 'neural_experiment.py')));
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
 app.get('/api/generator', async (req, res) => {
   try { res.json(await runGenerator('status')); }
   catch (error) { res.status(500).json({ error: error.message }); }

@@ -342,6 +342,26 @@ Parameter count depends on the training-only vocabulary and is shown exactly.
 This is a tiny neural language-model experiment, not an LLM or a replacement
 for the existing character-count generator.
 
+**Live unit path (opt-in):** on the Generation tab, enable **Use live skeleton
+units for training and generation** before training reviewed text. The model
+learns a mixed vocabulary of confirmed words and individual characters.
+Known units take one output decision; unknown words, names, casing, punctuation,
+and whitespace are preserved as characters. A partial prompt is never forcibly
+completed. Generation enforces boundaries around emitted whole units.
+
+Build the local reusable bank once from the already approved Bible learning and
+development books (never the locked books):
+
+```bash
+python3 neural_skeleton_runtime.py build
+```
+
+The UI reports target reductions and whole-unit emissions. **Generate from saved
+neural checkpoint** reuses saved weights and the exact unit mapping, even if the
+bank is later rebuilt or removed. The baseline stays available with the option
+off. This changes neural tokenization; it does not replace chat or automatically
+train on memories. See [runtime details](docs/FROM_SCRATCH.md#live-skeleton-units-in-neural-training-and-generation).
+
 Start with **Run synthetic learning check**. This original repeating-pattern
 fixture demonstrates weight updates, not generalization. For real experiments,
 provide new training text, separate held-out text, a provenance/rights note,
@@ -358,13 +378,18 @@ and then describe it as an untouched final test.
 
 Full submitted text, provenance, hashes, weights, and report are saved locally
 under `.data/neural-experiments/<run_id>.json`; `latest.json` holds the latest
-report. These ignored files can contain sensitive text. This baseline does not
-apply or soften Layer 0/1 rules. Controlled layer-assisted neural comparisons
-are a subsequent milestone; the existing four-mode chat lab is unchanged.
+report. These ignored files can contain sensitive text. The character baseline
+does not apply or soften Layer 0/1 rules; the optional unit path uses the frozen
+bank to select confirmed units, not to assert an incomplete word is certain.
+Mixed-token loss is per unit/character decision, including an end marker, not
+directly comparable to baseline character loss. The bank contains prior Bible
+learning/development evidence, so arbitrary held-out text is not necessarily
+unseen by that bank. The existing four-mode chat lab is unchanged.
 
 ```bash
 echo '{"synthetic":true}' | python3 neural_experiment.py train
 python3 neural_experiment.py status
+echo '{"run_id":"REPLACE_WITH_SAVED_RUN_ID","prompt":"and "}' | python3 neural_experiment.py generate
 python3 -m unittest -q test_neural_experiment
 ```
 
