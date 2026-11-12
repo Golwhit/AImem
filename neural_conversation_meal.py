@@ -2,8 +2,10 @@
 
 import argparse
 from collections import Counter, defaultdict
+from concurrent.futures import ProcessPoolExecutor
 from datetime import datetime, timezone
 import json
+import os
 from pathlib import Path
 import time
 from uuid import uuid4
@@ -173,8 +175,18 @@ def protected_files(root: Path) -> dict:
             for p in (root / ".data/neural-chat").glob("*.json")}
 
 
+def train_trial(job: dict) -> tuple[dict, dict]:
+    model = PlasticityContext.restore(json.loads(json.dumps(job["initial"])))
+    points = fit(model, job["rows"], seed=job["seed"], rate=RATE,
+                 cpu_checkpoints=job["cpu_checkpoints"], decay=job["decay"])
+    state = json.loads(json.dumps(model.snapshot(), allow_nan=False))
+    trial = {"arm": job["arm"], "seed": job["seed"], "subset": job["subset"], "checkpoints": points,
+             "teaching_pairs": paired_scores(points[-1]["training"])}
+    return trial, state
+
+
 def run(root: Path, *, acknowledge_review: bool, reviewed_sha256: str, size: int = 64,
-        cpu_checkpoints: tuple[float, ...] = CPU_CHECKPOINTS) -> dict:
+        cpu_checkpoints: tuple[float, ...] = CPU_CHECKPOINTS, decay: float = 1.0) -> dict:
     raw = (root / fixture_for(size)).read_bytes()
     if acknowledge_review is not True or digest(raw) != reviewed_sha256:
         raise ValueError("Explicit approval of exact larger curriculum hash required")
@@ -195,7 +207,7 @@ def run(root: Path, *, acknowledge_review: bool, reviewed_sha256: str, size: int
     report = {
         "run_id": directory.name, "status": "running", "parent": record, "metadata": metadata,
         "full_subset": full,
-        "seeds": SEEDS, "arms": ARMS, "rate": RATE, "cpu_checkpoints": cpu_checkpoints,
+        "seeds": SEEDS, "arms": ARMS, "rate": RATE, "decay": decay, "cpu_checkpoints": cpu_checkpoints,
         "review": {"file_sha256": reviewed_sha256,
                    "canonical_file_sha256": digest(canonical(data)),
                    "approval": "User approved exact file SHA256 via approve_exact_curriculum=true",
@@ -204,10 +216,12 @@ def run(root: Path, *, acknowledge_review: bool, reviewed_sha256: str, size: int
                    "scope": f"{size} original teaching exchanges and their 16-example subset; test answers evaluation only.",
                    "recorded_at": datetime.now(timezone.utc).isoformat(),
                    "provenance": data["provenance"], "record_type": "User declaration, not legal clearance"},
-        "policy": "Same fixed fresh_scaled and inherited_normalized designs and rate .1 from prior teaching-only "
-                  "selection, no new optimizer, auxiliary head, contrastive loss or architecture. Both start from "
+        "policy": "Same fixed fresh_scaled and inherited_normalized designs and starting rate .1 from prior teaching-only "
+                  f"selection, no new optimizer, auxiliary head, contrastive loss or architecture. Rate for CPU segment k is "
+                  f"0.1 * decay**k with decay {decay} fixed before any test. Both arms start from "
                   "new copies, not previous successful trial weights. Freeze lexicon and expanded character/identity "
                   f"alphabet using all {size} TRAINING examples; same initial weights per arm/seed across small16/{full}. "
+                  "Trials run as parallel processes, each with its own CPU-time budget. "
                   "Small16 is one complete balanced pair per skill, NOT the historical 8-example dataset. Its input "
                   "vocabulary includes other teaching cases, but their answers never update small16 weights. "
                   "Same parent, parameters/masks and update CPU; faster runs get more target draws. Uniform answer-token "
@@ -234,23 +248,25 @@ def run(root: Path, *, acknowledge_review: bool, reviewed_sha256: str, size: int
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes((root / name).read_bytes())
     print(f"Meal run {directory.name}", flush=True)
+    jobs = []
     for seed in SEEDS:
         for arm in ARMS:
             initial_model = initialize(base, arm, seed)
             initial = json.loads(json.dumps(initial_model.snapshot(), allow_nan=False))
             atomic_json(directory / f"{arm}-{seed}-initial.json", {"state": initial})
             for subset, rows in subsets.items():
-                model = PlasticityContext.restore(json.loads(json.dumps(initial)))
-                points = fit(model, rows, seed=seed, rate=RATE, cpu_checkpoints=cpu_checkpoints)
-                state = json.loads(json.dumps(model.snapshot(), allow_nan=False))
-                trial = {"arm": arm, "seed": seed, "subset": subset, "checkpoints": points,
-                         "teaching_pairs": paired_scores(points[-1]["training"])}
-                atomic_json(directory / f"{arm}-{seed}-{subset}-final.json", {"state": state, "trial": trial})
-                report["trials"].append(trial)
-                atomic_json(directory / "report.json", report)
-                print(f"{arm}/{seed}/{subset}: loss={points[-1]['teacher_forced_loss']:.4f}; "
-                      f"train={points[-1]['training']['exact']:.3f}; "
-                      f"CPU={points[-1]['training_cpu_seconds']:.2f}", flush=True)
+                jobs.append({"arm": arm, "seed": seed, "subset": subset, "rows": rows,
+                             "initial": initial, "cpu_checkpoints": cpu_checkpoints, "decay": decay})
+    with ProcessPoolExecutor(max_workers=min(len(jobs), os.cpu_count() or 1)) as pool:
+        for job, (trial, state) in zip(jobs, pool.map(train_trial, jobs)):
+            arm, seed, subset = job["arm"], job["seed"], job["subset"]
+            points = trial["checkpoints"]
+            atomic_json(directory / f"{arm}-{seed}-{subset}-final.json", {"state": state, "trial": trial})
+            report["trials"].append(trial)
+            atomic_json(directory / "report.json", report)
+            print(f"{arm}/{seed}/{subset}: loss={points[-1]['teacher_forced_loss']:.4f}; "
+                  f"train={points[-1]['training']['exact']:.3f}; "
+                  f"CPU={points[-1]['training_cpu_seconds']:.2f}", flush=True)
     atomic_json(directory / "pre-test-endpoints.json", report)
     for trial in report["trials"]:
         name = f"{trial['arm']}-{trial['seed']}-{trial['subset']}-final.json"
@@ -300,7 +316,8 @@ def validate(root: Path, run_id: str) -> dict:
     for trial in report["trials"]:
         arm, seed, subset = trial["arm"], trial["seed"], trial["subset"]
         initial = json.loads((directory / f"{arm}-{seed}-initial.json").read_text())["state"]
-        model = replay(initial, subsets[subset], rate=report["rate"], seed=seed, checkpoints=trial["checkpoints"])
+        model = replay(initial, subsets[subset], rate=report["rate"], seed=seed, checkpoints=trial["checkpoints"],
+                       decay=report.get("decay", 1.0))
         saved = json.loads((directory / f"{arm}-{seed}-{subset}-final.json").read_text())["state"]
         if model.snapshot() != saved or assess(model, data["test"]) != trial["test"]:
             raise AssertionError("Full weights or evaluation predictions differ on replay")
@@ -322,7 +339,9 @@ if __name__ == "__main__":
     parser.add_argument("--reviewed-sha256")
     parser.add_argument("--validate-run")
     parser.add_argument("--size", type=int, default=64, choices=TEACHING_SIZES)
-    parser.add_argument("--budget", type=float, help="Single CPU-second training budget; default is CPU_CHECKPOINTS.")
+    parser.add_argument("--budget", type=float, help="Total CPU-second training budget per trial; default is CPU_CHECKPOINTS.")
+    parser.add_argument("--segments", type=int, default=1, help="Equal CPU segments within --budget.")
+    parser.add_argument("--decay", type=float, default=1.0, help="Per-segment learning-rate multiplier.")
     args = parser.parse_args()
     root = Path(__file__).resolve().parent
     if args.prepare:
@@ -338,5 +357,9 @@ if __name__ == "__main__":
     else:
         if not args.reviewed_sha256:
             parser.error("--reviewed-sha256 required before training")
+        if args.budget:
+            checkpoints = tuple(args.budget * (k + 1) / args.segments for k in range(args.segments))
+        else:
+            checkpoints = CPU_CHECKPOINTS
         run(root, acknowledge_review=args.acknowledge_review, reviewed_sha256=args.reviewed_sha256,
-            size=args.size, cpu_checkpoints=(args.budget,) if args.budget else CPU_CHECKPOINTS)
+            size=args.size, cpu_checkpoints=checkpoints, decay=args.decay)

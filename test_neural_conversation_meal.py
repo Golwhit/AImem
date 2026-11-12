@@ -111,7 +111,7 @@ class ConversationMealTests(unittest.TestCase):
                 calls.append(rows)
                 return assess(model, rows, max_chars=1)
 
-            def brief_fit(model, rows, *, seed, rate, cpu_checkpoints):
+            def brief_fit(model, rows, *, seed, rate, cpu_checkpoints, decay=1.0):
                 import random
                 examples = answer_examples(model, rows)
                 context, target, prior = examples[random.Random(seed).randrange(len(examples))]
