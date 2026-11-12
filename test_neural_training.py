@@ -10,9 +10,22 @@ from neural_conversation_context import build
 from neural_conversation_meal import curriculum, FIXTURE
 from neural_conversation_trial import answer_examples, assess, prompt_for, token_loss
 from neural_plasticity import diagnostics, initialize
-from neural_training import DIRECTORY, INITIAL_RUN, activate, load_progress, rollback, run
+from neural_training import DIRECTORY, INITIAL_RUN, activate, health_problem, load_progress, rollback, run
 from neural_chat import CONVERSATION_MODEL, activate_base, generate, load_active
 from test_neural_chat import base_chat_fixture
+
+
+def checkpoint(updates, saturation, exact):
+    return {"updates": updates, "training": {"exact": exact},
+            "diagnostics": {"hidden_abs_over_099_fraction": saturation}}
+
+
+class HealthGuardTests(unittest.TestCase):
+    def test_accepts_healthy_round_and_rejects_saturated_or_regressed_rounds(self):
+        self.assertIsNone(health_problem([checkpoint(1, .1, 1.0), checkpoint(2, .43, 1.0)]))
+        self.assertIn("saturation", health_problem([checkpoint(1, .2, 1.0), checkpoint(2, 1.0, 1.0)]))
+        self.assertIn("teaching exact", health_problem([checkpoint(1, .2, 1.0), checkpoint(2, .2, 0.0)]))
+        self.assertIn("no checkpoints", health_problem([]))
 
 
 class PermanentTrainingTests(unittest.TestCase):
@@ -51,7 +64,8 @@ class PermanentTrainingTests(unittest.TestCase):
                          "training": assess(model, rows), "diagnostics": diagnostics(model, examples),
                          "training_cpu_seconds": 0.0}]
 
-            with patch("neural_training.fit", side_effect=brief_fit):
+            with patch("neural_training.fit", side_effect=brief_fit), \
+                    patch("neural_training.health_problem", return_value=None):
                 first = run(root, cpu_seconds=1)
                 self.assertEqual(first["reviewed_file_sha256"], checksum)
                 pointer, trained = load_progress(root)

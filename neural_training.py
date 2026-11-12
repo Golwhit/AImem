@@ -106,6 +106,23 @@ def rollback(root: Path) -> dict:
     return status(root)
 
 
+MAX_SATURATION = .6
+MIN_TEACHING_EXACT = .9
+
+
+def health_problem(points: list[dict]) -> str | None:
+    if not points:
+        return "no checkpoints recorded"
+    for point in points:
+        saturation = point["diagnostics"]["hidden_abs_over_099_fraction"]
+        if saturation > MAX_SATURATION:
+            return f"hidden saturation {saturation:.3f} above {MAX_SATURATION} at update {point['updates']}"
+    final = points[-1]["training"]["exact"]
+    if final < MIN_TEACHING_EXACT:
+        return f"teaching exact {final:.3f} below {MIN_TEACHING_EXACT}"
+    return None
+
+
 def run(root: Path, *, cpu_seconds: float = 300.0) -> dict:
     raw = (root / FIXTURE).read_bytes()
     reviewed_sha256 = digest(raw)
@@ -201,6 +218,14 @@ def run(root: Path, *, cpu_seconds: float = 300.0) -> dict:
             raise AssertionError("Permanent round full weights or test outputs differ on replay")
         report["validation"] = {"full_weights_and_milestones_replay_exact": True,
                                 "test_replay_exact": True}
+        problem = health_problem(points)
+        if problem:
+            # Rejected rounds keep their evidence but never become the parent or the active model.
+            report["status"] = "rejected"
+            report["rejection"] = problem
+            atomic_json(target / "report.json", report)
+            print(f"Rejected permanent round {round_number}: {problem}; parent unchanged", flush=True)
+            return report
         report["status"] = "completed"
         atomic_json(target / "report.json", report)
         # Evidence excludes its own content hash; the pointer binds the serialized checkpoint.
