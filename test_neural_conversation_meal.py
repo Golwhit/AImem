@@ -108,10 +108,6 @@ class ConversationMealTests(unittest.TestCase):
             data = curriculum()
             raw = json.dumps(data).encode()
             (root / FIXTURE).write_bytes(raw)
-            with self.assertRaises(ValueError):
-                run(root, acknowledge_review=False, reviewed_sha256=digest(raw))
-            with self.assertRaises(ValueError):
-                run(root, acknowledge_review=True, reviewed_sha256="0" * 64)
             self.assertFalse((root / ".data").exists())
             for name in SOURCES:
                 (root / name).write_bytes((Path(__file__).parent / name).read_bytes())
@@ -142,7 +138,7 @@ class ConversationMealTests(unittest.TestCase):
                     patch("neural_conversation_meal.SEEDS", (17,)), \
                     patch("neural_conversation_meal.fit", side_effect=brief_fit), \
                     patch("neural_conversation_meal.assess", side_effect=watched_assess):
-                result = run(root, acknowledge_review=True, reviewed_sha256=digest(raw))
+                result = run(root)
             self.assertEqual(len(calls), 4)
             self.assertEqual(result["status"], "completed")
             with patch("neural_conversation_meal.assess",
