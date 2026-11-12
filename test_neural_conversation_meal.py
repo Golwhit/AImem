@@ -8,9 +8,11 @@ from unittest.mock import patch
 from neural_base_comparison import WordBase, digest
 from neural_conversation_context import build
 from neural_conversation_meal import (
-    ARMS, FIXTURE, SKILLS, SOURCES, curriculum, paired_scores, run, validate, validate_curriculum,
+    ARMS, AUTHORED_FIXTURE, FIXTURE, SKILLS, SOURCES, authored_curriculum, curriculum, fixture_for, paired_scores,
+    run, validate, validate_curriculum,
 )
 from neural_conversation_trial import answer_examples, assess, prompt_for, token_loss
+from neural_meal_phrasing import FRAMES
 from neural_plasticity import PlasticityContext, diagnostics, initialize
 
 
@@ -59,6 +61,21 @@ class ConversationMealTests(unittest.TestCase):
         self.assertFalse(any("Mira" in text and "book" in text for text in train_text))
         with self.assertRaises(ValueError):
             curriculum(100)
+
+    def test_authored_set_holds_out_reserved_wording_and_new_entities(self):
+        data = authored_curriculum()
+        validate_curriculum(data)
+        self.assertEqual(len(data["train"]), 256)
+        self.assertEqual(len(data["test"]), 64)
+        self.assertEqual(Counter(row["evaluation_group"] for row in data["test"]),
+                         {"combination": 32, "wording": 32})
+        train_text = " ".join(turn["content"] for row in data["train"] for turn in row["turns"])
+        self.assertFalse(any(name in train_text for name in ("Theo", "Vera", "Pia", "Rosa", "clock", "sail")))
+        for skill in FRAMES:
+            self.assertEqual(len([row for row in data["test"] if row["skill"] == skill]), 8)
+        wording_prompts = {prompt_for(row) for row in data["test"] if row["evaluation_group"] == "wording"}
+        self.assertTrue(wording_prompts.isdisjoint({prompt_for(row) for row in data["train"]}))
+        self.assertEqual(fixture_for(256, authored=True), AUTHORED_FIXTURE)
 
     def test_training_only_symbols_and_equal_initials_across_sizes(self):
         data = curriculum()

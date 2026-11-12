@@ -15,6 +15,7 @@ from neural_base_diagnostic import ambiguity
 from neural_chat import BASE_MODEL, load_selection
 from neural_conversation_context import build
 from neural_conversation_trial import answer_examples, assess, canonical
+from neural_meal_phrasing import exchanges as authored_exchanges
 from neural_plasticity import PlasticityContext, diagnostics, fit, initialize, replay
 from original_generator import atomic_json
 
@@ -27,7 +28,7 @@ RATE = .1
 CPU_CHECKPOINTS = (8.0, 24.0)
 SKILLS = ("explicit_owner", "attribute", "transfer", "negation", "correction",
           "missing_information", "reference", "unknown_location")
-SOURCES = ("neural_conversation_meal.py", "neural_plasticity.py", "neural_experiment.py",
+SOURCES = ("neural_conversation_meal.py", "neural_meal_phrasing.py", "neural_plasticity.py", "neural_experiment.py",
            "neural_conversation_context.py", "neural_conversation_trial.py",
            "neural_base_comparison.py", "neural_continuation.py")
 
@@ -96,11 +97,44 @@ TEACHING_CASES = (
     ("Rex", "Sol", "shell"), ("Tara", "Uma", "coin"), ("Vic", "Wren", "plate"), ("Yuri", "Zoe", "rope"),
 )
 TEACHING_SIZES = (64, 256)
+TEST_SIZES = (32, 64)
 LARGE_FIXTURE = "fixtures/neural-conversation-meal-256.json"
+AUTHORED_FIXTURE = "fixtures/neural-conversation-meal-authored-256.json"
+HELD_FAMILIAR = (("Pia", "Quin", "cup"), ("Rosa", "Sam", "box"))
+HELD_WORDING = (("Theo", "Ula", "clock"), ("Vera", "Walt", "sail"))
 
 
-def fixture_for(size: int) -> str:
+def fixture_for(size: int, authored: bool = False) -> str:
+    if authored:
+        return AUTHORED_FIXTURE
     return FIXTURE if size == 64 else LARGE_FIXTURE
+
+
+def authored_curriculum() -> dict:
+    training = []
+    for case, (owner, other, obj) in enumerate(TEACHING_CASES):
+        training.extend(authored_exchanges(owner, other, obj, case, "train"))
+    test = []
+    for offset, (owner, other, obj) in enumerate(HELD_FAMILIAR):
+        test.extend(authored_exchanges(owner, other, obj, len(TEACHING_CASES) + offset, "combination"))
+    for offset, (owner, other, obj) in enumerate(HELD_WORDING):
+        test.extend(authored_exchanges(owner, other, obj, len(TEACHING_CASES) + len(HELD_FAMILIAR) + offset,
+                                       "wording", wording=True))
+    return {
+        "schema": 1, "status": "generated_pending_exact_content_hash_approval",
+        "provenance": "Original synthetic examples and sentence frames hand-authored with AI assistance for this "
+                      "project. Not copied from an external corpus. Not a guarantee of exclusive rights or legal clearance.",
+        "purpose": "256 authored teaching exchanges with three phrasing frames per skill, not general conversation training.",
+        "training_policy": "Only the train split is optimizer input, following explicit approval of exact file SHA256. "
+                           "Frame 3 of each skill is reserved for held-out wording and never trains. "
+                           "No runtime templates or answer lookup. Test never constructs vocabulary or selects models.",
+        "evaluation_policy": "64 newly authored developer-visible diagnostic cases: 32 new name/object combinations "
+                             "with trained phrasing and 32 new names/objects with unseen phrasing. "
+                             "Not a locked independent benchmark or proof of generalization.",
+        "small_control_ids": [row["id"] for row in training if row["case"] == 0],
+        "train": training,
+        "test": test,
+    }
 
 
 def curriculum(size: int = 64) -> dict:
@@ -127,9 +161,10 @@ def curriculum(size: int = 64) -> dict:
 
 
 def validate_curriculum(data: dict) -> None:
-    if len(data["train"]) not in TEACHING_SIZES or len(data["test"]) != 32:
-        raise ValueError("Meal requires 64 or 256 teaching and exactly 32 evaluation exchanges")
+    if len(data["train"]) not in TEACHING_SIZES or len(data["test"]) not in TEST_SIZES:
+        raise ValueError(f"Meal requires 64 or 256 teaching and {TEST_SIZES} evaluation exchanges")
     per_skill = len(data["train"]) // len(SKILLS)
+    test_per_skill = len(data["test"]) // len(SKILLS)
     all_rows = data["train"] + data["test"]
     ids = [row["id"] for row in all_rows]
     prompts = [canonical(row["turns"]) for row in all_rows]
@@ -139,7 +174,7 @@ def validate_curriculum(data: dict) -> None:
     if len(controls) != 16 or len(set(controls)) != 16 or not set(controls) <= {
             row["id"] for row in data["train"]}:
         raise ValueError("Small control requires 16 distinct teaching IDs")
-    for rows, count in ((data["train"], per_skill), (data["test"], 4),
+    for rows, count in ((data["train"], per_skill), (data["test"], test_per_skill),
                         ([row for row in data["train"] if row["id"] in controls], 2)):
         if Counter(row["skill"] for row in rows) != Counter({skill: count for skill in SKILLS}):
             raise ValueError("Each split must balance skill counts")
@@ -186,8 +221,8 @@ def train_trial(job: dict) -> tuple[dict, dict]:
 
 
 def run(root: Path, *, acknowledge_review: bool, reviewed_sha256: str, size: int = 64,
-        cpu_checkpoints: tuple[float, ...] = CPU_CHECKPOINTS, decay: float = 1.0) -> dict:
-    raw = (root / fixture_for(size)).read_bytes()
+        cpu_checkpoints: tuple[float, ...] = CPU_CHECKPOINTS, decay: float = 1.0, authored: bool = False) -> dict:
+    raw = (root / fixture_for(size, authored)).read_bytes()
     if acknowledge_review is not True or digest(raw) != reviewed_sha256:
         raise ValueError("Explicit approval of exact larger curriculum hash required")
     data = json.loads(raw)
@@ -229,8 +264,8 @@ def run(root: Path, *, acknowledge_review: bool, reviewed_sha256: str, size: int
                   "not simply repeated old examples. Train only answer+newline targets. Check budget per 100 updates "
                   "with explicit overshoot; checkpoints teaching-only. Final fixed endpoint only; save all six "
                   "arm/seed choices per data size before any test, no test-guided selection. Three draw/fresh-init "
-                  "seeds from one parent are not independent pretraining seeds. 32 test prompts developer-visible, "
-                  "not fresh locked evidence. Compare both pair members correct, not just common-answer guesses. "
+                  "seeds from one parent are not independent pretraining seeds. Developer-visible held-out prompts "
+                  f"({len(data['test'])}), not fresh locked evidence. Compare both pair members correct, not just common-answer guesses. "
                   "No active model changes or corpus-retention claims. Memory capture remains connected. "
                   "Measurement/evaluation/setup/persistence/replay cost is outside update budget and reported separately "
                   "where measured. Generic full-96-character decoder/scoring reused unchanged.",
@@ -339,16 +374,19 @@ if __name__ == "__main__":
     parser.add_argument("--reviewed-sha256")
     parser.add_argument("--validate-run")
     parser.add_argument("--size", type=int, default=64, choices=TEACHING_SIZES)
+    parser.add_argument("--authored", action="store_true", help="Use the hand-authored 256 set with 64 held-out cases.")
     parser.add_argument("--budget", type=float, help="Total CPU-second training budget per trial; default is CPU_CHECKPOINTS.")
     parser.add_argument("--segments", type=int, default=1, help="Equal CPU segments within --budget.")
     parser.add_argument("--decay", type=float, default=1.0, help="Per-segment learning-rate multiplier.")
     args = parser.parse_args()
     root = Path(__file__).resolve().parent
     if args.prepare:
-        path = root / fixture_for(args.size)
+        if args.authored and args.size != 256:
+            parser.error("--authored is defined for the 256 teaching set only")
+        path = root / fixture_for(args.size, args.authored)
         if path.exists():
             raise FileExistsError("Preserve existing generated curriculum; preparation cannot overwrite it")
-        data = curriculum(args.size)
+        data = authored_curriculum() if args.authored else curriculum(args.size)
         validate_curriculum(data)
         atomic_json(path, data)
         print(f"{path}: SHA256 {digest(path.read_bytes())}")
@@ -362,4 +400,4 @@ if __name__ == "__main__":
         else:
             checkpoints = CPU_CHECKPOINTS
         run(root, acknowledge_review=args.acknowledge_review, reviewed_sha256=args.reviewed_sha256,
-            size=args.size, cpu_checkpoints=checkpoints, decay=args.decay)
+            size=args.size, cpu_checkpoints=checkpoints, decay=args.decay, authored=args.authored)
