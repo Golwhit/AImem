@@ -128,24 +128,21 @@ HTML = r"""<!doctype html>
         radial-gradient(ellipse at 90% 80%, rgba(38, 111, 119, .10), transparent 42%),
         #080d19;
     }
-    main { max-width: 1180px; margin: 0 auto; }
-    body.sidebar-collapsed main { max-width: 1400px; }
-    header { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 10px; }
-    .graph-nav { display: flex; gap: 8px; }
-    .graph-nav a { border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; color: #dce7f8; font-size: 11px; text-decoration: none; }
-    .graph-nav a:hover { border-color: rgba(103,232,249,.4); background: rgba(103,232,249,.08); }
+    main { max-width: 1700px; margin: 0 auto; }
+    body.sidebar-collapsed main { max-width: 2016px; }
+    header { display: flex; justify-content: flex-end; align-items: center; gap: 12px; margin-bottom: 10px; }
     .eyebrow { color: var(--cyan); text-transform: uppercase; letter-spacing: .16em; font-size: 11px; font-weight: 750; }
-    .live-pill { white-space: nowrap; border: 1px solid rgba(110,231,183,.25); color: var(--green); border-radius: 30px; padding: 9px 13px; font-size: 12px; background: rgba(110,231,183,.07); }
+    .live-pill { white-space: nowrap; border: 1px solid rgba(110,231,183,.25); color: var(--green); border-radius: 30px; padding: 3px 8px; font-size: 9px; background: rgba(110,231,183,.07); }
     .stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin-bottom: 10px; }
     .stat, .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 18px 60px rgba(0,0,0,.18); }
-    .stat { padding: 9px 12px; }
-    .stat-label { color: var(--muted); font-size: 9px; text-transform: uppercase; letter-spacing: .06em; }
-    .stat-value { margin-top: 3px; font-size: 19px; font-weight: 700; font-variant-numeric: tabular-nums; }
-    .workspace { display: grid; grid-template-columns: minmax(0, 1fr) 332px; gap: 16px; align-items: stretch; }
-    body.sidebar-collapsed .workspace { grid-template-columns: minmax(0, 1fr); }
+    .stat { height: 22px; padding: 0 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .stat-label { color: var(--muted); font-size: 9px; text-transform: uppercase; letter-spacing: .06em; white-space: nowrap; }
+    .stat-value { font-size: 19px; line-height: 1; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .workspace { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: stretch; }
     .graph-panel { position: relative; min-width: 0; padding: 15px; overflow: hidden; }
     .graph-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 4px 7px 0; }
     .graph-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .zoom-button { padding: 4px 10px; font-size: 16px; line-height: 1; }
     h2 { font-size: 14px; margin: 0; letter-spacing: .01em; }
     .hint { font-size: 11px; color: var(--muted); }
     svg { display: block; width: 100%; height: auto; min-height: 330px; overflow: visible; }
@@ -255,10 +252,6 @@ HTML = r"""<!doctype html>
 <body>
 <main>
   <header>
-    <nav class="graph-nav" aria-label="App navigation">
-      <a href="/">Chat</a>
-      <a href="/?view=generation">Generator</a>
-    </nav>
     <div class="live-pill" id="learner-state-pill">LEARNER: CONNECTING</div>
   </header>
   <section class="stats" aria-label="Graph statistics">
@@ -271,10 +264,10 @@ HTML = r"""<!doctype html>
   <section class="workspace">
     <div class="panel graph-panel">
       <div class="graph-head">
-        <h2>Conversation memory graph</h2>
+        <h2>AI Memory</h2>
         <div class="graph-actions">
-          <button type="button" id="inspect-learner-button" title="Inspect the learner's live parameters and evaluation">Inspect learner</button>
-          <button type="button" id="sidebar-toggle-button">Hide right menu</button>
+          <button type="button" class="zoom-button" id="zoom-out" aria-label="Zoom out">&minus;</button>
+          <button type="button" class="zoom-button" id="zoom-in" aria-label="Zoom in">+</button>
         </div>
       </div>
       <div class="galaxy-canvas">
@@ -282,8 +275,7 @@ HTML = r"""<!doctype html>
         <span class="version-badge" aria-label="Application version __APP_VERSION__">v__APP_VERSION__</span>
       </div>
     </div>
-    <aside class="panel">
-      <section id="prompt-training-panel">
+    <section class="panel" id="prompt-training-panel">
         <div class="section-label">Prompt training</div>
         <form id="training-prompt-form">
           <textarea id="memory-query" class="query-input" rows="2" placeholder="Enter a training prompt" aria-label="Training prompt" required></textarea>
@@ -303,6 +295,7 @@ HTML = r"""<!doctype html>
         </section>
         <div id="search-results" class="search-results" aria-live="polite"></div>
       </section>
+    <aside class="panel">
       <section id="learner-panel">
         <div class="section-label">Learner component</div>
         <div class="learner-mode" id="learner-mode" aria-live="polite">Connecting</div>
@@ -313,7 +306,6 @@ HTML = r"""<!doctype html>
           <div class="section-label">Selected memory</div>
           <div class="selected-memory-actions">
             <button type="button" id="importance-toggle-button" hidden aria-pressed="false">Mark important</button>
-            <button type="button" id="selected-sidebar-toggle-button">Hide right menu</button>
           </div>
         </div>
         <h2 id="selected-name" class="selected-name">Pick a memory</h2>
@@ -366,19 +358,23 @@ const state = {
 const revisingJudgments = new Set();
 const graphStateApi = "http://localhost:3001/api/graph-state";
 const svg = document.getElementById("graph");
+let viewExtent = 380;
+let zoomLevel = 1;
+function applyViewBox() {
+  const size = 2 * viewExtent / zoomLevel;
+  const offset = viewExtent - size / 2;
+  svg.setAttribute("viewBox", `${offset} ${offset} ${size} ${size}`);
+}
+function changeZoom(factor) {
+  zoomLevel = Math.min(4, Math.max(0.5, zoomLevel * factor));
+  applyViewBox();
+}
 const ns = "http://www.w3.org/2000/svg";
 const positions = {};
 const queryInput = document.getElementById("memory-query");
 const searchResults = document.getElementById("search-results");
-const sidebarToggleButton = document.getElementById("sidebar-toggle-button");
-const selectedSidebarToggleButton = document.getElementById("selected-sidebar-toggle-button");
 const importanceToggleButton = document.getElementById("importance-toggle-button");
 const selectedMemoryPanel = document.getElementById("selected-memory-panel");
-function inspectLearner() {
-  state.sidebarCollapsed = false;
-  render();
-  document.getElementById("learner-panel").scrollIntoView({block: "nearest"});
-}
 async function refreshLearnerStatus() {
   try {
     const response = await fetch("http://localhost:3001/api/learner-status");
@@ -538,20 +534,121 @@ function domainForNode(node) {
 state.nodes.forEach(node => {
   node.domain = domainForNode(node);
 });
+const SPLIT_RADIUS = 180;
+function layoutStats(nodes) {
+  const messages = nodes.filter(node => node.kind === "message");
+  const salience = messages.reduce((sum, node) => sum + Math.min(1, learnedScore(node)), 0) / Math.max(1, messages.length);
+  return {messages, salience, raw: 48 + 6 * Math.sqrt(messages.length) + 20 * salience};
+}
+function relaxSun(nodeIds, radius, weights) {
+  const limit = Math.max(1, radius - 28);
+  const count = nodeIds.length;
+  const k = limit / Math.sqrt(Math.max(1, count));
+  const index = new Map(nodeIds.map((id, i) => [id, i]));
+  const pos = nodeIds.map((id, i) => {
+    const angle = i * Math.PI * (3 - Math.sqrt(5));
+    const distance = limit * Math.sqrt((i + 0.5) / Math.max(1, count));
+    return {x: distance * Math.cos(angle), y: distance * Math.sin(angle)};
+  });
+  const edges = [];
+  nodeIds.forEach(id => (weights.get(id) || new Map()).forEach((w, other) => {
+    if (index.has(other) && index.get(id) < index.get(other)) edges.push([index.get(id), index.get(other), w]);
+  }));
+  let temperature = radius * 0.1;
+  for (let iteration = 0; iteration < 80; iteration++) {
+    const disp = pos.map(() => ({x: 0, y: 0}));
+    for (let i = 0; i < count; i++) {
+      for (let j = i + 1; j < count; j++) {
+        const dx = pos[i].x - pos[j].x, dy = pos[i].y - pos[j].y;
+        const d = Math.max(0.01, Math.hypot(dx, dy));
+        const f = k * k / d;
+        disp[i].x += dx / d * f; disp[i].y += dy / d * f;
+        disp[j].x -= dx / d * f; disp[j].y -= dy / d * f;
+      }
+    }
+    edges.forEach(([i, j, w]) => {
+      const dx = pos[i].x - pos[j].x, dy = pos[i].y - pos[j].y;
+      const d = Math.max(0.01, Math.hypot(dx, dy));
+      const f = w * d * d / k;
+      disp[i].x -= dx / d * f; disp[i].y -= dy / d * f;
+      disp[j].x += dx / d * f; disp[j].y += dy / d * f;
+    });
+    for (let i = 0; i < count; i++) {
+      const len = Math.hypot(disp[i].x, disp[i].y);
+      if (len > 0) {
+        const step = Math.min(len, temperature) / len;
+        pos[i].x += disp[i].x * step; pos[i].y += disp[i].y * step;
+      }
+      const r = Math.hypot(pos[i].x, pos[i].y);
+      if (r > limit) { pos[i].x *= limit / r; pos[i].y *= limit / r; }
+    }
+    temperature *= 0.96;
+  }
+  return new Map(nodeIds.map((id, i) => [id, pos[i]]));
+}
+function planEvaluationSplit() {
+  const keyFor = new Map();
+  const relative = new Map();
+  const evaluation = state.nodes.filter(node => node.domain === "evaluation");
+  if (layoutStats(evaluation).raw < SPLIT_RADIUS) return {keyFor, relative};
+  const members = new Set(evaluation.map(node => node.id));
+  const weights = new Map();
+  members.forEach(id => weights.set(id, new Map()));
+  state.links.forEach(link => {
+    if (link.kind === "parent" || link.source === link.target || !members.has(link.source) || !members.has(link.target)) return;
+    const w = Number(link.strength) || 0.3;
+    weights.get(link.source).set(link.target, (weights.get(link.source).get(link.target) || 0) + w);
+    weights.get(link.target).set(link.source, (weights.get(link.target).get(link.source) || 0) + w);
+  });
+  const ordered = evaluation.map(node => node.id);
+  const degree = new Map(ordered.map(id => [id, [...weights.get(id).values()].reduce((sum, w) => sum + w, 0)]));
+  let vector = new Map(ordered.map((id, i) => [id, (i % 2 ? 1 : -1) * (1 + (i % 7) / 7)]));
+  for (let round = 0; round < 200; round++) {
+    const next = new Map();
+    ordered.forEach(id => {
+      let sum = 0;
+      weights.get(id).forEach((w, other) => { sum += w * vector.get(other); });
+      const walk = degree.get(id) > 0 ? sum / degree.get(id) : 0;
+      next.set(id, 0.5 * vector.get(id) + 0.5 * walk);
+    });
+    let total = 0, mass = 0;
+    ordered.forEach(id => { total += degree.get(id) * next.get(id); mass += degree.get(id); });
+    const mean = mass > 0 ? total / mass : 0;
+    let norm = 0;
+    ordered.forEach(id => { next.set(id, next.get(id) - mean); norm += next.get(id) ** 2; });
+    norm = Math.sqrt(norm) || 1;
+    ordered.forEach(id => next.set(id, next.get(id) / norm));
+    vector = next;
+  }
+  const ranked = [...ordered].sort((x, y) => vector.get(y) - vector.get(x) || (x < y ? -1 : 1));
+  const sunOf = new Map(ranked.map((id, i) => [id, i < Math.ceil(ranked.length / 2) ? 0 : 1]));
+  [0, 1].forEach(sun => {
+    const ids = ordered.filter(id => sunOf.get(id) === sun);
+    const key = sun === 0 ? "evaluation" : "evaluation-2";
+    ids.forEach(id => keyFor.set(id, key));
+    const nodes = evaluation.filter(node => sunOf.get(node.id) === sun);
+    const radius = domainLayoutFor(key, nodes).radius;
+    relaxSun(ids, radius, weights).forEach((point, id) => relative.set(id, point));
+  });
+  return {keyFor, relative};
+}
+const evaluationSplit = planEvaluationSplit();
+state.nodes.forEach(node => {
+  node.layoutKey = evaluationSplit.keyFor.get(node.id) || node.domain || "memory";
+});
 const domainGroups = Object.entries(
   state.nodes.reduce((acc, node) => {
-    const domain = node.domain || "memory";
+    const domain = node.layoutKey || "memory";
     (acc[domain] ||= []).push(node);
     return acc;
   }, {})
 );
 function domainLayoutFor(domain, nodes) {
   const cluster = initialGraph.clusters?.[domain];
-  const labels = {memory: "AI memory", scripture: "Scripture", food: "Food", finance: "Finance", evaluation: "Under evaluation", entertainment: "Entertainment", other: "Other"};
-  const messages = nodes.filter(node => node.kind === "message");
-  const salience = messages.reduce((sum, node) => sum + Math.min(1, learnedScore(node)), 0) / Math.max(1, messages.length);
-  const radius = Math.min(180, 48 + 6 * Math.sqrt(messages.length) + 20 * salience);
-  return {center: {x: 0, y: 0}, radius, label: cluster?.label || labels[domain] || domain, subtitle: `${messages.length} memories`, messages: messages.length, salience};
+  const labels = {memory: "AI memory", scripture: "Scripture", food: "Food", finance: "Finance", evaluation: "Under evaluation", "evaluation-2": "Under evaluation II", entertainment: "Entertainment", other: "Other"};
+  const {messages, salience, raw} = layoutStats(nodes);
+  const radius = Math.min(SPLIT_RADIUS, raw);
+  return {center: {x: 0, y: 0}, radius, label: cluster?.label || labels[domain] || domain, subtitle: `${messages.length} memories`, messages: messages.length, salience, styleDomain: domain === "evaluation-2" ? "evaluation" : domain};
 }
 const domainLayouts = new Map();
 function memoryRadius(node) {
@@ -565,7 +662,8 @@ function updateLayout() {
   const orbit = Math.max(centerRadius + satelliteRadius + 65, satellites.length > 1 ? (2 * satelliteRadius + 45) / (2 * Math.sin(Math.PI / satellites.length)) : 0);
   const extent = Math.max(380, orbit + satelliteRadius + 55);
   const center = {x: extent, y: extent};
-  svg.setAttribute("viewBox", `0 0 ${extent * 2} ${extent * 2}`);
+  viewExtent = extent;
+  applyViewBox();
   if (domainLayouts.has("memory")) domainLayouts.get("memory").center = center;
   satellites.forEach((domain, index) => {
     const angle = -Math.PI / 2 + index * 2 * Math.PI / satellites.length;
@@ -574,6 +672,11 @@ function updateLayout() {
   domainGroups.forEach(([domain, nodes]) => {
     const layout = domainLayouts.get(domain);
     nodes.forEach((node, index) => {
+      const relaxed = evaluationSplit.relative.get(node.id);
+      if (relaxed) {
+        positions[node.id] = {x: layout.center.x + relaxed.x, y: layout.center.y + relaxed.y, depth: (relaxed.y / Math.max(1, layout.radius) + 1) / 2};
+        return;
+      }
       const angle = index * Math.PI * (3 - Math.sqrt(5));
       const distance = (layout.radius - 28) * Math.sqrt((index + 0.5) / Math.max(1, nodes.length));
       positions[node.id] = {x: layout.center.x + distance * Math.cos(angle), y: layout.center.y + distance * Math.sin(angle), depth: (Math.sin(angle) + 1) / 2};
@@ -660,7 +763,6 @@ function applySnapshot(snapshot) {
     if (link && typeof saved.strength === "number") link.strength = saved.strength;
   });
   if (typeof snapshot.cycles === "number") state.cycles = snapshot.cycles;
-  if (typeof snapshot.sidebarCollapsed === "boolean") state.sidebarCollapsed = snapshot.sidebarCollapsed;
   if (!state.currentEvaluation) state.query = typeof snapshot.query === "string" ? snapshot.query : "";
   if (queryInput) queryInput.value = state.query;
 }
@@ -709,7 +811,7 @@ function importance(node) {
   return node.rawImportance * average;
 }
 function learnedScore(node) {
-  const fb = node.feedback || defaultFeedback();
+  const fb = node.feedback && typeof node.feedback === "object" ? node.feedback : defaultFeedback();
   const base = importance(node);
   const recency = Math.min(0.25, node.history.length * 0.02);
   const helpful = fb.helpful * 0.09;
@@ -775,28 +877,12 @@ function saveAndRender() {
 }
 function syncSidebarVisibility() {
   document.body.classList.toggle("sidebar-collapsed", state.sidebarCollapsed);
-  if (sidebarToggleButton) {
-    sidebarToggleButton.textContent = state.sidebarCollapsed ? "Show right menu" : "Hide right menu";
-    sidebarToggleButton.setAttribute(
-      "aria-pressed",
-      state.sidebarCollapsed ? "true" : "false"
-    );
-  }
-  if (selectedSidebarToggleButton) {
-    selectedSidebarToggleButton.textContent = state.sidebarCollapsed ? "Show right menu" : "Hide right menu";
-    selectedSidebarToggleButton.setAttribute("aria-pressed", state.sidebarCollapsed ? "true" : "false");
-  }
 }
 function syncSelectedMemoryPanel() {
   const node = state.nodes.find(item => item.id === state.selected);
   const hasSelection = Boolean(node);
   if (selectedMemoryPanel) {
     selectedMemoryPanel.hidden = !hasSelection;
-  }
-  if (selectedSidebarToggleButton) {
-    selectedSidebarToggleButton.hidden = !hasSelection;
-    selectedSidebarToggleButton.textContent = state.sidebarCollapsed ? "Show right menu" : "Hide right menu";
-    selectedSidebarToggleButton.setAttribute("aria-pressed", state.sidebarCollapsed ? "true" : "false");
   }
   if (importanceToggleButton) {
     const canMark = node?.role === "You";
@@ -817,20 +903,21 @@ function render() {
   const createdIds = newestMessageIds();
   const backdropLayer = el("g");
   domainLayouts.forEach((layout, domain) => {
-    const nodes = state.nodes.filter(node => (node.domain || "memory") === domain);
+    const nodes = state.nodes.filter(node => (node.layoutKey || "memory") === domain);
     if (!nodes.length) return;
+    const style = layout.styleDomain || domain;
     const y = layout.center.y - layout.radius;
     backdropLayer.append(el("ellipse", {cx: layout.center.x + 5, cy: layout.center.y + 12, rx: layout.radius, ry: layout.radius, class: "region-shadow"}));
     const boundary = el("circle", {
       cx: layout.center.x, cy: layout.center.y, r: layout.radius,
-      class: `cluster-bg ${domain}`
+      class: `cluster-bg ${style}`
     });
     boundary.append(el("title", {}, `${layout.label}: radius ${layout.radius.toFixed(1)}; ${layout.messages} messages; mean capped salience ${layout.salience.toFixed(2)}. Size is visual salience, not intelligence or training approval.`));
     backdropLayer.append(boundary);
     backdropLayer.append(el("circle", {cx: layout.center.x, cy: layout.center.y, r: layout.radius, fill: "url(#region-shading)", class: "region-depth"}));
-    backdropLayer.append(el("text", {x: layout.center.x, y: y + 22, class: `cluster-title ${domain}`, "text-anchor": "middle"}, layout.label));
+    backdropLayer.append(el("text", {x: layout.center.x, y: y + 22, class: `cluster-title ${style}`, "text-anchor": "middle"}, layout.label));
     if (layout.subtitle) {
-      backdropLayer.append(el("text", {x: layout.center.x, y: y + 38, class: `cluster-subtitle ${domain}`, "text-anchor": "middle"}, layout.subtitle));
+      backdropLayer.append(el("text", {x: layout.center.x, y: y + 38, class: `cluster-subtitle ${style}`, "text-anchor": "middle"}, layout.subtitle));
     }
   });
   svg.append(backdropLayer);
@@ -1210,16 +1297,6 @@ function reset() {
   render();
   announce("Simulation reset to the original memory graph.");
 }
-document.getElementById("inspect-learner-button").addEventListener("click", inspectLearner);
-sidebarToggleButton.addEventListener("click", () => {
-  state.sidebarCollapsed = !state.sidebarCollapsed;
-  saveAndRender();
-});
-selectedSidebarToggleButton.addEventListener("click", () => {
-  if (!state.selected) return;
-  state.sidebarCollapsed = !state.sidebarCollapsed;
-  saveAndRender();
-});
 importanceToggleButton.addEventListener("click", () => {
   const node = state.nodes.find(item => item.id === state.selected);
   if (!node || node.role !== "You") return;
@@ -1227,6 +1304,8 @@ importanceToggleButton.addEventListener("click", () => {
   saveAndRender();
   announce(node.userImportant ? `<strong>${node.id}</strong> marked important.` : `<strong>${node.id}</strong> importance mark removed.`);
 });
+document.getElementById("zoom-in").addEventListener("click", () => changeZoom(1.25));
+document.getElementById("zoom-out").addEventListener("click", () => changeZoom(0.8));
 document.getElementById("response-useful").addEventListener("click", () => recordResponseFeedback("useful"));
 document.getElementById("response-needs-correction").addEventListener("click", () => recordResponseFeedback("needs_correction"));
 document.getElementById("training-prompt-form").addEventListener("submit", async event => {

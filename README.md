@@ -383,7 +383,15 @@ Parent-child galaxy relationships use solid green shell-to-shell connectors,
 with hover labels identifying the child and parent. Cross-galaxy memory links
 remain dashed. This styling does not change membership or learning weights.
 
-The conversation memory prototype stores its transcript in `chat_memory.json` and renders it in `memory_graph.html`. The browser view now keeps its learning overlay in a backend graph-state file served from the local API, so helpful, correction, and weak-link feedback survives refreshes without depending on browser `localStorage`. The graph page also polls that backend snapshot, so it refreshes itself when the stored memory state changes. Use the search box to rank memories by query, click a node to open the selected-memory panel, hide that selected-memory section from the graph header if you want it out of the way, and hide the entire right menu with the button above the graph if you want the graph to use the full workspace. The feedback buttons teach the graph which memories should matter more. To add a conversation exchange and advance one persistent decay cycle:
+When Under evaluation grows past its maximum drawn radius, the graph splits it
+into two suns labeled Under evaluation and Under evaluation II. The split is
+computed once at page load from the link structure: memories with stronger
+mutual connections stay together, and the weakest-tied memories are pulled to
+the second sun. Each sun is then relaxed by a deterministic force layout so
+connections pull related memories close and weaker links drag toward the new
+sun. This is a display-only split; it does not change membership or weights.
+
+The conversation memory prototype stores its transcript in `chat_memory.json` and renders it in `memory_graph.html`. The browser view now keeps its learning overlay in a backend graph-state file served from the local API, so helpful, correction, and weak-link feedback survives refreshes without depending on browser `localStorage`. The graph page also polls that backend snapshot, so it refreshes itself when the stored memory state changes. Use the search box to rank memories by query and click a node to open the selected-memory panel. The zoom − and + buttons at the upper right of AI Memory scale the view. The feedback buttons teach the graph which memories should matter more. To add a conversation exchange and advance one persistent decay cycle:
 
 ```bash
 python update_chat_memory.py \
@@ -1357,7 +1365,7 @@ diagram. Reviewed source text feeds the local generator; chat exchanges are
 saved in shared memory; eligible memories and explicit labels inform the
 relevance learner. Generated replies are stored but are not automatically used
 to train either model, and retrieved memories do not yet condition generation.
-Inspect learner shows live generation, all five parameters, review/eligibility
+The learner panel shows live generation, all five parameters, review/eligibility
 counts, and the latest evaluation. The learner status polls every five seconds
 and refreshes after feedback; generation zero does not mean trained weights.
 See Lesson 8 in the

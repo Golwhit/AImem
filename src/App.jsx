@@ -16,22 +16,18 @@ export default function App() {
 
   return (
     <div className="app-shell">
-      <header className="hero">
-        <div>
-          <p className="eyebrow">Push Bridge POC</p>
-          <h1>Memory + AI Chat</h1>
-          <p className="subtitle">Local memory</p>
-        </div>
+      <header className="hero" style={{ textAlign: 'center' }}>
+        <h1>Chat</h1>
       </header>
 
-      <nav className="tabs">
+      <nav className="tabs" style={{ justifyContent: 'center' }}>
         <button className={activeTab === 'chat' ? 'tab active' : 'tab'} onClick={() => setActiveTab('chat')}>Chat</button>
         <button className={activeTab === 'generation' ? 'tab active' : 'tab'} onClick={() => setActiveTab('generation')}>Generation</button>
         <button className={activeTab === 'base-lab' ? 'tab active' : 'tab'} onClick={() => setActiveTab('base-lab')}>Base Model Lab</button>
         <button className={activeTab === 'graph' ? 'tab active' : 'tab'} onClick={() => setActiveTab('graph')}>Memory Graph</button>
       </nav>
 
-      <main style={{ maxWidth: activeTab === 'base-lab' ? 1200 : 800, margin: '0 auto', padding: '0 16px' }}>
+      <main style={{       maxWidth: activeTab === 'base-lab' ? 1200 : activeTab === 'graph' ? 960 : 800, margin: '0 auto', padding: '0 16px' }}>
         {activeTab === 'base-lab' && <BaseModelLab />}
         {activeTab === 'chat' && <ChatPanel sessionId={sessionId} />}
         {activeTab === 'generation' && <><NeuralPanel /><GeneratorPanel /></>}
@@ -45,25 +41,19 @@ export default function App() {
 
 function ChatPanel({ sessionId }) {
   const [messages, setMessages] = useState([]);
-  const [generatorStatus, setGeneratorStatus] = useState(null);
   const [chatModel, setChatModel] = useState(null);
-  const [progressError, setProgressError] = useState('');
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [includeLab, setIncludeLab] = useState(false);
   const bottomRef = useRef(null);
 
   const refreshProgress = async () => {
     try {
-      const [response, modelResponse] = await Promise.all([fetch('/api/generator'), fetch('/api/chat-model')]);
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const modelResponse = await fetch('/api/chat-model');
       if (!modelResponse.ok) throw new Error(`Chat model HTTP ${modelResponse.status}`);
-      setGeneratorStatus(await response.json());
       setChatModel(await modelResponse.json());
-      setProgressError('');
     } catch (err) {
-      setProgressError(`Progress unavailable: ${err.message}`);
+      setError(`Progress unavailable: ${err.message}`);
     }
   };
 
@@ -88,7 +78,7 @@ function ChatPanel({ sessionId }) {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text, sessionId, include_in_generator: true, include_lab: includeLab })
+        body: JSON.stringify({ message: text, sessionId, include_in_generator: true })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
@@ -139,57 +129,12 @@ function ChatPanel({ sessionId }) {
 
   return (
     <section className="hero-card" style={{ marginTop: 24 }}>
-      <div>
-        <p className="eyebrow">AI Chat</p>
-        <h2>Memory and local generation</h2>
-      </div>
-      {chatModel?.ready && <p><strong>Active chat: {chatModel.label || 'Historical layered neural model (L0/L1)'}</strong>
-        {' '}— {chatModel.parameters.toLocaleString()} parameters, seed {chatModel.seed},
-        {' '}{chatModel.training_round ? `training round ${chatModel.training_round}` : `${chatModel.passes} passes`}; run {chatModel.run_id}.
-        {' '}Training history: {chatModel.source?.training}.
-        {' '}{chatModel.note}
-        {chatModel.comparison_baseline && <> Original comparison control:
-          {' '}{chatModel.comparison_baseline.parameters.toLocaleString()} parameters,
-          {' '}seed {chatModel.comparison_baseline.seed}, {chatModel.comparison_baseline.passes} passes.</>}
-        {' '}Optional model-lab comparisons below use the separate legacy generator.</p>}
-
-      <div className="generator-status" aria-live="polite">
-        {generatorStatus ? (
-          <>
-            <span>{chatModel?.ready ? 'Legacy generator (not active chat)' : 'Generation'} {generatorStatus.generation}</span>
-            <span>{generatorStatus.document_count} training sources</span>
-            <span>{generatorStatus.training_characters.toLocaleString()} characters</span>
-          </>
-        ) : <span>Loading progress...</span>}
-        <span>{messages.filter((message) => message.rating === 'useful').length} relevant this session</span>
-        <span>{messages.filter((message) => message.rating === 'needs_correction').length} need correction this session</span>
-        <a href="/?view=generation">Compare generations</a>
-      </div>
-      {progressError && <p className="banner banner-error">{progressError}</p>}
-      {!chatModel?.ready && generatorStatus?.seed_extraction && (
-        <p className="message-meta">
-          Seed layers run alongside training: {generatorStatus.seed_extraction.counts.alive} alive,
-          {' '}{generatorStatus.seed_extraction.counts.dead} dead, and {generatorStatus.seed_extraction.counts.maybe} review occurrences
-          {' '}across {generatorStatus.seed_extraction.document_count} sources. Existing training is unchanged.
-        </p>
-      )}
-      {!chatModel?.ready && generatorStatus?.scorer && (
-        <section aria-label="Response learning progress" style={{ borderBottom: '1px solid #334155', paddingBottom: 12 }}>
-          <div className="generator-status">
-            <span>Response scorer generation {generatorStatus.scorer.generation}</span>
-            <span>{generatorStatus.scorer.examples} reviewed pairs</span>
-            <span>{generatorStatus.scorer.queries} distinct prompts</span>
-            <span>{generatorStatus.scorer.training?.status || 'Awaiting ratings'}</span>
-          </div>
-          <label style={{ display: 'block', fontSize: 12 }}>Reviewed pairs: {generatorStatus.scorer.examples} / {generatorStatus.scorer.minimum_examples}
-            <progress style={{ width: '100%' }} aria-label="Reviewed pairs toward validation minimum" value={Math.min(generatorStatus.scorer.examples, generatorStatus.scorer.minimum_examples)} max={generatorStatus.scorer.minimum_examples} />
-          </label>
-          <label style={{ display: 'block', fontSize: 12 }}>Distinct prompts: {generatorStatus.scorer.queries} / {generatorStatus.scorer.minimum_queries}
-            <progress style={{ width: '100%' }} aria-label="Distinct prompts toward validation minimum" value={Math.min(generatorStatus.scorer.queries, generatorStatus.scorer.minimum_queries)} max={generatorStatus.scorer.minimum_queries} />
-          </label>
-          {generatorStatus.scorer.training?.reason && <small className="message-meta">{generatorStatus.scorer.training.reason}</small>}
-          {generatorStatus.scorer.training?.candidate_loss != null && <small className="message-meta">Held-out error: {generatorStatus.scorer.training.baseline_loss.toFixed(4)} → {generatorStatus.scorer.training.candidate_loss.toFixed(4)}</small>}
-        </section>
+      {chatModel?.ready && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <small className="message-meta" title="Parameters in the active trained chat model">
+            Trained model parameters: <strong>{chatModel.parameters.toLocaleString()}</strong>
+          </small>
+        </div>
       )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 360, overflowY: 'auto', margin: '12px 0' }}>
@@ -278,12 +223,6 @@ function ChatPanel({ sessionId }) {
           {loading ? '…' : 'Send'}
         </button>
       </div>
-      <label className="message-meta">
-        <input type="checkbox" checked={includeLab} onChange={(event) => setIncludeLab(event.target.checked)} />
-        {' '}{chatModel?.ready
-          ? 'Opt into the historical layer lab (retired; does not train the working base).'
-          : 'Compare extraction and generation before training this prompt (local lab).'}
-      </label>
     </section>
   );
 }

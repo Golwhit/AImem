@@ -19,8 +19,8 @@ from neural_word_context import WORD
 from original_generator import atomic_json
 
 
-MAX_CPU = 10.0
-MAX_UPDATES = 2000
+MAX_CPU = 30.0
+MAX_UPDATES = 6000
 
 
 def train_correction(root: Path, payload: dict) -> dict:

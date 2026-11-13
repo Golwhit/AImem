@@ -432,8 +432,10 @@ as trained. The UI displays this limit.
 
 Training starts within the feedback request. After each 50 updates, it
 checks the exact prompt's free-running, newline-terminated answer.
-The budget is 10 update-CPU seconds or 2,000 updates; generation,
-independent replay and disk writes add latency. This is immediate initiation,
+The budget is 30 update-CPU seconds or 6,000 updates; generation,
+independent replay and disk writes add latency. Earlier 10-second and
+2,000-update limits stopped corrections that needed 450–700 updates, so they
+were raised. This is immediate initiation,
 not an instantaneous or guaranteed successful fit. If it cannot learn within
 that budget, it reports failure and does not change active/progress weights.
 The failed candidate evidence is retained as **not learned**, not as success.
@@ -4235,6 +4237,14 @@ which galaxy grew from which. Cross-galaxy memory connections retain their
 dashed styling; Under evaluation receives no parent connector. This is visual
 only and does not change membership, merge galaxies, or train weights.
 
+Under evaluation is split into two suns when it reaches its maximum drawn
+radius (`SPLIT_RADIUS` in `generate_html_graph.py`). The split uses a
+deterministic spectral bisection over the non-parent link weights, so strongly
+connected memories land on one sun and the weakest-tied ones on the other. Each
+sun is then relaxed with a Fruchterman-Reingold-style layout, which keeps tight
+connections close and drags weaker ones toward the second sun. Only the display
+changes; memberships and weights are untouched.
+
 The graph can now look for related user contributions inside an existing domain,
 such as AI memory. It removes broad parent words and conversational filler from
 that comparison, so saying "memory model" repeatedly does not itself create an
@@ -4288,7 +4298,7 @@ Directed system links show the project building the learner, the learner
 retrieving memories, and reviewed examples flowing from memory to the learner.
 These are architectural relationships, not inferred memory associations.
 
-Select Learner or Inspect learner to view live generation, four feature weights,
+Select Learner to view live generation, four feature weights,
 the intercept, reviewed memories, recorded and eligible judgments, pending
 review, and the last evaluation losses. Status refreshes periodically and after
 feedback. Reading it does not train the model. A generation-zero learner displays
