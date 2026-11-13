@@ -704,13 +704,16 @@ const domainGroups = Object.entries(
     return acc;
   }, {})
 );
+function styleDomainFor(domain) {
+  return initialGraph.clusters?.[domain]?.parent_domain || domain;
+}
 function domainLayoutFor(domain, nodes) {
   const cluster = initialGraph.clusters?.[domain];
   const labels = {memory: "AI memory", scripture: "Scripture", food: "Food", finance: "Finance", evaluation: "Under evaluation", "evaluation-2": "Under evaluation II", entertainment: "Entertainment", other: "Other"};
   const {messages, salience, raw} = layoutStats(nodes);
   const overflow = layoutStats(state.nodes.filter(node => node.domain === "evaluation")).raw >= SPLIT_RADIUS;
   const radius = domain.startsWith("evaluation") && overflow ? SUN_RADIUS : isBaby(domain) ? BABY_RADIUS : Math.min(SPLIT_RADIUS, raw);
-  return {center: {x: 0, y: 0}, radius, label: cluster?.label || labels[domain] || domain, subtitle: `${messages.length} memories`, messages: messages.length, salience, styleDomain: domain === "evaluation-2" ? "evaluation" : domain};
+  return {center: {x: 0, y: 0}, radius, label: cluster?.label || labels[domain] || domain, subtitle: `${messages.length} memories`, messages: messages.length, salience, styleDomain: styleDomainFor(domain) === "evaluation-2" ? "evaluation" : styleDomainFor(domain)};
 }
 const domainLayouts = new Map();
 function memoryRadius(node) {
@@ -1099,7 +1102,7 @@ function render() {
     const fb = node.feedback || defaultFeedback();
     const isCreated = createdIds.has(node.id);
     const group = el("g", {
-      class: `node${state.selected === node.id ? " selected" : ""}${node.consolidated ? " consolidated" : ""}${node.userImportant ? " user-important" : ""}${node.kind === "topic" ? " topic" : ""}${node.domain ? ` ${node.domain}` : ""}${isCreated ? " created" : ""}${isMatch ? " match" : ""}${dimmed ? " dimmed" : ""}`,
+      class: `node${state.selected === node.id ? " selected" : ""}${node.consolidated ? " consolidated" : ""}${node.userImportant ? " user-important" : ""}${node.kind === "topic" ? " topic" : ""}${node.domain ? ` ${styleDomainFor(node.domain)}` : ""}${isCreated ? " created" : ""}${isMatch ? " match" : ""}${dimmed ? " dimmed" : ""}`,
       transform: `translate(${p.x} ${p.y})`,
       tabindex: "0",
       role: "button",
