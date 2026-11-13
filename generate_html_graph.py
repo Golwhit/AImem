@@ -155,6 +155,7 @@ HTML = r"""<!doctype html>
     .edge.transition { stroke: #fda4af; stroke-dasharray: 3 6; opacity: .35; }
     .edge.transition.created { opacity: .9; }
     .edge.parent { stroke: #6ee7b7; stroke-dasharray: none; opacity: .8; }
+    .edge.related { stroke: #facc15; stroke-dasharray: 4 3; opacity: .6; }
     .learner-values { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; margin: 12px 0; font-size: 12px; }
     .learner-values dt { color: var(--muted); overflow-wrap: anywhere; }
     .learner-values dd { margin: 0; font-variant-numeric: tabular-nums; }
@@ -1095,7 +1096,8 @@ function render() {
     const relation = link.kind === "similarity" ? "Related wording"
       : link.kind === "parent" ? `${domainLayouts.get(sourceDomain).label} grew from ${domainLayouts.get(targetDomain).label} (separate membership; visual relationship only)`
       : link.kind === "transition" ? "Subject transition (not core membership)"
-      : link.kind === "topic" ? "Shared topic" : "Adjacent turn";
+      : link.kind === "topic" ? "Shared topic"
+      : link.kind === "related" ? "Related memory (galaxy relation)" : "Adjacent turn";
     layer.lastChild.append(el("title", {}, `${relation}: ${link.strength.toFixed(2)}`));
     if (sunFade !== null) layer.lastChild.style.opacity = sunFade;
   });

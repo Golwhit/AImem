@@ -31,6 +31,39 @@ def discovery_text(message: dict) -> str:
     return " ".join(term for term in terms if len(term) > 2 and not term.isdigit() and term not in DISCOVERY_NOISE and term not in parent_words)
 
 
+RELATED_CLUSTER_PAIRS = (("Git / Aimem", "Commit / Push"),)
+RELATED_MENTION_TERM = "aimem"
+RELATED_MENTION_CLUSTER = "Git / Aimem"
+RELATED_MENTION_DOMAIN = "memory"
+
+
+def apply_relations(data: dict, transcript: dict) -> None:
+    """Add simple memory-to-memory `related` links between specific promoted galaxies."""
+    cluster_ids = {
+        cluster["label"]: cluster_id
+        for cluster_id, cluster in transcript.get("clusters", {}).items()
+        if cluster.get("promoted")
+    }
+    messages = [node for node in data["nodes"] if node.get("kind") == "message"]
+
+    def members(label: str) -> list:
+        cluster_id = cluster_ids.get(label)
+        return [node for node in messages if cluster_id and node.get("domain") == cluster_id and node.get("role") == "You"]
+
+    def relate(first: dict, second: dict) -> None:
+        data["links"].append({"source": first["id"], "target": second["id"], "kind": "related", "strength": 0.5})
+
+    for left, right in RELATED_CLUSTER_PAIRS:
+        for first in members(left):
+            for second in members(right):
+                relate(first, second)
+    anchors = members(RELATED_MENTION_CLUSTER)
+    for node in messages:
+        if node.get("domain") == RELATED_MENTION_DOMAIN and RELATED_MENTION_TERM in node.get("content", "").lower():
+            for anchor in anchors:
+                relate(anchor, node)
+
+
 def apply_graph_domains(data: dict, transcript: dict) -> None:
     nodes_by_id = {node["id"]: node for node in data["nodes"]}
     for node in data["nodes"]:
@@ -74,6 +107,7 @@ def apply_graph_domains(data: dict, transcript: dict) -> None:
         for node in list(data["nodes"]):
             if node.get("kind") == "message" and node.get("domain") == cluster_id:
                 data["links"].append({"source": node["id"], "target": hub_id, "kind": "hub", "strength": 0.5})
+    apply_relations(data, transcript)
 def subject_for_message(message: dict) -> str:
     tokens = set(re.findall(r"[a-z0-9]+", message.get("text", "").lower()))
     topics = set(message.get("topics", []))

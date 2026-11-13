@@ -253,6 +253,32 @@ class ClusterTests(unittest.TestCase):
             graph["links"],
         )
 
+    def test_related_galaxy_pairs_and_aimem_mentions_get_related_links(self):
+        transcript = {"messages": [
+            {"id": "git1", "role": "You", "text": "git push", "domain": "git"},
+            {"id": "commit1", "role": "You", "text": "commit push", "domain": "commit"},
+            {"id": "aimem1", "role": "You", "text": "aimem note", "domain": "aimem"},
+            {"id": "mention", "role": "AI", "text": "AImem reply", "domain": "memory"},
+            {"id": "plain", "role": "AI", "text": "memory reply", "domain": "memory"},
+        ], "clusters": {
+            "cluster-git": {"label": "Git / Aimem", "promoted": True, "parent_domain": "evaluation"},
+            "cluster-commit": {"label": "Commit / Push", "promoted": True, "parent_domain": "evaluation"},
+        }}
+        transcript["messages"][0]["domain"] = "cluster-git"
+        transcript["messages"][1]["domain"] = "cluster-commit"
+        transcript["messages"][2]["domain"] = "cluster-git"
+        graph = {"nodes": [
+            {"id": message["id"], "kind": "message", "domain": message["domain"], "role": message["role"], "content": message["text"]}
+            for message in transcript["messages"]
+        ], "links": []}
+        apply_graph_domains(graph, transcript)
+        related = {(link["source"], link["target"]) for link in graph["links"] if link["kind"] == "related"}
+        self.assertIn(("git1", "commit1"), related)
+        self.assertIn(("aimem1", "commit1"), related)
+        self.assertIn(("git1", "mention"), related)
+        self.assertIn(("aimem1", "mention"), related)
+        self.assertNotIn(("git1", "plain"), related)
+
 
 if __name__ == "__main__":
     unittest.main()
