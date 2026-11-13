@@ -538,7 +538,7 @@ const SPLIT_RADIUS = 180;
 const SUN_RADIUS = 100;
 const BLAST_DISTANCE = 200;
 const SUN_SPREAD = 0.5;
-const BABY_RADIUS = 40;
+const BABY_RADIUS = 26;
 const BABY_INTERACTIONS = 5;
 function isBaby(domain) {
   const cluster = initialGraph.clusters?.[domain];
@@ -664,18 +664,22 @@ const domainLayouts = new Map();
 function memoryRadius(node) {
   return 2.5 + 3.5 * Math.sqrt(Math.min(1, learnedScore(node))) + (node.consolidated ? 0.75 : 0);
 }
-function nearestSunFor(domain) {
+function linkWeightsFor(domain) {
   const keyById = new Map(state.nodes.map(node => [node.id, node.layoutKey || node.domain || "memory"]));
   const totals = new Map();
-  const suns = ["evaluation", "evaluation-2"];
   state.links.forEach(link => {
     if (link.kind === "parent") return;
     const a = keyById.get(link.source), b = keyById.get(link.target);
     const w = Number(link.strength) || 0.3;
-    if (a === domain && suns.includes(b)) totals.set(b, (totals.get(b) || 0) + w);
-    if (b === domain && suns.includes(a)) totals.set(a, (totals.get(a) || 0) + w);
+    if (a === domain && b !== domain) totals.set(b, (totals.get(b) || 0) + w);
+    if (b === domain && a !== domain) totals.set(a, (totals.get(a) || 0) + w);
   });
-  return [...totals.entries()].sort((x, y) => y[1] - x[1])[0]?.[0] || null;
+  return totals;
+}
+function nearestSunFor(domain) {
+  const suns = ["evaluation", "evaluation-2"];
+  const totals = linkWeightsFor(domain);
+  return [...totals.entries()].filter(([key]) => suns.includes(key)).sort((x, y) => y[1] - x[1])[0]?.[0] || null;
 }
 function updateLayout() {
   domainGroups.forEach(([domain, nodes]) => domainLayouts.set(domain, domainLayoutFor(domain, nodes)));
@@ -700,9 +704,21 @@ function updateLayout() {
   });
   babySuns.forEach((sun, domain) => {
     const sunOffset = offsets.get(sun);
+    const toward = {x: 0, y: 0};
+    linkWeightsFor(domain).forEach((weight, key) => {
+      const target = offsets.get(key);
+      if (!target || key === sun || babySuns.has(key)) return;
+      const dx = target.x - sunOffset.x, dy = target.y - sunOffset.y;
+      const distance = Math.hypot(dx, dy);
+      if (distance === 0) return;
+      toward.x += weight * dx / distance;
+      toward.y += weight * dy / distance;
+    });
     const outward = Math.hypot(sunOffset.x, sunOffset.y) || 1;
-    const gap = domainLayouts.get(sun).radius + domainLayouts.get(domain).radius + 20;
-    offsets.set(domain, {x: sunOffset.x + sunOffset.x / outward * gap, y: sunOffset.y + sunOffset.y / outward * gap});
+    const pull = Math.hypot(toward.x, toward.y) || 1;
+    const dir = Math.hypot(toward.x, toward.y) ? {x: toward.x / pull, y: toward.y / pull} : {x: sunOffset.x / outward, y: sunOffset.y / outward};
+    const gap = domainLayouts.get(sun).radius + domainLayouts.get(domain).radius + 12;
+    offsets.set(domain, {x: sunOffset.x + dir.x * gap, y: sunOffset.y + dir.y * gap});
   });
   let reach = 0;
   offsets.forEach((offset, domain) => { reach = Math.max(reach, Math.hypot(offset.x, offset.y) + domainLayouts.get(domain).radius); });

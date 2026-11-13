@@ -4252,7 +4252,7 @@ sun is then relaxed with a Fruchterman-Reingold-style layout, which keeps tight
 connections close and drags weaker ones toward the second sun. The suns are then
 pushed apart by `BLAST_DISTANCE` so they sit well apart. A promoted galaxy with
 fewer than `BABY_INTERACTIONS` interactions is drawn as a small baby beside the
-sun it links to most. It stays promoted. Only the display changes; memberships
+sun it links to most, on the side facing the galaxies it links to most. It stays promoted. Only the display changes; memberships
 and weights are untouched.
 
 The graph can now look for related user contributions inside an existing domain,
