@@ -405,6 +405,8 @@ def activate(root: Path, run_id: str, arm: str = "fresh_scaled", seed: int = 17)
         "context": model.model.context, "vocabulary": model.model.size,
         "label": "Conversation learning model (meal curriculum, replay-validated)",
         "source": {"training": f"{subset} reviewed teaching exchanges",
+                   "training_sha256": report["review"]["train_sha256"],
+                   "evaluation_sha256": report["review"]["test_sha256"],
                    "run_id": run_id, "arm": arm, "subset": subset,
                    "curriculum_sha256": report["review"]["canonical_file_sha256"]},
         "comparison_baseline": prior.get("comparison_baseline"),
