@@ -379,6 +379,11 @@ associated replies move with it. Its parent tether to Under evaluation is
 removed. Memory-to-memory links remain, including pairs whose other endpoint
 is still under evaluation; those links do not confer galaxy membership.
 Connections to other galaxies and original transcript provenance remain.
+Promotion is permanent. A promoted galaxy never returns to Under evaluation, even
+if its links weaken or a later similarity pass merges it into a larger group.
+It keeps its own members, can be absorbed or split, and can be pulled into close
+orbit by a sun; related memories can join it from the suns. Memories from a
+merged group that were not in the galaxy are evaluated as separate clusters.
 Parent-child galaxy relationships use solid green shell-to-shell connectors,
 with hover labels identifying the child and parent. Cross-galaxy memory links
 remain dashed. This styling does not change membership or learning weights.

@@ -78,6 +78,20 @@ class ClusterTests(unittest.TestCase):
         self.assertTrue(clusters[cluster_id]["promoted"])
         self.assertTrue(all(message["domain"] == cluster_id for message in transcript["messages"]))
 
+    def test_promoted_galaxy_never_returns_to_evaluation(self):
+        transcript = {"messages": [
+            {"id": f"u{index}", "role": "You", "text": "orchids greenhouse humidity watering", "session_id": str(index % 3)}
+            for index in range(5)
+        ]}
+        cluster_id = next(iter(update_clusters(transcript)))
+        self.assertTrue(transcript["clusters"][cluster_id]["promoted"])
+        unrelated = ["granite", "ferry", "saxophone", "walrus", "lantern"]
+        for message, word in zip(transcript["messages"], unrelated):
+            message["text"] = f"{word} {word}x quartz vessel"
+        clusters = update_clusters(transcript)
+        self.assertTrue(clusters[cluster_id]["promoted"])
+        self.assertTrue(all(message.get("candidate_cluster") == cluster_id for message in transcript["messages"]))
+
     def test_assistant_repetition_cannot_promote(self):
         transcript = {"messages": [{"id": "u1", "role": "You", "text": "orchids humidity"}] + [
             {"id": f"a{index}", "role": "Assistant", "text": "orchids humidity", "session_id": str(index)}

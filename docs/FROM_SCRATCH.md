@@ -4228,6 +4228,13 @@ their parent. The graph omits the evaluation-parent tether, not links between
 individual memories. Memory pairs remain linked even if one endpoint is still
 under evaluation: a sequence or similarity link is not galaxy membership.
 Links to other galaxies and non-evaluation parent relationships remain.
+
+Promotion is sticky. `update_clusters()` records each promoted galaxy's members
+and, on later runs, keeps those members together and never demotes the galaxy
+back into Under evaluation. A merged similarity component hands over only the
+galaxy's own members; the rest are re-evaluated on their own. Galaxies that lose
+all links keep their promoted members as leftovers. This is why the Commit / Push
+galaxy survives a recomputation that previously dropped it.
 Historical transcript links and the cluster's
 origin metadata are preserved for provenance; regeneration applies the same
 display separation without deleting memories or approving training.

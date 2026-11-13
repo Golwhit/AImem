@@ -128,6 +128,14 @@ def update_clusters(transcript: dict) -> dict[str, dict]:
         scores[frozenset((link["source"], link["target"]))] = link["similarity"]
 
     previous = transcript.get("clusters", {})
+    # Promotion is permanent: members of a promoted galaxy stay with it, and the
+    # galaxy can only be absorbed or split, never returned to evaluation.
+    sticky = {
+        member_id: key
+        for key, cluster in previous.items()
+        if cluster.get("promoted")
+        for member_id in cluster.get("members", [])
+    }
     clusters = {}
     remaining = set(adjacency)
     while remaining:
@@ -135,17 +143,26 @@ def update_clusters(transcript: dict) -> dict[str, dict]:
         component = {seed}
         pending = [seed]
         while pending:
-            for neighbor in adjacency[pending.pop()] - component:
+            for neighbor in (adjacency[pending.pop()] & remaining) - component:
                 component.add(neighbor)
                 pending.append(neighbor)
         remaining -= component
+        carried = sorted({sticky[member_id] for member_id in component if member_id in sticky})
+        if carried:
+            # A galaxy absorbs only its own members; other memories in a merged
+            # component are evaluated again as separate clusters.
+            galaxy = {member_id for member_id in component if sticky.get(member_id) == carried[0]}
+            remaining |= component - galaxy
+            component = galaxy
         if len(component) < 2:
             continue
         members = [message for message in users if message["id"] in component]
-        matching = next(
+        matching = carried[0] if carried else next(
             (key for key, cluster in previous.items() if cluster["anchor"] in component),
             None,
         )
+        if matching in clusters:
+            matching = None
         anchor = previous[matching]["anchor"] if matching else members[0]["id"]
         cluster_id = matching or "cluster-" + sha256(anchor.encode()).hexdigest()[:12]
         terms = Counter(
@@ -171,7 +188,7 @@ def update_clusters(transcript: dict) -> dict[str, dict]:
         parent = sorted(parent_counts, key=lambda domain: (-parent_counts[domain], domain == "evaluation", domain))[0]
         pairs = len(members) * (len(members) - 1) / 2
         cohesion = sum(value for pair, value in scores.items() if pair <= component) / pairs
-        promoted = (
+        promoted = bool(carried) or (
             len(members) >= MIN_INTERACTIONS
             and (len(sessions) >= MIN_SESSIONS or sustained)
             and cohesion >= MIN_COHESION
@@ -193,6 +210,21 @@ def update_clusters(transcript: dict) -> dict[str, dict]:
         for message in messages:
             if message["id"] in component:
                 message["candidate_cluster"] = cluster_id
+
+    # Promoted members whose links dropped out of every component (for example, an
+    # isolated member after a split) keep their galaxy instead of returning to evaluation.
+    user_ids = {message["id"] for message in users}
+    unclaimed = {message["id"] for message in messages if message["id"] in user_ids and not message.get("candidate_cluster")}
+    for key, cluster in previous.items():
+        if not cluster.get("promoted") or key in clusters:
+            continue
+        leftover = [member_id for member_id in cluster.get("members", []) if member_id in unclaimed]
+        if not leftover:
+            continue
+        clusters[key] = {**cluster, "members": leftover, "interactions": len(leftover), "promoted": True}
+        for message in messages:
+            if message["id"] in leftover:
+                message["candidate_cluster"] = key
 
     for message in messages:
         message.pop("cluster_id", None)
