@@ -146,7 +146,7 @@ HTML = r"""<!doctype html>
     h2 { font-size: 14px; margin: 0; letter-spacing: .01em; }
     .hint { font-size: 11px; color: var(--muted); }
     svg { display: block; width: 100%; height: auto; min-height: 330px; overflow: visible; }
-    .edge { stroke: #64749b; stroke-linecap: round; opacity: .5; transition: stroke .25s, opacity .25s, stroke-width .25s; }
+    .edge { stroke: #8b9bc4; stroke-linecap: round; opacity: .8; transition: stroke .25s, opacity .25s, stroke-width .25s; }
     .edge.topic { stroke: #2dd4bf; }
     .edge.hub { stroke: #f59e0b; stroke-dasharray: 2 4; }
     .edge.similarity { stroke: #c084fc; stroke-dasharray: 5 5; }
@@ -538,7 +538,7 @@ const SPLIT_RADIUS = 180;
 const SUN_RADIUS = 100;
 const BLAST_DISTANCE = 200;
 const SUN_SPREAD = 0.5;
-const BABY_RADIUS = 9;
+const BABY_RADIUS = 34;
 const BABY_INTERACTIONS = 5;
 const SUN_BALANCE = 0.4;
 const CROSS_SUN_MIN = 0.3;
