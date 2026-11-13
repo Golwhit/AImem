@@ -538,7 +538,7 @@ const SPLIT_RADIUS = 180;
 const SUN_RADIUS = 100;
 const BLAST_DISTANCE = 200;
 const SUN_SPREAD = 0.5;
-const BABY_RADIUS = 26;
+const BABY_RADIUS = 9;
 const BABY_INTERACTIONS = 5;
 const SUN_BALANCE = 0.4;
 const CROSS_SUN_MIN = 0.3;
@@ -1014,6 +1014,8 @@ function render() {
   definitions.append(shading);
   svg.append(definitions);
   const createdIds = newestMessageIds();
+  const edgesBehind = el("g");
+  svg.append(edgesBehind);
   const backdropLayer = el("g");
   domainLayouts.forEach((layout, domain) => {
     const nodes = state.nodes.filter(node => (node.layoutKey || "memory") === domain);
@@ -1028,13 +1030,19 @@ function render() {
     boundary.append(el("title", {}, `${layout.label}: radius ${layout.radius.toFixed(1)}; ${layout.messages} messages; mean capped salience ${layout.salience.toFixed(2)}. Size is visual salience, not intelligence or training approval.`));
     backdropLayer.append(boundary);
     backdropLayer.append(el("circle", {cx: layout.center.x, cy: layout.center.y, r: layout.radius, fill: "url(#region-shading)", class: "region-depth"}));
+    if (isBaby(domain)) {
+      const hover = el("circle", {cx: layout.center.x, cy: layout.center.y, r: layout.radius + 4, fill: "rgba(0,0,0,0)"});
+      hover.append(el("title", {}, `${layout.label} (${layout.messages} messages)`));
+      backdropLayer.append(hover);
+      return;
+    }
     backdropLayer.append(el("text", {x: layout.center.x, y: y + 22, class: `cluster-title ${style}`, "text-anchor": "middle"}, layout.label));
     if (layout.subtitle) {
       backdropLayer.append(el("text", {x: layout.center.x, y: y + 38, class: `cluster-subtitle ${style}`, "text-anchor": "middle"}, layout.subtitle));
     }
   });
   svg.append(backdropLayer);
-  const edges = el("g");
+  const edges = edgesBehind;
   const layoutKeyById = new Map(state.nodes.map(node => [node.id, node.layoutKey || node.domain || "memory"]));
   const focus = makeFocusSet();
   state.links.forEach(link => {
@@ -1081,7 +1089,6 @@ function render() {
     edges.lastChild.append(el("title", {}, `${relation}: ${link.strength.toFixed(2)}`));
     if (sunFade !== null) edges.lastChild.style.opacity = sunFade;
   });
-  svg.append(edges);
 
   [...state.nodes].sort((first, second) => positions[first.id].depth - positions[second.id].depth).forEach(node => {
     const p = positions[node.id], value = learnedScore(node);

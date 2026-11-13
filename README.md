@@ -406,8 +406,9 @@ The two suns are pushed apart by `BLAST_DISTANCE` and spread by `SUN_SPREAD` in
 opposite directions, so they sit well apart rather than side by side. A promoted
 galaxy with fewer than `BABY_INTERACTIONS` user interactions is drawn as a small
 baby (`BABY_RADIUS`) just outside the sun it links to most strongly, on the side
-facing the galaxies it links to most (weighted by link strength). It stays
-promoted; only its drawing changes.
+facing the galaxies it links to most (weighted by link strength). It is drawn
+small enough that its name appears on mouseover. It stays
+promoted; only its drawing changes. Connections are drawn beneath the galaxy fills, so they read as running behind each galaxy.
 
 The conversation memory prototype stores its transcript in `chat_memory.json` and renders it in `memory_graph.html`. The browser view now keeps its learning overlay in a backend graph-state file served from the local API, so helpful, correction, and weak-link feedback survives refreshes without depending on browser `localStorage`. The graph page also polls that backend snapshot, so it refreshes itself when the stored memory state changes. Use the search box to rank memories by query and click a node to open the selected-memory panel. The zoom − and + buttons at the upper right of AI Memory scale the view. The feedback buttons teach the graph which memories should matter more. To add a conversation exchange and advance one persistent decay cycle:
 
