@@ -540,6 +540,9 @@ const BLAST_DISTANCE = 200;
 const SUN_SPREAD = 0.5;
 const BABY_RADIUS = 26;
 const BABY_INTERACTIONS = 5;
+const SUN_BALANCE = 0.4;
+const CROSS_SUN_MIN = 0.3;
+const EVAL_SUNS = ["evaluation", "evaluation-2"];
 function isBaby(domain) {
   const cluster = initialGraph.clusters?.[domain];
   return Boolean(cluster?.promoted) && (cluster.interactions || 0) < BABY_INTERACTIONS;
@@ -595,6 +598,33 @@ function relaxSun(nodeIds, radius, weights) {
   }
   return new Map(nodeIds.map((id, i) => [id, pos[i]]));
 }
+function refineSunMembership(sunOf, weights, ordered) {
+  const total = ordered.length;
+  const minSize = Math.floor(total * SUN_BALANCE);
+  const maxSize = Math.ceil(total * (1 - SUN_BALANCE));
+  const sizes = [0, 0];
+  ordered.forEach(id => sizes[sunOf.get(id)]++);
+  for (let round = 0; round < 20; round++) {
+    let moved = 0;
+    ordered.forEach(id => {
+      const current = sunOf.get(id), other = 1 - current;
+      if (sizes[current] - 1 < minSize || sizes[other] + 1 > maxSize) return;
+      let pullCurrent = 0, pullOther = 0;
+      weights.get(id).forEach((w, neighbor) => {
+        if (sunOf.get(neighbor) === current) pullCurrent += w;
+        else pullOther += w;
+      });
+      const gain = pullOther - pullCurrent;
+      const tieToSmaller = Math.abs(gain) < 1e-9 && sizes[other] < sizes[current];
+      if (gain > 1e-9 || tieToSmaller) {
+        sunOf.set(id, other);
+        sizes[current]--; sizes[other]++;
+        moved++;
+      }
+    });
+    if (!moved) break;
+  }
+}
 function planEvaluationSplit() {
   const keyFor = new Map();
   const relative = new Map();
@@ -631,6 +661,7 @@ function planEvaluationSplit() {
   }
   const ranked = [...ordered].sort((x, y) => vector.get(y) - vector.get(x) || (x < y ? -1 : 1));
   const sunOf = new Map(ranked.map((id, i) => [id, i < Math.ceil(ranked.length / 2) ? 0 : 1]));
+  refineSunMembership(sunOf, weights, ordered);
   [0, 1].forEach(sun => {
     const ids = ordered.filter(id => sunOf.get(id) === sun);
     const key = sun === 0 ? "evaluation" : "evaluation-2";
@@ -645,6 +676,27 @@ const evaluationSplit = planEvaluationSplit();
 state.nodes.forEach(node => {
   node.layoutKey = evaluationSplit.keyFor.get(node.id) || node.domain || "memory";
 });
+const preferredSun = new Map();
+(() => {
+  const pull = new Map();
+  const keyById = new Map(state.nodes.map(n => [n.id, n.layoutKey]));
+  state.links.forEach(link => {
+    if (link.kind === "parent") return;
+    const keyA = keyById.get(link.source), keyB = keyById.get(link.target);
+    const w = Number(link.strength) || 0.3;
+    [[link.source, keyB, keyA], [link.target, keyA, keyB]].forEach(([id, other, own]) => {
+      if (!EVAL_SUNS.includes(other) || EVAL_SUNS.includes(own)) return;
+      const m = pull.get(id) || new Map();
+      m.set(other, (m.get(other) || 0) + w);
+      pull.set(id, m);
+    });
+  });
+  pull.forEach((m, id) => {
+    const [best] = [...m.entries()].sort((x, y) => (y[1] - x[1]) || (x[0] < y[0] ? -1 : 1));
+    preferredSun.set(id, best[0]);
+  });
+})();
+
 const domainGroups = Object.entries(
   state.nodes.reduce((acc, node) => {
     const domain = node.layoutKey || "memory";
@@ -983,6 +1035,7 @@ function render() {
   });
   svg.append(backdropLayer);
   const edges = el("g");
+  const layoutKeyById = new Map(state.nodes.map(node => [node.id, node.layoutKey || node.domain || "memory"]));
   const focus = makeFocusSet();
   state.links.forEach(link => {
     let a = positions[link.source], b = positions[link.target];
@@ -1001,6 +1054,18 @@ function render() {
       a = {x: sourceLayout.center.x + dx / distance * sourceLayout.radius, y: sourceLayout.center.y + dy / distance * sourceLayout.radius};
       b = {x: targetLayout.center.x - dx / distance * targetLayout.radius, y: targetLayout.center.y - dy / distance * targetLayout.radius};
     }
+    const sourceKey = layoutKeyById.get(link.source), targetKey = layoutKeyById.get(link.target);
+    const sourceSun = EVAL_SUNS.includes(sourceKey), targetSun = EVAL_SUNS.includes(targetKey);
+    let sunFade = null;
+    if (sourceSun && targetSun && sourceKey !== targetKey) {
+      if (link.strength < CROSS_SUN_MIN) return;
+      sunFade = Math.min(0.4, Math.max(0.03, (link.strength - 0.2) * 0.6));
+    }
+    if (sourceSun !== targetSun) {
+      const outside = sourceSun ? link.target : link.source;
+      const sunKey = sourceSun ? sourceKey : targetKey;
+      if (preferredSun.has(outside) && preferredSun.get(outside) !== sunKey) return;
+    }
     const crossDomain = sourceDomain !== targetDomain;
     const created = createdIds.has(link.source) || createdIds.has(link.target) || link.created_cycle === state.cycles;
     edges.append(el("line", {
@@ -1014,6 +1079,7 @@ function render() {
       : link.kind === "transition" ? "Subject transition (not core membership)"
       : link.kind === "topic" ? "Shared topic" : "Adjacent turn";
     edges.lastChild.append(el("title", {}, `${relation}: ${link.strength.toFixed(2)}`));
+    if (sunFade !== null) edges.lastChild.style.opacity = sunFade;
   });
   svg.append(edges);
 

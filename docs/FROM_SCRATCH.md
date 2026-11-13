@@ -4253,7 +4253,12 @@ connections close and drags weaker ones toward the second sun. The suns are then
 pushed apart by `BLAST_DISTANCE` so they sit well apart. A promoted galaxy with
 fewer than `BABY_INTERACTIONS` interactions is drawn as a small baby beside the
 sun it links to most, on the side facing the galaxies it links to most. It stays promoted. Only the display changes; memberships
-and weights are untouched.
+and weights are untouched. Membership is then refined so each memory sits with
+the sun holding more of its tie weight, keeping each sun between `SUN_BALANCE`
+and 1 − `SUN_BALANCE` of the members (exact ties go to the smaller sun). Cross-sun
+links weaker than `CROSS_SUN_MIN` are hidden, and the rest are drawn with
+opacity set from strength, so decayed bonds fade. A memory outside evaluation
+draws its link only to the sun it is most tied to.
 
 The graph can now look for related user contributions inside an existing domain,
 such as AI memory. It removes broad parent words and conversational filler from

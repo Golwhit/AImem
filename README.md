@@ -395,7 +395,13 @@ mutual connections stay together, and the weakest-tied memories are pulled to
 the second sun. Each sun is drawn at a fixed radius (`SUN_RADIUS` in
 `generate_html_graph.py`) and then relaxed by a deterministic force layout so
 connections pull related memories close and weaker links drag toward the new
-sun. This is a display-only split; it does not change membership or weights.
+sun. Membership is then refined so each memory sits with the sun that holds more of
+its tie weight, keeping each sun between `SUN_BALANCE` and 1 − `SUN_BALANCE` of
+the members; exact ties go to the smaller sun. Cross-sun links weaker than
+`CROSS_SUN_MIN` are hidden, and the remaining ones are drawn with opacity that
+follows strength, so decayed bonds fade. A memory outside evaluation draws its
+link only to the sun it is most tied to. This is a display-only split; it does
+not change stored weights.
 The two suns are pushed apart by `BLAST_DISTANCE` and spread by `SUN_SPREAD` in
 opposite directions, so they sit well apart rather than side by side. A promoted
 galaxy with fewer than `BABY_INTERACTIONS` user interactions is drawn as a small
