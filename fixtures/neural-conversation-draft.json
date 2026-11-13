@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "status": "draft_pending_user_review_not_approved_for_training",
+  "provenance": "New illustrative examples authored with AI assistance for this project; not copied from an external corpus. This provenance is not a guarantee of exclusive rights or legal clearance.",
+  "purpose": "Proposed miniature conversation/comprehension diagnostic, not general assistant training.",
+  "training_policy": "Do not train without explicit content-hashed user review. No loader or training integration is supplied. No runtime answer lookup. Do not mix test answers into vocabulary construction, examples or optimizer selection.",
+  "evaluation_policy": "Proposed frozen tests, not yet a locked independent test. Examples are visible to developers. Approve and hash the exact splits before experiments; use separate development examples for tuning. Preserve name spelling, conversational order, negation and corrections. Test more than expected-answer string matching before claiming understanding.",
+  "conversation_format": "Ordered role/content turns. Predict assistant answer after all supplied turns. No role tokens are implemented by this draft.",
+  "train": [
+    {"id": "train-possession", "skill": "explicit_fact", "turns": [{"role": "user", "content": "Mira has a red cup. What does Mira have?"}], "answer": "A red cup."},
+    {"id": "train-color", "skill": "attribute", "turns": [{"role": "user", "content": "Jon has a blue box. What color is the box?"}], "answer": "Blue."},
+    {"id": "train-transfer", "skill": "transfer", "turns": [{"role": "user", "content": "Mira has a cup. Mira gives the cup to Jon. Who has the cup now?"}], "answer": "Jon."},
+    {"id": "train-negation", "skill": "negation", "turns": [{"role": "user", "content": "The box is not red. It is blue. Is the box red?"}], "answer": "No. It is blue."},
+    {"id": "train-update", "skill": "correction", "turns": [{"role": "user", "content": "The cup is red."}, {"role": "assistant", "content": "The cup is red."}, {"role": "user", "content": "Correction: the cup is blue. What color is it?"}], "answer": "Blue."},
+    {"id": "train-missing", "skill": "missing_information", "turns": [{"role": "user", "content": "Mira has a box. What color is it?"}], "answer": "What color is Mira's box?"},
+    {"id": "train-reference", "skill": "reference", "turns": [{"role": "user", "content": "Jon has a cup."}, {"role": "assistant", "content": "Jon has a cup."}, {"role": "user", "content": "It is red. What color is Jon's cup?"}], "answer": "Red."},
+    {"id": "train-refusal-to-invent", "skill": "unknown_fact", "turns": [{"role": "user", "content": "Where is Mira's cup?"}], "answer": "I do not know where it is."}
+  ],
+  "test": [
+    {"id": "test-transfer-reversed", "skill": "transfer", "pair": "changed-holder", "turns": [{"role": "user", "content": "Jon has a box. Jon gives the box to Mira. Who has the box now?"}], "answer": "Mira."},
+    {"id": "test-transfer-no-transfer", "skill": "transfer", "pair": "changed-holder", "turns": [{"role": "user", "content": "Jon has a box. Jon keeps the box. Who has the box now?"}], "answer": "Jon."},
+    {"id": "test-color-red", "skill": "attribute", "pair": "changed-color", "turns": [{"role": "user", "content": "Mira has a red box. What color is the box?"}], "answer": "Red."},
+    {"id": "test-color-blue", "skill": "attribute", "pair": "changed-color", "turns": [{"role": "user", "content": "Mira has a blue box. What color is the box?"}], "answer": "Blue."},
+    {"id": "test-update-reversed", "skill": "correction", "turns": [{"role": "user", "content": "The box is blue."}, {"role": "assistant", "content": "The box is blue."}, {"role": "user", "content": "Correction: the box is red. What color is it?"}], "answer": "Red."},
+    {"id": "test-negation-reversed", "skill": "negation", "turns": [{"role": "user", "content": "The cup is not blue. It is red. Is the cup blue?"}], "answer": "No. It is red."},
+    {"id": "test-unfamiliar-name", "skill": "new_spelling", "turns": [{"role": "user", "content": "Tavi has the cup. Who has the cup?"}], "answer": "Tavi."},
+    {"id": "test-paraphrase", "skill": "paraphrase", "turns": [{"role": "user", "content": "The blue cup belongs to Mira. Who owns it?"}], "answer": "Mira."},
+    {"id": "test-missing-color", "skill": "missing_information", "turns": [{"role": "user", "content": "Jon has a cup. What color is it?"}], "answer": "What color is Jon's cup?"},
+    {"id": "test-reference", "skill": "reference", "turns": [{"role": "user", "content": "Mira has a box."}, {"role": "assistant", "content": "Mira has a box."}, {"role": "user", "content": "It is blue. What color is Mira's box?"}], "answer": "Blue."}
+  ]
+}

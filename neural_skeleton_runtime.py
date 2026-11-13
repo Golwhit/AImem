@@ -9,6 +9,7 @@ from collections import Counter
 from datetime import datetime, timezone
 import hashlib
 import json
+import math
 from pathlib import Path
 import random
 
@@ -138,6 +139,22 @@ class UnitCodec:
     def snapshot(self) -> dict:
         return {"units": self.units, "provenance": self.provenance}
 
+    def distribution(self, model: NeuralModel, context: list[int], prefix: str,
+                     *, after_unit: bool, remaining: int) -> list[float]:
+        probabilities = model.forward(context)[2]
+        in_word = word_character(prefix[-1:])
+        for piece, token in model.tokens.items():
+            is_unit = piece in self.units
+            if (piece != END and (len(piece) > remaining
+                    or (is_unit and (in_word or after_unit))
+                    or (after_unit and (is_unit or word_character(piece))))):
+                probabilities[token] = 0.0
+        probabilities[0] = probabilities[1] = 0.0
+        total = sum(probabilities)
+        if total <= 0 or not math.isfinite(total):
+            raise ArithmeticError("Unit generation has no finite allowed output")
+        return [value / total for value in probabilities]
+
     def sample(self, model: NeuralModel, prompt: str, *, length: int = 120, seed: int = 23) -> dict:
         if type(length) is not int or not 1 <= length <= 500:
             raise ValueError("Generation length must be an integer from 1 to 500 characters")
@@ -150,18 +167,9 @@ class UnitCodec:
         after_unit = False
         ended = False
         while len(output) < length:
-            probabilities = model.forward(context)[2]
-            tail = (prompt + output)[-1:]
-            in_word = word_character(tail)
             remaining = length - len(output)
-            for piece, token in model.tokens.items():
-                is_unit = piece in self.units
-                if (piece != END and (len(piece) > remaining
-                        or (is_unit and (in_word or after_unit))
-                        or (after_unit and (is_unit or word_character(piece))))):
-                    probabilities[token] = 0.0
-            if not any(probabilities[2:]):
-                raise ArithmeticError("Unit generation has no allowed output")
+            probabilities = self.distribution(model, context, prompt + output,
+                                              after_unit=after_unit, remaining=remaining)
             token = rng.choices(range(2, model.size), weights=probabilities[2:])[0]
             piece = model.characters[token - 2]
             decisions += 1

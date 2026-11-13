@@ -29,6 +29,7 @@ class NeuralModel:
         self.characters = characters
         self.tokens = {char: index + 2 for index, char in enumerate(characters)}
         self.size = len(characters) + 2  # Boundary and unknown are distinct tokens.
+        self.reference_condition: tuple[float, ...] | None = None
         rng = random.Random(seed)
         self.weights = {
             "embedding": [rng.uniform(-0.2, 0.2) for _ in range(self.size * EMBEDDING)],
@@ -42,15 +43,34 @@ class NeuralModel:
         tokens = [0] * self.context + [self.tokens.get(char, 1) for char in text]
         return [(tokens[i - self.context:i], tokens[i]) for i in range(self.context, len(tokens))]
 
+    def set_reference_condition(self, features: tuple[float, ...] | None) -> None:
+        if features is not None and (len(features) != HIDDEN or
+                                     any(not math.isfinite(value) for value in features)):
+            raise ValueError(f"Reference condition requires {HIDDEN} finite features")
+        self.reference_condition = features
+
+    def _preactivations(self, x: list[float]) -> list[float]:
+        w = self.weights
+        return [
+            w["hidden_bias"][j] + sum(value * w["hidden"][i * HIDDEN + j] for i, value in enumerate(x))
+            + (self.reference_condition[j] if self.reference_condition is not None else 0.0)
+            for j in range(HIDDEN)
+        ]
+
+    def _hidden_activation(self, x: list[float]) -> list[float]:
+        return [math.tanh(value) for value in self._preactivations(x)]
+
+    def _hidden_gradient(
+        self, x: list[float], hidden: list[float], upstream: list[float],
+    ) -> list[float]:
+        return [value * (1 - activation ** 2) for value, activation in zip(upstream, hidden)]
+
     def forward(
         self, context: list[int], *, output_prior: list[float] | None = None,
     ) -> tuple[list[float], list[float], list[float]]:
         w = self.weights
         x = [w["embedding"][token * EMBEDDING + d] for token in context for d in range(EMBEDDING)]
-        hidden = [
-            math.tanh(w["hidden_bias"][j] + sum(value * w["hidden"][i * HIDDEN + j] for i, value in enumerate(x)))
-            for j in range(HIDDEN)
-        ]
+        hidden = self._hidden_activation(x)
         logits = [
             w["output_bias"][k] + sum(hidden[j] * w["output"][j * self.size + k] for j in range(HIDDEN))
             for k in range(self.size)
@@ -81,10 +101,10 @@ class NeuralModel:
         w = self.weights
         gradients = {name: [0.0] * len(values) for name, values in w.items()}
         gradients["output_bias"] = delta
-        hidden_delta = [
-            sum(w["output"][j * self.size + k] * delta[k] for k in range(self.size)) * (1 - hidden[j] ** 2)
+        hidden_delta = self._hidden_gradient(x, hidden, [
+            sum(w["output"][j * self.size + k] * delta[k] for k in range(self.size))
             for j in range(HIDDEN)
-        ]
+        ])
         gradients["hidden_bias"] = hidden_delta
         for j in range(HIDDEN):
             for k in range(self.size):
@@ -159,12 +179,9 @@ def train_experiment(payload: dict, root: Path) -> dict:
     codec = None
     vocabulary = set(train)
     if use_units:
-        from neural_skeleton_runtime import END, UnitCodec, load_bank
+        from neural_character_onlies import CharacterOnlies
 
-        codec = UnitCodec.from_bank(load_bank(root), train)
-        if not codec.units:
-            raise ValueError("No confirmed skeleton units occur in this training text; use the character baseline")
-        vocabulary |= set(codec.units) | {END}
+        codec = CharacterOnlies.cached(root)
     model = NeuralModel(sorted(vocabulary))
     training = codec.examples(model, train) if codec else model.examples(train)
     validation = codec.examples(model, held) if codec else model.examples(held)
@@ -190,7 +207,7 @@ def train_experiment(payload: dict, root: Path) -> dict:
     generation = codec.sample(model, train[:CONTEXT]) if codec else None
     report = {
         "version": 1, "run_id": uuid4().hex,
-        "model": "original-unit-character-mlp-v1" if codec else "original-character-mlp-v1",
+        "model": "original-character-onlies-mlp-v1" if codec else "original-character-mlp-v1",
         "created_at": datetime.now(timezone.utc).isoformat(),
         "synthetic": synthetic, "source": source, "legal_clearance": False,
         "parameter_count": sum(map(len, model.weights.values())),
@@ -208,20 +225,20 @@ def train_experiment(payload: dict, root: Path) -> dict:
         "layer_policy": "Unconstrained neural baseline; Layer 0/1 rules are unchanged and not applied here.",
         "evaluation_note": "Synthetic repetition checks mechanics only, not generalization." if synthetic else
         "Held-out text receives no gradient updates. Author must ensure meaningful separation; substring checks do not prove independence.",
-        "loss_unit": "mixed unit/character decision (including end marker)" if codec else "character",
+        "loss_unit": "unskipped character target" if codec else "character",
     }
     if codec:
         report["layer_policy"] = (
-            "Opt-in lossless whole-word skeleton units plus character fallback; the neural model learns and chooses "
-            "both. Unit boundaries are enforced during generation. No speculative prefix completion."
+            "Character-only neural vocabulary. Recognized onlies skip interior spelling updates with original "
+            "character contexts intact; generation supplies only closed-list unambiguous prefix continuations."
         )
         report["evaluation_note"] += (
             " The bank was learned from prior Bible learn/develop text: new held-out text is not necessarily "
-            "unseen by that bank. Mixed-token loss is not directly comparable to character-baseline loss. "
+            "unseen by that bank. Unskipped-target loss is not directly comparable to all-character loss. "
             "Fewer encoded targets do not by themselves prove faster training or better responses."
         )
         report["unit_runtime"] = {
-            "bank": codec.provenance, "units": len(codec.units),
+            "bank": codec.provenance, "units": len(codec.words),
             "training": codec.reading(train), "held_out": codec.reading(held),
             "initial_generation": initial_generation, "generation": generation,
             "training_targets_per_pass": len(training), "held_out_targets": len(validation),
@@ -232,7 +249,7 @@ def train_experiment(payload: dict, root: Path) -> dict:
         "approval": "synthetic diagnostic" if synthetic else "explicit user declaration for this neural experiment",
     }
     if codec:
-        checkpoint["unit_codec"] = codec.snapshot()
+        checkpoint["character_onlies"] = codec.snapshot()
     directory = root / ".data" / "neural-experiments"
     atomic_json(directory / f"{report['run_id']}.json", checkpoint)
     atomic_json(directory / "latest.json", report)
@@ -250,6 +267,7 @@ def status(root: Path) -> dict:
     patterns = path.with_name("latest-patterns.json")
     strict = path.with_name("latest-strict.json")
     skeletons = path.with_name("latest-skeletons.json")
+    unit_benchmark = path.with_name("latest-unit-benchmark.json")
     return {
         "ready": path.exists(), "report": json.loads(path.read_text()) if path.exists() else None,
         "context_comparison": json.loads(comparison.read_text()) if comparison.exists() else None,
@@ -261,6 +279,7 @@ def status(root: Path) -> dict:
         "patterns_comparison": json.loads(patterns.read_text()) if patterns.exists() else None,
         "strict_comparison": json.loads(strict.read_text()) if strict.exists() else None,
         "skeletons_comparison": json.loads(skeletons.read_text()) if skeletons.exists() else None,
+        "unit_benchmark": json.loads(unit_benchmark.read_text()) if unit_benchmark.exists() else None,
         "skeleton_runtime": {
             "available": (root / ".data/neural-skeletons/runtime-bank.json").exists(),
             "build_command": "python3 neural_skeleton_runtime.py build",
@@ -285,11 +304,17 @@ def generate_checkpoint(payload: dict, root: Path) -> dict:
         raise ValueError("Unknown neural run")
     checkpoint = json.loads(path.read_text())
     report = checkpoint["report"]
-    if report["model"] not in ("original-character-mlp-v1", "original-unit-character-mlp-v1"):
+    if report["model"] not in ("original-character-mlp-v1", "original-unit-character-mlp-v1",
+                              "original-character-onlies-mlp-v1"):
         raise ValueError("This checkpoint does not support live generation")
     model = NeuralModel(checkpoint["characters"], context=report["context"])
     model.weights = checkpoint["weights"]
-    if report["model"] == "original-unit-character-mlp-v1":
+    if report["model"] == "original-character-onlies-mlp-v1":
+        from neural_character_onlies import CharacterOnlies
+
+        codec = CharacterOnlies.restore(checkpoint["character_onlies"])
+        generation = codec.sample(model, prompt, length=length)
+    elif report["model"] == "original-unit-character-mlp-v1":
         from neural_skeleton_runtime import UnitCodec
 
         snapshot = checkpoint["unit_codec"]

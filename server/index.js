@@ -30,6 +30,7 @@ webpush.setVapidDetails(
 const graphStatePath = path.join(rootDir, 'memory_graph_state.json');
 const updateScriptPath = path.join(rootDir, 'update_chat_memory.py');
 const generatorScriptPath = path.join(rootDir, 'original_generator.py');
+const neuralChatScriptPath = path.join(rootDir, 'neural_chat.py');
 const execFileAsync = promisify(execFile);
 const learnerPython = process.env.MEMORY_PYTHON || 'python3';
 let learnerQueue = Promise.resolve();
@@ -77,12 +78,12 @@ function runLearner(command, payload = {}) {
   return result;
 }
 
-function runGenerator(command, payload = {}, scriptPath = generatorScriptPath) {
+function runGenerator(command, payload = {}, scriptPath = generatorScriptPath, timeoutMs = 30000) {
   const result = generatorQueue.then(() => new Promise((resolve, reject) => {
     const child = spawn(learnerPython, [scriptPath, command], { cwd: rootDir });
     let output = '';
     let errors = '';
-    const timer = setTimeout(() => child.kill(), 30000);
+    const timer = setTimeout(() => child.kill(), timeoutMs);
     child.stdout.on('data', chunk => { output += chunk; });
     child.stderr.on('data', chunk => { errors += chunk; });
     child.on('error', error => { clearTimeout(timer); reject(error); });
@@ -139,13 +140,14 @@ async function writeGraphState(snapshot) {
   return stat.mtimeMs;
 }
 
-async function appendMemoryExchange({ user, assistant, userTopics = [], assistantTopics = [], sessionId, source = 'app' }) {
+async function appendMemoryExchange({ user, assistant, userTopics = [], assistantTopics = [], sessionId, source = 'app', modelProvenance }) {
   const args = [
     updateScriptPath,
     '--user', user,
     '--assistant', assistant
   ];
   args.push('--source', source);
+  if (modelProvenance) args.push('--model-provenance', JSON.stringify(modelProvenance));
   if (typeof sessionId === 'string' && sessionId.trim()) {
     args.push('--session-id', sessionId);
   }
@@ -271,6 +273,15 @@ app.post('/api/send-push', async (req, res) => {
 
 // ─── Chat API (mirrors /api/respond but for direct chat) ─────────────────────
 
+app.get('/api/chat-model', async (req, res) => {
+  try {
+    res.json(await runGenerator('status', {}, neuralChatScriptPath));
+  } catch (error) {
+    console.error('Chat model status error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.post('/api/chat', async (req, res) => {
   const rawUserMessage = String(req.body?.message || '');
   const userMessage = rawUserMessage.trim();
@@ -282,7 +293,8 @@ app.post('/api/chat', async (req, res) => {
   }
   try {
     const retrieval = await runLearner('search', { query: userMessage, limit: 3 });
-    const generatorStatus = await runGenerator('status');
+    const chatModel = await runGenerator('status', {}, neuralChatScriptPath);
+    const generatorStatus = chatModel.ready ? null : await runGenerator('status');
     const best = retrieval.results.find(memory => memory.role === 'Assistant');
     let aiResponse = best
       ? `[${best.id}] ${best.text.length > 600 ? best.text.slice(0, 600).trimEnd() + '...' : best.text}`
@@ -300,7 +312,14 @@ app.post('/api/chat', async (req, res) => {
         labError = error.message;
       }
     }
-    if (generatorStatus.ready) {
+    if (chatModel.ready) {
+      generated = await runGenerator('generate', { prompt: rawUserMessage, max_chars: 320 }, neuralChatScriptPath);
+      if (!generated.text?.trim()) throw new Error('Active neural chat model returned empty output');
+      aiResponse = generated.text;
+      mode = generated.chat_model.arm === 'conversation' ? 'local-conversation-neural'
+        : generated.chat_model.arm === 'new' ? 'local-base-neural' : 'local-layered-neural';
+      responseSource = 'local-generated';
+    } else if (generatorStatus.ready) {
       generated = lab?.old_response || await runGenerator('generate-selected', { prompt: userMessage, max_chars: 320 });
       if (generated.text) {
         aiResponse = generated.text;
@@ -308,8 +327,8 @@ app.post('/api/chat', async (req, res) => {
         responseSource = 'local-generated';
       }
     }
-    let generatorLearning = { added: false, reason: includeInGenerator ? 'not_added' : 'opted_out' };
-    if (includeInGenerator) {
+    let generatorLearning = { added: false, reason: chatModel.ready ? 'fixed_neural_checkpoint' : includeInGenerator ? 'not_added' : 'opted_out' };
+    if (includeInGenerator && !chatModel.ready) {
       try {
         generatorLearning = await runGenerator('ingest-chat-prompt', { text: rawUserMessage });
       } catch (error) {
@@ -317,10 +336,11 @@ app.post('/api/chat', async (req, res) => {
       }
     }
     const assistantTopics = inferMemoryTopics(aiResponse);
-    const saved = await appendMemoryExchange({ user: userMessage, assistant: aiResponse, userTopics: [], assistantTopics, sessionId: req.body?.sessionId, source: responseSource });
+    const saved = await appendMemoryExchange({ user: userMessage, assistant: aiResponse, userTopics: [], assistantTopics, sessionId: req.body?.sessionId, source: responseSource,
+      modelProvenance: generated?.chat_model });
     const recent = saved.snapshot.nodes.filter(node => node.kind === 'message' && node.created_cycle === saved.snapshot.cycles);
 
-    res.json({ reply: aiResponse, model: generated?.model || retrieval.model, generation: generated?.generation ?? retrieval.generation, mode, selection: generated?.selection || null, training_sources: generated?.training_sources || [], generator_learning: generatorLearning, lab, lab_error: labError, response_source_id: best?.id || null, memories: retrieval.results,
+    res.json({ reply: aiResponse, model: generated?.model || retrieval.model, chat_model: generated?.chat_model || null, generation: generated?.generation ?? retrieval.generation, mode, selection: generated?.selection || null, training_sources: generated?.training_sources || [], generator_learning: generatorLearning, lab, lab_error: labError, response_source_id: mode === 'memory-excerpts' ? best?.id || null : null, memories: retrieval.results,
       prompt_memory_id: recent.find(node => node.role === 'You')?.id,
       response_memory_id: recent.find(node => node.role === 'Assistant')?.id });
   } catch (err) {
@@ -402,6 +422,15 @@ app.post('/api/development/decisions', async (req, res) => {
   try {
     res.json(await runGenerator('decide', req.body, path.join(rootDir, 'seed_development.py')));
   } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.post('/api/base-model-lab/trace', async (req, res) => {
+  try {
+    res.json(await runGenerator('trace', req.body, path.join(rootDir, 'neural_base_lab.py')));
+  } catch (error) {
+    console.error('Base model lab trace error:', error);
     res.status(400).json({ error: error.message });
   }
 });
@@ -517,17 +546,27 @@ app.post('/api/response-feedback', async (req, res) => {
     res.status(400).json({ error: 'response_id, valid rating and correction up to 2000 characters are required' });
     return;
   }
+  const neuralCorrection = req.body?.train_neural_correction === true;
   if (typeof approve_for_scoring !== 'boolean' || typeof approve_correction !== 'boolean'
+      || (req.body?.train_neural_correction !== undefined && typeof req.body.train_neural_correction !== 'boolean')
+      || (neuralCorrection && (rating !== 'needs_correction' || !correction.trim() || approve_for_scoring || approve_correction))
       || (approve_correction && (!approve_for_scoring || rating !== 'needs_correction' || correction.trim().length < 4))) {
-    res.status(400).json({ error: 'Correction training requires explicit scoring approval and an edited correction of at least four characters.' });
+    res.status(400).json({ error: 'Invalid feedback approval flags. Neural correction needs edited text without legacy scoring flags; legacy correction needs scoring approval and at least four characters.' });
     return;
   }
   try {
+    const markedRelevant = (rating === 'useful' || (rating === 'needs_correction' && Boolean(correction.trim())))
+      && (await runGenerator('status', {}, neuralChatScriptPath)).arm === 'conversation';
+    const neuralTraining = (neuralCorrection || markedRelevant) ? await runGenerator('train', {
+      response_id, rating, correction, acknowledge_review: true
+    }, path.join(rootDir, 'neural_correction.py'), 120000) : null;
     const scorer = approve_for_scoring ? await runGenerator('scorer-feedback', { response_id, rating, correction, approve_correction, acknowledge_review: true }) : null;
-    const feedback = await runLearner('response-feedback', { response_id, rating, correction });
-    res.json({ ...feedback, scorer });
+    const feedback = await runLearner('response-feedback', { response_id, rating, correction,
+      neural_training: neuralTraining });
+    res.json({ ...feedback, used_for_training: neuralTraining?.trained || feedback.used_for_training,
+      scorer, neural_training: neuralTraining });
   }
-  catch (error) { res.status(400).json({ error: error.message }); }
+  catch (error) { console.error('Response correction error:', error); res.status(400).json({ error: error.message }); }
 });
 
 const graphHtmlPath = path.join(rootDir, 'memory_graph.html');

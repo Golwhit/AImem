@@ -1,7 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
+import BaseModelLab from './BaseModelLab';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState(() => new URLSearchParams(window.location.search).get('view') === 'generation' ? 'generation' : 'chat');
+  const [activeTab, setActiveTab] = useState(() => {
+    const view = new URLSearchParams(window.location.search).get('view');
+    return ['generation', 'base-lab'].includes(view) ? view : 'chat';
+  });
   const [sessionId] = useState(() => {
     const existing = sessionStorage.getItem('memory-chat-session');
     if (existing) return existing;
@@ -23,10 +27,12 @@ export default function App() {
       <nav className="tabs">
         <button className={activeTab === 'chat' ? 'tab active' : 'tab'} onClick={() => setActiveTab('chat')}>Chat</button>
         <button className={activeTab === 'generation' ? 'tab active' : 'tab'} onClick={() => setActiveTab('generation')}>Generation</button>
+        <button className={activeTab === 'base-lab' ? 'tab active' : 'tab'} onClick={() => setActiveTab('base-lab')}>Base Model Lab</button>
         <button className={activeTab === 'graph' ? 'tab active' : 'tab'} onClick={() => setActiveTab('graph')}>Memory Graph</button>
       </nav>
 
-      <main style={{ maxWidth: 800, margin: '0 auto', padding: '0 16px' }}>
+      <main style={{ maxWidth: activeTab === 'base-lab' ? 1200 : 800, margin: '0 auto', padding: '0 16px' }}>
+        {activeTab === 'base-lab' && <BaseModelLab />}
         {activeTab === 'chat' && <ChatPanel sessionId={sessionId} />}
         {activeTab === 'generation' && <><NeuralPanel /><GeneratorPanel /></>}
         {activeTab === 'graph' && (
@@ -40,18 +46,21 @@ export default function App() {
 function ChatPanel({ sessionId }) {
   const [messages, setMessages] = useState([]);
   const [generatorStatus, setGeneratorStatus] = useState(null);
+  const [chatModel, setChatModel] = useState(null);
   const [progressError, setProgressError] = useState('');
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [includeLab, setIncludeLab] = useState(true);
+  const [includeLab, setIncludeLab] = useState(false);
   const bottomRef = useRef(null);
 
   const refreshProgress = async () => {
     try {
-      const response = await fetch('/api/generator');
+      const [response, modelResponse] = await Promise.all([fetch('/api/generator'), fetch('/api/chat-model')]);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      if (!modelResponse.ok) throw new Error(`Chat model HTTP ${modelResponse.status}`);
       setGeneratorStatus(await response.json());
+      setChatModel(await modelResponse.json());
       setProgressError('');
     } catch (err) {
       setProgressError(`Progress unavailable: ${err.message}`);
@@ -87,6 +96,7 @@ function ChatPanel({ sessionId }) {
         role: 'assistant',
         text: data.reply,
         mode: data.mode,
+        chatModel: data.chat_model,
         generation: data.generation,
         trainingSources: data.training_sources,
         generatorLearning: data.generator_learning,
@@ -104,18 +114,21 @@ function ChatPanel({ sessionId }) {
     }
   };
 
-  const rateResponse = async (responseId, rating, approveForScoring, correction = '') => {
+  const rateResponse = async (responseId, rating, approveForScoring, correction = '', trainNeuralCorrection = false) => {
     setMessages((previous) => previous.map((message) => message.responseId === responseId ? { ...message, ratingPending: true } : message));
     setError('');
     try {
       const response = await fetch('/api/response-feedback', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ response_id: responseId, rating, correction, approve_for_scoring: approveForScoring, approve_correction: approveForScoring && Boolean(correction.trim()) })
+        body: JSON.stringify({ response_id: responseId, rating, correction, approve_for_scoring: approveForScoring,
+          approve_correction: approveForScoring && Boolean(correction.trim()), train_neural_correction: trainNeuralCorrection })
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
-      setMessages((previous) => previous.map((message) => message.responseId === responseId ? { ...message, rating, scorer: data.scorer, correctionSaved: Boolean(correction.trim()), correctionTrained: data.scorer?.correction_training?.trained } : message));
+      setMessages((previous) => previous.map((message) => message.responseId === responseId ? { ...message, rating, scorer: data.scorer,
+        correctionSaved: Boolean(correction.trim()), correctionTrained: data.neural_training?.trained || data.scorer?.correction_training?.trained,
+        neuralCorrectionTrained: data.neural_training?.trained } : message));
       void refreshProgress();
     } catch (err) {
       setError(err.message);
@@ -130,11 +143,20 @@ function ChatPanel({ sessionId }) {
         <p className="eyebrow">AI Chat</p>
         <h2>Memory and local generation</h2>
       </div>
+      {chatModel?.ready && <p><strong>Active chat: {chatModel.label || 'Historical layered neural model (L0/L1)'}</strong>
+        {' '}— {chatModel.parameters.toLocaleString()} parameters, seed {chatModel.seed},
+        {' '}{chatModel.training_round ? `training round ${chatModel.training_round}` : `${chatModel.passes} passes`}; run {chatModel.run_id}.
+        {' '}Training history: {chatModel.source?.training}.
+        {' '}{chatModel.note}
+        {chatModel.comparison_baseline && <> Original comparison control:
+          {' '}{chatModel.comparison_baseline.parameters.toLocaleString()} parameters,
+          {' '}seed {chatModel.comparison_baseline.seed}, {chatModel.comparison_baseline.passes} passes.</>}
+        {' '}Optional model-lab comparisons below use the separate legacy generator.</p>}
 
       <div className="generator-status" aria-live="polite">
         {generatorStatus ? (
           <>
-            <span>Generation {generatorStatus.generation}</span>
+            <span>{chatModel?.ready ? 'Legacy generator (not active chat)' : 'Generation'} {generatorStatus.generation}</span>
             <span>{generatorStatus.document_count} training sources</span>
             <span>{generatorStatus.training_characters.toLocaleString()} characters</span>
           </>
@@ -144,14 +166,14 @@ function ChatPanel({ sessionId }) {
         <a href="/?view=generation">Compare generations</a>
       </div>
       {progressError && <p className="banner banner-error">{progressError}</p>}
-      {generatorStatus?.seed_extraction && (
+      {!chatModel?.ready && generatorStatus?.seed_extraction && (
         <p className="message-meta">
           Seed layers run alongside training: {generatorStatus.seed_extraction.counts.alive} alive,
           {' '}{generatorStatus.seed_extraction.counts.dead} dead, and {generatorStatus.seed_extraction.counts.maybe} review occurrences
           {' '}across {generatorStatus.seed_extraction.document_count} sources. Existing training is unchanged.
         </p>
       )}
-      {generatorStatus?.scorer && (
+      {!chatModel?.ready && generatorStatus?.scorer && (
         <section aria-label="Response learning progress" style={{ borderBottom: '1px solid #334155', paddingBottom: 12 }}>
           <div className="generator-status">
             <span>Response scorer generation {generatorStatus.scorer.generation}</span>
@@ -185,6 +207,18 @@ function ChatPanel({ sessionId }) {
                 {m.trainingSources?.length ? ` Sources: ${m.trainingSources.map((source) => source.title).join(', ')}.` : ''}
               </small>
             )}
+            {['local-layered-neural', 'local-base-neural', 'local-conversation-neural'].includes(m.mode) && <small className="message-meta">
+              {m.mode === 'local-conversation-neural' ? 'Persistent conversation learner (reviewed teaching and feedback)'
+                : m.mode === 'local-base-neural' ? 'Experimental layer-free New Base' : 'Historical L0/L1 neural'} output; not a grounded answer or scripture.
+              {' '}Run {m.chatModel?.run_id}, seed {m.chatModel?.seed},
+              {' '}{m.chatModel?.training_round ? `training round ${m.chatModel.training_round}` : `${m.chatModel?.passes} passes`}.
+              {m.mode === 'local-conversation-neural'
+                ? ' Unmarked replies do not train. Relevant or a submitted correction trains the active weights.'
+                : ' Prompts and feedback are saved for review, not neural weight updates.'}
+            </small>}
+            {m.generatorLearning?.reason === 'fixed_neural_checkpoint' && <small className="message-meta">
+              Generating this reply did not train weights; the prompt was saved to memory.
+            </small>}
             {m.generatorLearning?.added && <small className="message-meta">Your prompt was added for future generation {m.generatorLearning.generation}.</small>}
             {m.generatorLearning?.reason === 'already_present' && <small className="message-meta">Your prompt is already in the generator corpus.</small>}
             {m.generatorLearning?.reason === 'too_short' && <small className="message-meta">Prompt skipped: at least four characters are needed for generator training.</small>}
@@ -192,23 +226,31 @@ function ChatPanel({ sessionId }) {
             {m.selection && <small className="message-meta">{Number.isFinite(m.selection.score) ? `Selected from ${m.selection.candidate_count} candidates. Scorer generation ${m.selection.generation}, selection score ${m.selection.score.toFixed(2)}.` : 'No generated candidate was available; showing the memory fallback.'}</small>}
             {m.responseId && (
               <div role="group" aria-label="Response relevance" style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
-                <button type="button" title="Review this pair and train response selection" aria-pressed={m.rating === 'useful'} disabled={m.ratingPending} onClick={() => rateResponse(m.responseId, 'useful', m.mode === 'local-character-ngram')}>Relevant{m.mode === 'local-character-ngram' ? ' and train' : ''}</button>
+                <button type="button" title="Approve this exact answer and train immediately" aria-pressed={m.rating === 'useful'} disabled={m.ratingPending} onClick={() => rateResponse(m.responseId, 'useful', m.mode === 'local-character-ngram')}>{m.ratingPending && m.rating !== 'needs_correction' ? 'Training…' : 'Relevant'}</button>
                 <button type="button" title="Review this pair and train response selection" aria-pressed={m.rating === 'needs_correction'} disabled={m.ratingPending} onClick={() => rateResponse(m.responseId, 'needs_correction', m.mode === 'local-character-ngram')}>Needs correction{m.mode === 'local-character-ngram' ? ' and train' : ''}</button>
-                {m.rating && <small className="message-meta" role="status">{m.scorer ? `Local preference updated. Scorer generation ${m.scorer.generation}: ${m.scorer.training?.status}.` : 'Feedback saved for review.'}</small>}
+                {m.rating && <small className="message-meta" role="status">{m.neuralCorrectionTrained
+                  ? 'Approved answer trained, verified and active in chat.'
+                  : m.scorer ? `Local preference updated. Scorer generation ${m.scorer.generation}: ${m.scorer.training?.status}.`
+                    : m.mode === 'local-conversation-neural' ? 'No weight update until you submit a correction.' : 'Feedback saved for review.'}</small>}
               </div>
             )}
             {m.rating === 'needs_correction' && (
               <div style={{ marginTop: 8 }}>
                 <label style={{ display: 'block', fontSize: 12 }}>Your corrected response
-                  <textarea rows={3} maxLength={2000} value={m.correction || ''} style={{ width: '100%', marginTop: 6, resize: 'vertical' }} onChange={(event) => {
+                  <textarea rows={3} maxLength={m.mode === 'local-conversation-neural' ? 95 : 2000} value={m.correction || ''} style={{ width: '100%', marginTop: 6, resize: 'vertical' }} onChange={(event) => {
                     const correction = event.target.value;
                     setMessages((previous) => previous.map((message) => message.responseId === m.responseId ? { ...message, correction, correctionSaved: false } : message));
                   }} />
                 </label>
                 <button type="button" disabled={m.ratingPending || !m.correction?.trim() || (m.mode === 'local-character-ngram' && m.correction.trim().length < 4)} onClick={async () => {
-                  await rateResponse(m.responseId, 'needs_correction', m.mode === 'local-character-ngram', m.correction);
-                }}>{m.mode === 'local-character-ngram' ? 'Approve correction and train' : 'Save correction for review'}</button>
-                {m.correctionSaved && <small className="message-meta" role="status">{m.correctionTrained ? 'Your correction trained the generator and positive response selection.' : 'Correction saved for review; not added to generator training text.'}</small>}
+                  await rateResponse(m.responseId, 'needs_correction', m.mode === 'local-character-ngram', m.correction,
+                    m.mode === 'local-conversation-neural');
+                }}>{m.ratingPending ? 'Training correction…' : m.mode === 'local-conversation-neural' ? 'Train correction now'
+                  : m.mode === 'local-character-ngram' ? 'Approve correction and train' : 'Save correction for review'}</button>
+                {m.mode === 'local-conversation-neural' && <small className="message-meta">Submitting approves this exact prompt and correction for immediate weight training. One line, up to 95 characters.</small>}
+                {m.correctionSaved && <small className="message-meta" role="status">{m.neuralCorrectionTrained
+                  ? 'Correction learned, verified and active in chat. Included in future training rounds.'
+                  : m.correctionTrained ? 'Your correction trained the generator and positive response selection.' : 'Correction saved for review; not added to generator training text.'}</small>}
               </div>
             )}
           </div>
@@ -238,7 +280,9 @@ function ChatPanel({ sessionId }) {
       </div>
       <label className="message-meta">
         <input type="checkbox" checked={includeLab} onChange={(event) => setIncludeLab(event.target.checked)} />
-        {' '}Compare extraction and generation before training this prompt (local lab).
+        {' '}{chatModel?.ready
+          ? 'Opt into the historical layer lab (retired; does not train the working base).'
+          : 'Compare extraction and generation before training this prompt (local lab).'}
       </label>
     </section>
   );
@@ -748,6 +792,237 @@ function SkeletonLayer({ report }) {
   </section>;
 }
 
+function IndexPipelineBenchmark({ report }) {
+  const layered = report.method === 'candidate_layer_comparison';
+  const arms = report.settings.arms || ['baseline', 'separated'];
+  const armName = arm => ({ baseline: 'Baseline', separated: 'Remainder base + placement index',
+    layers_0: 'L0 + base', layers_2: 'L2 + base (no L0/L1)', layers_01: 'L0 + L1 + base',
+    layers_01_quarter: 'L0 + L1 top 25% + base', layers_01_half: 'L0 + L1 top 50% + base',
+    layers_01_pretrained: 'L0 + L1 + pretrained base',
+    layers_01_injected: 'L0 + L1 + protected injection',
+    layers_01_atomic: 'L0 + L1 atomic contextual model',
+    layers_01_selective: 'L0 + selective L1 + base', layers_012: 'L0 + L1 + L2 + base' }[arm] || arm);
+  return <section className="layered-efficiency">
+    <h3>{layered ? 'Candidate-layer cascade comparison' : 'Separate index and remainder-only training'}</h3>
+    <p>{report.status}; {report.settings.seeds.length} paired seeds;
+      {' '}{report.source.training_characters} training characters; {report.source.evaluation_characters} evaluation
+      characters; {report.settings.probes} common next-word probes.
+      {' '}{report.source.corpus ? report.source.corpus.title : 'Reused Acts development data'}.
+      {' '}Development experiment, not a locked test.</p>
+    {report.source.corpus && <p>{report.source.corpus.provenance} {report.source.corpus.limitations}</p>}
+    {report.source.whole_acts && <p><strong>IN-SAMPLE: all 28 chapters are training data.</strong>
+      {' '}{report.source.whole_acts.evaluation_scope}</p>}
+    {report.opportunity_check && <><p>{report.opportunity_check.focused_probes} explicit L1 target opportunities
+      across {report.opportunity_check.distinct_l1_words} distinct words. {report.opportunity_check.policy}</p>
+      <table><caption>Four-pass L1-focused learning checks (training text, not generalization)</caption>
+        <thead><tr><th>Model / seed</th><th>Correct / opportunities</th><th>Edit distance</th></tr></thead>
+        <tbody>{report.runs.map(run => {
+          const row = run.checkpoints.find(item => item.passes === 4).l1_focused;
+          return <tr key={`${run.seed}-${run.arm}`}><td>{armName(run.arm)} / {run.seed}</td>
+            <td>{row.correct} / {row.probes}</td><td>{row.normalized_edit_distance.toFixed(3)}</td></tr>;
+        })}</tbody></table></>}
+    {report.unique_l1 && <><p>Corrected L1: {Object.keys(report.unique_l1.forms).length} complete forms
+      identified by shortest unique fragments against {report.unique_l1.inventory.entries.toLocaleString()}
+      {' '}comparison entries plus training words. Whole-word candidates replaced; no fallback or Layer 2.
+      {' '}{report.unique_l1.policy}</p>
+      <p>{Object.entries(report.unique_l1.forms).map(([word, evidence]) =>
+        `${evidence.key} → ${word}`).join('; ') || 'No forms qualified; corrected L01 equals L0.'}</p></>}
+    {report.pretraining && <><p>L0/L1-only pretraining: {report.pretraining.passes} passes over
+      {' '}{report.pretraining.patterns.length} isolated patterns, then restore the saved checkpoint.
+      {' '}{report.pretraining.policy}</p>
+      <table><caption>Pretraining and retention (teacher-forced spelling, not free recall)</caption>
+        <thead><tr><th>Model / seed</th><th>Pretraining CPU</th><th>Before</th><th>After pretraining</th><th>After 4 passage passes</th></tr></thead>
+        <tbody>{report.runs.filter(run => run.pretraining).map(run => <tr key={`${run.seed}-${run.arm}`}>
+          <td>{armName(run.arm)} / {run.seed}</td><td>{run.pretraining.cpu_seconds.toFixed(3)}</td>
+          <td>{(100 * run.pretraining.before.teacher_forced_character_accuracy).toFixed(1)}%</td>
+          <td>{(100 * run.pretraining.after.teacher_forced_character_accuracy).toFixed(1)}%</td>
+          <td>{(100 * run.checkpoints.find(row => row.passes === 4).pattern_recall.teacher_forced_character_accuracy).toFixed(1)}%</td>
+        </tr>)}</tbody></table>
+      <p>Pattern literals: {report.pretraining.patterns.map(pattern => JSON.stringify(pattern)).join(', ')}.
+        Identical starting contexts can have different targets; 100% teacher-forced accuracy may be impossible.
+        Base updates below count passage training only; total CPU includes pretraining.</p></>}
+    {report.injection && <><p>Protected reference injection: {report.injection.policy}</p>
+      <p>Active-model recall above is measured without injection, not frozen-bank recall.
+        Identical per-seed pretraining checkpoints are reused across the two pretrained arms;
+        their measured pretraining cost is charged to both.
+        Injection feature construction is included in total training CPU.</p></>}
+    {report.reinforcement && <><p>Matched pretraining and occurrence reinforcement:
+      {' '}{report.reinforcement.policy} {report.reinforcement.occurrences_per_pass} refreshes /
+      {' '}{report.reinforcement.updates_per_pass} extra character updates per pass in each arm.</p>
+      <table><caption>Four-pass replay cost (already included in total training CPU)</caption>
+        <thead><tr><th>Model / seed</th><th>Replay CPU</th><th>Replay updates</th><th>All updates including pretraining</th></tr></thead>
+        <tbody>{report.runs.map(run => {
+          const row = run.checkpoints.find(item => item.passes === 4);
+          return <tr key={`${run.seed}-${run.arm}`}><td>{armName(run.arm)} / {run.seed}</td>
+            <td>{row.reinforcement_cpu_seconds.toFixed(3)}</td><td>{row.reinforcement_updates}</td>
+            <td>{row.total_updates_including_pretraining}</td></tr>;
+        })}</tbody></table></>}
+    {report.atomic && <><p>Atomic contextual comparison: {report.atomic.policy}</p>
+      <table><caption>Four-pass reference usage and surrounding predictions (pooled probe counts)</caption>
+        <thead><tr><th>Model</th><th>Outputs / parameters</th><th>Correct L1 selections / emissions</th>
+          <th>L1 target probes</th><th>Recent-reference word accuracy</th></tr></thead>
+        <tbody>{arms.map(arm => {
+          const entries = report.runs.filter(run => run.arm === arm);
+          const scores = entries.flatMap(run => run.checkpoints.filter(row => row.passes === 4))
+            .map(row => row.selection_metrics);
+          const sum = key => scores.reduce((total, score) => total + score[key], 0);
+          const recent = sum('recent_reference_probes');
+          const correct = scores.reduce((total, score) =>
+            total + (score.recent_reference_word_accuracy || 0) * score.recent_reference_probes, 0);
+          return <tr key={arm}><td>{armName(arm)}</td>
+            <td>{entries[0] ? `${entries[0].vocabulary} / ${entries[0].parameters}` : 'Pending'}</td>
+            <td>{sum('correct_l1_first_emissions')} / {sum('l1_first_emissions')}</td>
+            <td>{sum('eligible_l1_target_probes')}</td>
+            <td>{recent ? `${(100 * correct / recent).toFixed(2)}% (${recent} probes)` : 'No probes'}</td></tr>;
+        })}</tbody></table></>}
+    {report.selections && Object.entries(report.selections).map(([arm, selection]) =>
+      <p key={arm}>{armName(arm)}: {Object.values(selection.selective_l1).filter(item => item.selected).length}
+        {' '}selected of {Object.values(selection.selective_l1).filter(item => item.occurrences >= 2).length}
+        {' '}repeated forms ({Object.keys(selection.selective_l1).length} bank candidates).
+        {' '}{selection.selection_policy}</p>)}
+    {report.selection && <p>Selective L1 accepted{' '}
+      {Object.values(report.selection.selective_l1).filter(item => item.selected).length} of{' '}
+      {Object.keys(report.selection.selective_l1).length} eligible forms.
+      {' '}{report.selection.selection_policy}
+      {!Object.values(report.selection.selective_l1).some(item => item.selected) &&
+        ' No L1 forms qualified: this arm reduces to L0 alone, not an intermediate extraction level.'}</p>}
+    {!layered && <p>{report.extraction.indexed_forms} bank-backed forms; {report.extraction.occurrences} extracted occurrences;
+      {' '}{report.extraction.removed_characters} characters removed from base training;
+      {' '}{report.extraction.remainder_characters} characters remain.
+      No indexed outputs or embeddings are added to the base.</p>}
+    {layered && <><p>{report.settings.l2_only ?
+      'Standalone L2: repeated 3–4-character blocks and hidden-backed complete forms, discovered directly from training. L0 and L1 are disabled.' :
+      report.settings.atomic_l01 ? 'Same corrected L0/L1 recognition in both layered arms. Atomic model learns references in context; remainder control removes them. No Layer 2.' :
+      report.settings.unique_l1 ? 'Layer 0 unchanged; Layer 1 uses only complete forms identified by unique partial keys. Base learns none of an extracted form’s characters. No Layer 2.' :
+      report.settings.savings_l1 ? 'Layer 0 unchanged; L1 selects the top 25% and 50% of repeated forms by training-only character savings, alongside L0 and full L1 controls. No Layer 2.' :
+      report.settings.selective_l1 ?
+      'Layer 0 unchanged; selective L1 uses a fixed training-only context reliability and savings gate, compared with full L1. No Layer 2 in this run.' :
+      'Layer 0 unchanged; Layer 1 whole-form candidates; Layer 2 repeated 3–4-character blocks and hidden-backed complete matches.'}
+      {' '}Base remains separate. No old generation exclusions enabled.
+      Candidates are experimental, not foundational admissions.</p>
+      <table><thead><tr><th>Arm</th><th>Removed characters</th><th>Remainder</th><th>Matched kinds</th></tr></thead>
+        <tbody>{Object.entries(report.layer_extractions).map(([arm, row]) => <tr key={arm}>
+          <td>{armName(arm)}</td><td>{row.removed_characters}</td><td>{row.remainder_characters}</td>
+          <td>{JSON.stringify(row.by_kind)}</td></tr>)}</tbody></table></>}
+    {report.summary && <table>
+      <thead><tr><th>Passes</th><th>Model</th><th>Total training CPU</th><th>Base CPU</th><th>Index CPU</th>
+        <th>Base updates</th><th>Word accuracy</th><th>Word edit distance (lower better)</th></tr></thead>
+      <tbody>{Object.entries(report.summary).flatMap(([budget, arms]) => Object.entries(arms).map(([arm, row]) =>
+        <tr key={`${budget}-${arm}`}><td>{budget}</td><td>{armName(arm)}</td>
+          <td>{row.total_training_cpu_seconds.toFixed(3)}</td><td>{row.neural_cpu_seconds.toFixed(3)}</td>
+          <td>{row.selector_cpu_seconds.toFixed(3)}</td><td>{row.updates}</td>
+          <td>{(100 * row.exact_next_word_accuracy).toFixed(2)}%</td>
+          <td>{row.normalized_edit_distance.toFixed(3)}</td></tr>))}</tbody>
+    </table>}
+    {report.status === 'completed' && <table>
+      <caption>Generation after four passes (120 characters/sample; not a coherence test)</caption>
+      <thead><tr><th>Model</th><th>Mean CPU seconds/sample</th><th>Neural calls</th><th>Index lookups</th>
+        <th>Indexed emissions</th>{report.injection && <th>Conditioned calls</th>}</tr></thead>
+      <tbody>{arms.map(arm => {
+        const samples = report.runs.filter(run => run.arm === arm).flatMap(run => run.samples);
+        const sum = key => samples.reduce((total, sample) => total + (sample[key] || 0), 0);
+        return <tr key={arm}><td>{armName(arm)}</td><td>{(sum('cpu_seconds') / samples.length).toFixed(4)}</td>
+          <td>{sum('neural_calls')}</td><td>{sum('index_lookups')}</td><td>{sum('indexed_emissions')}</td>
+          {report.injection && <td>{sum('conditioned_neural_calls')}</td>}</tr>;
+      })}</tbody>
+    </table>}
+    <p>Training CPU includes both base updates and placement-count learning; setup/extraction is separate
+      ({report.setup_cpu_seconds.toFixed(3)} CPU seconds). Prior bank construction is excluded.
+      {report.atomic ? ' The atomic arm learns both references and characters in context without a separate placement index; the remainder control retains separate placement.' :
+        ' The base uses only remainder characters as context. The separate index uses preceding stream events, including references, to learn placement.'}
+      Recognition runs ahead, not as concurrent workers.
+      {report.injection && ' The protected-injection arm additionally conditions base hidden state on the latest reference vector.'}
+      No comparable all-character loss or equal-update claim is made.</p>
+    <details><summary>Protocol, placement policy and saved samples (not scripture)</summary>
+      <pre>{JSON.stringify(report, null, 2)}</pre></details>
+  </section>;
+}
+
+function UnitBenchmark({ report }) {
+  if (['separate_index_remainder', 'candidate_layer_comparison'].includes(report.method))
+    return <IndexPipelineBenchmark report={report} />;
+  const corrected = report.method === 'character_recognition_onlies';
+  const indexed = report.method === 'indexed_onlies';
+  const title = report.source_run_id ? 'Baseline vs recognition vs combined' :
+    indexed ? 'Atomic indexed-onlies comparison' :
+      corrected ? 'Character-only recognition comparison' : 'Legacy expanded-output comparison';
+  const armName = arm => ({ characters: 'Baseline', skeleton_units: indexed ? 'Base + indexed onlies' :
+    corrected ? 'Recognition (skip spelling)' : 'Legacy units',
+    baseline_plus_rules: 'Baseline + rules (all updates)' }[arm] || arm);
+  const updateBudget = `updates-${report.settings?.matched_updates || 12000}`;
+  const pct = value => `${(100 * value).toFixed(1)}%`;
+  if (!report.summary) return <section className="layered-efficiency">
+    <h3>{title}</h3>
+    <p>Status: {report.status}; {report.runs.length} arms completed. Development data only.</p>
+  </section>;
+  return <section className="layered-efficiency">
+    <h3>{title}</h3>
+    <p>{report.settings.seeds.length} paired seeds; {report.source.training_characters.toLocaleString()} training characters;
+      {' '}{report.source.evaluation_characters.toLocaleString()} evaluation characters;
+      {' '}{report.settings.probes} shared next-word questions.
+      Development only: the pattern bank already saw these Bible chapters.
+      No character-versus-unit token-loss comparison is used.</p>
+    <table>
+      <thead><tr><th>Budget</th><th>Model</th><th>CPU seconds</th><th>Wall seconds</th>
+        <th>Estimated update work</th><th>Next-word accuracy</th><th>Word edit distance (lower better)</th>
+        <th>All-character probe loss</th></tr></thead>
+      <tbody>{['passes-4', updateBudget].flatMap(budget =>
+        Object.entries(report.summary[budget].arms).map(([arm, row]) =>
+          <tr key={`${budget}-${arm}`}><td>{budget}</td><td>{armName(arm)}</td>
+            <td>{row.training_cpu_seconds.toFixed(2)}</td><td>{row.training_wall_seconds.toFixed(2)}</td>
+            <td>{(row.estimated_update_operations / 1e6).toFixed(1)}M</td>
+            <td>{pct(row.exact_next_word_accuracy)}</td><td>{row.normalized_edit_distance.toFixed(3)}</td>
+            <td>{row.all_character_probe_loss?.toFixed(3) ?? 'not measured'}</td></tr>))}</tbody>
+    </table>
+    <p>{corrected ? 'Recognition-arm input decisions saved' : 'Input decisions saved'}: {pct(report.reading.decisions_saved_fraction)}.
+      {' '}{corrected ? 'Recognition vs baseline equal-pass CPU ratio' : 'Equal-pass CPU ratio'}: {report.summary['passes-4'].cpu_ratio.toFixed(2)}× baseline.
+      {' '}Less-effort criterion: {report.summary.verdicts.less_effort ? 'met' : 'not met'}.
+      {' '}Loose similar-quality criterion: {report.summary.verdicts.similar_quality ? 'met' : 'not met'},
+      but this loose criterion alone is not evidence of useful quality or coherence.</p>
+    {indexed ? <p>Each indexed pattern occupies one context position and is emitted with one neural selection.
+      The base learns pattern placement, not its internal spelling. Vocabulary and parameter counts differ,
+      so character-versus-unit loss is not reported as comparable.
+      This bounded test uses up to 128 bank-backed patterns found in training, not arbitrary dictionary entries.
+      {' '}{report.units} patterns indexed.
+      {' '}{report.runs.filter(run => run.seed === report.settings.seeds[0]).map(run =>
+        `${armName(run.arm)}: ${run.vocabulary} outputs, ${run.parameters} parameters`).join('; ')}.</p> :
+      <p>All-character probe loss scores the same original positions, including skipped spelling, without
+        generation rules. It tests neural character prediction, not the combined rule-assisted decoder.</p>}
+    {report.combined_note && <p>{report.combined_note}</p>}
+    {report.summary['passes-4'].arms.skeleton_units.all_character_probe_loss >
+      report.summary['passes-4'].arms.characters.all_character_probe_loss &&
+      <p>The recognition trainer has worse all-character prediction loss. Lower update cost does not
+        establish equal overall prediction quality.</p>}
+    <p>Training timings exclude evaluation. Setup is recorded separately; prior bank construction is excluded.
+      {corrected ? ' All arms use identical character vocabularies, parameter counts and character context. The recognition arm skips known interior spelling updates; baseline plus rules retains every baseline update.'
+        : indexed ? ' Atomic references add output classes and lengthen effective text context. Recognition runs ahead of training; concurrent-worker throughput is not measured.'
+          : ' The legacy unit model has more parameters and a longer effective text context; it is not the intended recognition-only method.'}
+      No ordinary-tokenizer control was run.</p>
+    <details><summary>All seeds, checkpoints and generated samples (not scripture)</summary>
+      <pre>{JSON.stringify(report.runs, null, 2)}</pre></details>
+    {report.matched_generation && <details>
+      <summary>Equal-update generated sample pairs (not scripture)</summary>
+      <p>{report.sample_budget_note}</p>
+      <pre>{JSON.stringify(report.matched_generation, null, 2)}</pre>
+    </details>}
+    {(report.source_run_id || indexed) && report.matched_generation && <table>
+      <caption>Fresh equal-update generation samples (up to 120 characters each; not a coherence test)</caption>
+      <thead><tr><th>Model</th><th>Mean CPU seconds/sample</th><th>{indexed ? 'Indexed emissions' : 'Rule matches'}</th>
+        <th>{indexed ? 'Emitted characters' : 'Forced characters'}</th>{indexed && <th>Neural decisions</th>}</tr></thead>
+      <tbody>{['characters', 'skeleton_units', 'baseline_plus_rules'].map(arm => {
+        const samples = report.matched_generation.runs.filter(run => run.arm === arm).flatMap(run => run.samples);
+        if (!samples.length) return null;
+        return <tr key={arm}><td>{armName(arm)}</td>
+          <td>{(samples.reduce((sum, sample) => sum + sample.cpu_seconds, 0) / samples.length).toFixed(4)}</td>
+          <td>{samples.reduce((sum, sample) => sum + sample.unit_occurrences, 0)}</td>
+          <td>{samples.reduce((sum, sample) => sum +
+            (indexed ? sample.text.length : sample.forced_characters || 0), 0)}</td>
+          {indexed && <td>{samples.reduce((sum, sample) => sum + sample.decisions, 0)}</td>}</tr>;
+      })}</tbody>
+    </table>}
+  </section>;
+}
+
 function NeuralPanel() {
   const [report, setReport] = useState(null);
   const [comparison, setComparison] = useState(null);
@@ -760,6 +1035,7 @@ function NeuralPanel() {
   const [strict, setStrict] = useState(null);
   const [skeletonReport, setSkeletonReport] = useState(null);
   const [runtimeBank, setRuntimeBank] = useState(null);
+  const [unitBenchmark, setUnitBenchmark] = useState(null);
   const [useUnits, setUseUnits] = useState(false);
   const [generationPrompt, setGenerationPrompt] = useState('');
   const [liveGeneration, setLiveGeneration] = useState(null);
@@ -785,6 +1061,7 @@ function NeuralPanel() {
       setStrict(data.strict_comparison);
       setSkeletonReport(data.skeletons_comparison);
       setRuntimeBank(data.skeleton_runtime);
+      setUnitBenchmark(data.unit_benchmark);
     }).catch(err => setError(err.message));
   }, []);
 
@@ -831,7 +1108,7 @@ function NeuralPanel() {
   };
 
   useEffect(() => {
-    if (![report, comparison, rateComparison, layered, proof].some(item => item?.status === 'running')) return;
+    if (![report, comparison, rateComparison, layered, proof, unitBenchmark].some(item => item?.status === 'running')) return;
     const timer = setInterval(() => {
       fetch('/api/neural').then(async response => {
         const data = await response.json();
@@ -846,15 +1123,16 @@ function NeuralPanel() {
         setPatterns(data.patterns_comparison);
         setStrict(data.strict_comparison);
         setSkeletonReport(data.skeletons_comparison);
+        setUnitBenchmark(data.unit_benchmark);
       }).catch(err => setError(err.message));
     }, 3000);
     return () => clearInterval(timer);
-  }, [report?.status, comparison?.status, rateComparison?.status, layered?.status, proof?.status]);
+  }, [report?.status, comparison?.status, rateComparison?.status, layered?.status, proof?.status, unitBenchmark?.status]);
 
   return (
     <section className="hero-card generator-panel neural-panel" style={{ marginTop: 24 }}>
       <h2>Neural weight lab</h2>
-      <p>Tiny from-scratch MLP with a character baseline and optional live skeleton units.
+      <p>Tiny from-scratch character MLP with optional only-state recognition and spelling shortcuts.
         UI training starts fresh; saved checkpoints can generate without retraining.
         This does not replace chat, import memories, or update the old generator.</p>
       <button disabled={busy} onClick={() => train(true)}>Run synthetic learning check</button>
@@ -871,12 +1149,12 @@ function NeuralPanel() {
         </label>
         <label><input type="checkbox" checked={useUnits} disabled={busy || !runtimeBank?.available}
           onChange={event => setUseUnits(event.target.checked)} />
-          Use live skeleton units for training and generation (opt-in)
+          Use expanded only-state recognition (character vocabulary unchanged)
         </label>
         <p>{runtimeBank === null ? 'Loading skeleton bank status…' : runtimeBank.available
-          ? 'Bank ready: approved Bible learning/development text only. Complete matching words become single neural tokens; unknowns remain characters. The neural model still chooses what to say.'
+          ? 'Bank ready: absorb exact recognized forms, skip their interior spelling updates, and preserve original character context. Generation shortcuts require a closed-list unique prefix; ambiguous fragments stay character predictions.'
           : `Bank unavailable. Build locally with ${runtimeBank.build_command}, then reload.`}
-          {' '}Baseline remains character-only. Unit loss is not directly comparable to character loss.</p>
+          {' '}Both modes remain character-only. Unskipped-target loss is not directly comparable to all-character loss.</p>
         <label><input type="checkbox" required checked={approved} onChange={event => setApproved(event.target.checked)} />
           I have reviewed these texts and authorize their use in this neural experiment.
           This declaration is not legal clearance. Full texts and weights are saved locally.
@@ -884,6 +1162,7 @@ function NeuralPanel() {
         <button disabled={busy || !approved} type="submit">{busy ? 'Training…' : 'Train separate neural experiment'}</button>
       </form>
       {error && <p className="banner banner-error">{error}</p>}
+      {unitBenchmark && <UnitBenchmark report={unitBenchmark} />}
       {skeletonReport && <SkeletonLayer report={skeletonReport} />}
       {strict && <StrictLayers report={strict} />}
       {patterns && <FixedPatterns report={patterns} />}
@@ -915,13 +1194,14 @@ function NeuralPanel() {
         </table>
         <p>{report.evaluation_note} Loss is mean negative log probability per {report.loss_unit || 'character'}; lower is better within the same tokenization.</p>
         {report.unit_runtime && <section>
-          <h3>Live skeleton unit use</h3>
-          <p>{report.unit_runtime.units} units selected from this training text.
-            {' '}{report.unit_runtime.training.decisions_saved} fewer encoded training targets
+          <h3>{report.model === 'original-character-onlies-mlp-v1' ? 'Character-only recognition use' : 'Legacy unit-token use'}</h3>
+          <p>{report.unit_runtime.units} available recognized forms.
+            {' '}{report.unit_runtime.training.decisions_saved} skipped internal spelling targets
             ({(100 * report.unit_runtime.training.decisions_saved_fraction).toFixed(1)}%).
-            {' '}{report.unit_runtime.training_targets_per_pass} targets per full pass, including the end marker;
+            {' '}{report.unit_runtime.training_targets_per_pass} update targets per source pass;
             actual updates remain {report.steps}.</p>
-          <p>Generated sample: {report.unit_runtime.generation.unit_occurrences} whole-unit emissions,
+          <p>Generated sample: {report.unit_runtime.generation.unit_occurrences} pattern shortcuts,
+            {' '}{report.unit_runtime.generation.forced_characters ?? 0} rule-supplied characters,
             {' '}{report.unit_runtime.generation.character_steps} character emissions.
             Fewer decisions do not prove a wall-clock speedup, understanding, or correct responses.</p>
           <details><summary>Runtime provenance and counts</summary><pre>{JSON.stringify(report.unit_runtime, null, 2)}</pre></details>
@@ -931,7 +1211,7 @@ function NeuralPanel() {
         <pre className="generator-sample">{report.initial_sample}</pre>
         <p>After training:</p>
         <pre className="generator-sample">{report.sample}</pre>
-        {['original-character-mlp-v1', 'original-unit-character-mlp-v1'].includes(report.model) && <form
+        {['original-character-mlp-v1', 'original-unit-character-mlp-v1', 'original-character-onlies-mlp-v1'].includes(report.model) && <form
           className="generator-form" onSubmit={event => { event.preventDefault(); generate(); }}>
           <label>Prompt for saved neural checkpoint
             <input maxLength={1000} value={generationPrompt} onChange={event => setGenerationPrompt(event.target.value)} />
@@ -939,7 +1219,7 @@ function NeuralPanel() {
           <button type="submit" disabled={busy}>Generate from saved neural checkpoint</button>
           {liveGeneration && <div>
             <pre className="generator-sample">{liveGeneration.text || '(model chose end of output)'}</pre>
-            <p>{liveGeneration.decisions} decisions; {liveGeneration.unit_occurrences} whole-unit emissions.
+            <p>{liveGeneration.decisions} neural decisions; {liveGeneration.unit_occurrences} pattern shortcuts.
               {' '}{liveGeneration.note}</p>
           </div>}
         </form>}

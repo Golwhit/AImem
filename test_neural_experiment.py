@@ -41,6 +41,35 @@ class NeuralExperimentTests(unittest.TestCase):
             self.assertEqual(status(root)["report"], report)
             self.assertEqual(sorted(path.name for path in (root / ".data").iterdir()), ["neural-experiments"])
 
+    def test_protected_condition_changes_forward_and_keeps_backprop_correct(self):
+        model = NeuralModel(list("ab "))
+        context, target = model.examples("aba")[2]
+        original = model.forward(context)[2]
+        features = tuple((i - 8) / 10 for i in range(16))
+        model.set_reference_condition(features)
+        self.assertNotEqual(model.forward(context)[2], original)
+        _, gradients = model.loss_and_gradients(context, target)
+        epsilon = 1e-5
+        for name, values in model.weights.items():
+            for index in {0, len(values) // 2, len(values) - 1}:
+                before = values[index]
+                values[index] = before + epsilon
+                plus = model.loss([(context, target)])
+                values[index] = before - epsilon
+                minus = model.loss([(context, target)])
+                values[index] = before
+                self.assertAlmostEqual(gradients[name][index], (plus - minus) / (2 * epsilon), places=7)
+        model.update(context, target)
+        self.assertEqual(model.reference_condition, features)
+        fresh = NeuralModel(list("ab "))
+        fresh.set_reference_condition(features)
+        fresh.set_reference_condition(None)
+        self.assertEqual(fresh.forward(context)[2], original)
+        with self.assertRaises(ValueError):
+            model.set_reference_condition((float("nan"),) * 16)
+        with self.assertRaises(ValueError):
+            model.set_reference_condition((0.0,))
+
     def test_approval_and_input_bounds(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

@@ -9,8 +9,217 @@ the [versioned session log](docs/SESSION_LOG.md) records each checkpoint.
 The memory graph displays its generated application version in a small
 bottom-right badge inside the galaxy canvas. Regenerate the graph after a version bump.
 
+## Working model: New Base, no layers
+
+L0, L1 and L2 are **retired from the working path**. The layer-free
+word/punctuation base with character fallback is the preserved prose baseline:
+run `10255643d34e41749c6bcc1f68ee8b5c`, arm `new`, seed 17, four passes,
+7,078 parameters. Seed/pass selection follows the protocol, not the best score.
+This checkpoint trained on Acts 6-12; it is **not** the prior whole-Acts/
+Corinthians continuation and does not inherit that model's training history.
+It remains an experimental continuation model, not an assistant or factual source.
+The persistent conversation-training path below supersedes it in chat after
+explicit promotion; the prose checkpoint remains available for rollback.
+
+The original context-4 character base is the permanent comparison control.
+Its paired seed-17/four-pass checkpoint (2,103 parameters) is copied and
+checksum-pinned beside the new checkpoint, with its own selection in
+`.data/neural-chat/comparison-baseline.json`. Historical experiments, old
+layered weights, source data and the previous selection are retained unchanged
+for provenance, not used by active generation.
+
+```sh
+# Working training comparison: original versus new, without any layer setup.
+python3 neural_base_comparison.py --acknowledge-review
+# Explicitly select the established working checkpoint.
+python3 neural_chat.py activate-base --run-id 10255643d34e41749c6bcc1f68ee8b5c --seed 17 --passes 4
+python3 neural_chat.py status
+# Same prompt through the active new base or the pinned original control.
+printf '%s' '{"prompt":"The ","max_chars":64}' | python3 neural_chat.py generate
+printf '%s' '{"prompt":"The ","max_chars":64}' | python3 neural_chat.py generate-original
+```
+
+Both use deterministic greedy decoding for repeatable comparisons; no layers
+or online weight updates run. A new experiment never auto-activates. Missing
+or corrupt pinned files fail explicitly. The Base Model Lab remains an
+educational walkthrough of the **original** character base.
+Layer descriptions and results below are historical. Reproducing retired
+five-arm experiments requires `--include-retired-layers`.
+
+### Permanent conversation training
+
+[neural_training.py](neural_training.py) continues saved weights rather than
+restarting for each round. Initial parent: the full-64, fresh-scaled seed-17
+checkpoint from `ee7f3c1be14f477a82e2db03ae72ff71`, the first protocol seed,
+not the highest test score. The separately preserved original character
+control is unchanged. The conversation design has 15,508 parameters and
+64 input slots; its weights were originally fresh, so it does not inherit
+the prose model's Acts knowledge.
+
+```sh
+# Each invocation continues the last completed permanent checkpoint.
+python3 neural_training.py --cpu-seconds 300 --rate 0.1 --activate-after
+# Promote the completed replay-verified round to chat.
+python3 neural_training.py --activate
+# Restore the previous active selection without erasing learned progress.
+python3 neural_training.py --rollback
+```
+
+`--activate-after` promotes only after a round finishes with status
+`completed` and replays exactly. Rejected rounds are never activated, and
+no approval flag is needed. Omit it to keep training progress separate from
+the active model. Rounds use plain SGD on the **existing approved 64
+exchanges only**. Default rate is .1; `--rate` lowers it. The recent
+passing rounds used .02 with a 60 CPU-second budget. Each round is
+guarded: hidden saturation above .6 or teaching exact below .9 rejects it.
+Weights, exact inputs, parent hashes, source copies, metrics and reports
+persist in `.data/neural-training/`; `progress.json` selects the most recent
+completed round. A new target-draw seed is recorded per round. There is no
+optimizer momentum to lose, no retraining from scratch and no indefinite
+background daemon. Concurrent rounds fail explicitly rather than overwriting
+one another. The CPU allowance covers updates, not evaluation or an
+additional full exact replay.
+
+Promotion copies checksum-pinned weights into the existing chat mechanism,
+archives the previous selection and leaves the original comparison untouched.
+Chat applies the teaching role format to the **current user message only**,
+returns the first generated line (at most 96 characters), and reports empty
+answers as errors. It does not claim full conversation history or retrieval-
+conditioned generation. Normal memory retrieval, automatic app-chat capture,
+development findings and graph refresh remain connected.
+
+This is a narrow synthetic-task learner, not a grounded assistant.
+**Unmarked replies do not train. Clicking Relevant trains that exact saved
+prompt/answer immediately. Submitting Train correction now trains your
+edited answer immediately.** A bare Needs correction click only opens the
+editor. These explicit actions approve the exact content-hashed pair; there
+is no additional review checkbox. The app verifies the learned answer and
+activates saved weights before reporting success. Unsupported or unlearned
+answers report errors, not a success-shaped review record.
+User-approved pairs join future permanent training; a newer correction
+replaces conflicting targets for that same prompt. See
+[immediate feedback training](docs/FROM_SCRATCH.md#immediate-feedback-training).
+Other new material still needs explicit content-hashed approval.
+Evaluation answers never train weights or choose checkpoints. See
+[permanent training details](docs/FROM_SCRATCH.md#permanent-conversation-training).
+Initial permanent round: `57f452944e2c4767b5586c8320bfbad7`, 57,100 additional
+updates / 300.28 update-CPU seconds, **64/64 teaching and 22/32 development
+answers**, 10/16 fully correct pairs. Changed wording remains weak.
+Exact state and prediction replay passed; rollback and the original control
+are preserved. This is saved learning, not general conversational competence.
+
+Memory capture remains connected throughout model development: development
+conversation exchanges and important findings are recorded through the existing
+transcript/graph workflow; internal app chat continues to append exchanges
+automatically. Model-capability tests must not disable capture or stop memory
+growth. Keep provenance and topic separation intact. Saving content to memory
+does not approve it for neural training: the content-hashed review gate remains
+separate from capture, retrieval and model-weight updates.
+
+### Next milestone: stable learning and conversation context
+
+The offline [stability diagnostic](neural_base_diagnostic.py) audits identical
+inputs with conflicting targets, then fits two small already-approved training
+snippets with three learning rates and seeds:
+
+```sh
+python3 neural_base_diagnostic.py --acknowledge-review
+```
+
+Run `2d557e54d04543efa9b8dc0fe2220d56` confirms learning but not near-perfect
+tiny-sample fitting. Rate .1 fits faster but worsens old-sample token loss
+after new-sample training in all three seeds. Lower rates reduce interference
+at this short budget, not proof of better final quality. More importantly,
+two draft questions differing only in an earlier red/blue fact produce
+identical model features and masks, so this base cannot answer both correctly
+with its deterministic decoder. Longer fact-bearing context is necessary
+for this task; lowering the rate alone cannot fix it.
+
+The [conversation teaching draft](fixtures/neural-conversation-draft.json)
+contains eight proposed teaching examples and ten separate tests. It is
+**pending review, not approved for training**, with no runtime answer lookup
+or training integration. Review names, facts, corrections, missing-information
+answers and split design before freezing content hashes.
+See [diagnostic results and limitations](docs/FROM_SCRATCH.md#working-base-stability-diagnostic).
+
+### First approved conversation-training trial
+
+The user subsequently approved training on the eight draft teaching exchanges.
+The exact file remains preserved; per-run `review.json` records its hash and
+approval rather than rewriting the earlier pending-review artifact.
+[neural_conversation_trial.py](neural_conversation_trial.py) continues isolated
+copies of the actual active New Base, training assistant answers only.
+The ten test answers are never optimizer targets or vocabulary sources.
+
+Run `576f66ae430b4f0088fde6af5fc87e76`: 5,000 updates per rate (.1/.03/.01),
+one parent and shared draw schedule. At .1, exact teaching answers **1/8**,
+test answers **1/10**; the lower rates get zero on both. All three reduce
+teacher-forced loss but fail useful conversation. The matched test answer
+is "Jon." when he keeps the box; the same answer is incorrectly given when
+he transfers it to Mira. Earlier facts fall outside observable context,
+and ordinary text role labels consume some of that limited context.
+Only one missing training character (straight apostrophe) was appended,
+preserving old weights/IDs; test vocabulary was not added.
+Active chat and original control are unchanged; no experimental model was
+activated. See [training protocol and results](docs/FROM_SCRATCH.md#first-approved-conversation-training).
+
+### Longer conversation context: information preserved, learning still weak
+
+[neural_conversation_context.py](neural_conversation_context.py) compares
+the previous short base, training-only word-identity expansion, and that same
+expansion plus a 64-feature single context (up to 32 word/gap pairs, with
+the original local fallback features). No layers or new word-output tokens.
+Run `1fe67c6c59064ddab1e088843cbe1c60` uses the same approved teaching split,
+parent and 5,000-update schedule. At rate .1, exact teaching/test answers:
+1/8 and 1/10 short; 1/8 and 1/10 short+identities; **0/8 and 0/10 long**.
+The longer variant distinguishes the red/blue facts but fails optimization;
+all measured final teaching hidden activations exceed absolute .99.
+Lower-rate follow-up selected .01 by teaching loss only: still 0/10 exact
+test answers, 1/10 case-normalized, and only 4/10 terminated replies.
+All five full model states and non-timing metrics replay exactly.
+Active chat/control remain unchanged; findings and conversations remain in memory.
+See [long-context evidence and limitations](docs/FROM_SCRATCH.md#longer-context-conversation-ablation).
+
+### Initialization and normalization diagnostic
+
+[neural_plasticity.py](neural_plasticity.py) tests inherited weights,
+fresh scale-aware initialization and inherited weights with fixed pre-tanh
+normalization. It keeps the approved teaching data and long-context
+representation fixed, compares equal update-CPU allowances, and selects rates
+using teaching loss before checking the existing developer-visible tests.
+Experimental copies cannot activate chat. See
+[protocol and validation](docs/FROM_SCRATCH.md#initialization-and-plasticity-diagnostic).
+Run `29395ea2dc794a499c608b489959221f`: fresh initialization fits 4/8,
+7/8 and 5/8 teaching answers; normalization fits 3/8, 4/8 and 4/8;
+inherited weights fit none. Both interventions score only **1/10 test**
+in every seed (the same blue-box answer), versus 0/10 inherited.
+Learning on teaching examples improves, but useful conversation does not.
+No relative-gain claim from a zero baseline, no activation or knowledge-retention claim.
+
+### Larger balanced conversation meal
+
+[neural_conversation_meal.py](neural_conversation_meal.py) compares an approved
+64-exchange paired teaching set with its balanced 16-exchange subset.
+Fresh and normalized designs use identical starting weights/vocabulary
+across sizes, three seeds, rate .1 and 24 update-CPU seconds per copy.
+The 32 separate evaluation cases include new combinations and changed
+wording; answer and both-members-correct pair scores are reported.
+No test answers become training input and no experimental model activates chat.
+See [curriculum, exact approval and protocol](docs/FROM_SCRATCH.md#larger-balanced-conversation-meal).
+Run `ee7f3c1be14f477a82e2db03ae72ff71`: fresh/64 fits 59/64, 58/64,
+59/64 teaching answers and scores 21/32, 18/32, 15/32 on evaluation.
+The fresh/16 control scores 20/32, 20/32, 19/32 at matched CPU:
+**the bigger meal does not improve mean evaluation accuracy**.
+Familiar question patterns work much better than changed wording.
+These are narrow synthetic tasks, not useful general conversation.
+
 ## What it does
 
+- Includes a separate **Base Model Lab** tab at `/?view=base-lab`: step through
+  the real base neural model's construction and one character-training update.
+  Diagrams and actual numeric values sit beside a short conceptual code sketch;
+  a separate source view shows the real Python from line 1 with junior-friendly
+  annotations. No L0/L1 or active chat training occurs in this teaching lab.
 - Registers the phone as a push subscription.
 - Sends one push from the desktop.
 - Shows the notification on the phone via a service worker.
@@ -57,6 +266,113 @@ This starts the API server on `http://localhost:3001` and the Vite client on `ht
 - Each phone reply now appends a new memory exchange automatically, advances the cycle, regenerates `memory_graph.html`, and refreshes the backend graph-state snapshot.
 
 ## Local memory graph
+
+### Base Model Lab: learn the mechanics first
+
+For an offline quick multi-context comparison:
+```sh
+python3 neural_context_mix.py --acknowledge-review
+```
+This creates fresh base-only 4-character, 16-character, jointly trained
+4+16 probability-mixture and approximately parameter-matched single-window
+models. It uses three seeds, 1,500 identical target draws per arm/seed,
+rate .03, and 512 fixed character checks each on Acts 1 training / reused
+Acts 2 validation. The mixture learns a global blend weight, not attention
+or an input-dependent selector. Equal target exposures are not equal compute.
+Reports/checkpoints stay in `.data/neural-context-mix/<run-id>/`; active
+chat, the teaching lab and historical latest-report pointers are unchanged.
+First run: mixture character accuracy was higher (19.53% versus 17.51%
+for context 4), but target loss was worse (3.134 versus 3.065, lower is
+better) and training CPU about four times higher. This is mixed evidence,
+not a multi-context advantage; see [full results](docs/FROM_SCRATCH.md#quick-multi-context-comparison).
+
+Requested 5+12 versus 4-only variant:
+```sh
+python3 neural_context_mix.py --acknowledge-review --contexts 5 12 --pair-only
+```
+Same three seeds/1,500-target budget: mean character accuracy 19.27% mixed
+versus 17.51% baseline, but loss 3.140 versus 3.065 (worse in all three
+seeds). Mixture training CPU was ~3.6x baseline; no demonstrated overall win.
+
+Triple variant: `python3 neural_context_mix.py --acknowledge-review --contexts 3 5 7 --pair-only`.
+Three branches learn global softmax blend weights, initially equal.
+Same short protocol: accuracy 20.64% versus 17.51% context-4; loss 3.176
+versus 3.065 (worse in every seed), ~4.3x training CPU. Not an overall win.
+
+Word/punctuation representation screening:
+`python3 neural_word_context.py --acknowledge-review --known-targets-only`.
+This is a **different, closed-64-word task**, not comparable to the character
+accuracy above. Compare raw four-character context, two previous word IDs
+without punctuation, and those IDs plus gap-punctuation signals, using the
+same single MLP size, initial weights and 1,500 word-target draws per seed.
+Unknown words remain in context; unknown target positions are excluded.
+Three-seed known-word accuracy: 12.63/13.98/15.46%; loss
+3.76434/3.75880/3.74443. Training CPU is approximately equal. Small promising
+signal, not a 2x gain or demonstrated grammar/whole-vocabulary improvement.
+The initial all-target version collapsed to predicting OTHER and is preserved.
+See [screening limitations](docs/FROM_SCRATCH.md#word-identity-and-punctuation-screening).
+
+Larger saved-corpus check:
+`python3 neural_word_context.py --acknowledge-review --known-targets-only --larger --steps 5000`.
+Exact archived Acts 6-12 training / 13-14 evaluation passages are verified
+against the old benchmark hashes and inputs. Rerun matched word-task controls:
+accuracy 18.38% raw4 / 19.01% words / 20.91% words+punctuation; loss
+3.39667/3.44055/3.30765. Punctuation wins against both controls in all three
+seeds on this closed-set task, with similar compute. Not directly comparable
+to old character-generator accuracy and not a 2x gain. Active chat unchanged.
+
+Historical full-generation five-arm comparison:
+`python3 neural_base_comparison.py --acknowledge-review --include-retired-layers`.
+Original character base versus a word/punctuation generator with character
+fallback, then that new base with L0, L0+L1 and L0+L1+L2 extraction/placement.
+Exact same larger saved passages, three seeds, 1/2/4 complete source passes,
+and 256 unrestricted next-word probes; no unknown-target exclusion.
+This is a new generative extension, not the earlier closed-word classifier.
+Preparation/training/generation CPU and capacity are reported separately:
+the new base is larger, not a punctuation-only matched-capacity control.
+Experiments remain offline, with active chat unchanged.
+See [protocol and limitations](docs/FROM_SCRATCH.md#full-generation-five-arm-comparison).
+Run `10255643d34e41749c6bcc1f68ee8b5c`: four-pass accuracy
+1.95/7.16/6.51/3.52/5.86%; preparation+training CPU
+64.07/165.93/165.85/166.68/107.15s respectively.
+L012 at one pass gives 5.99% in 30.96s versus original's best first-two-pass
+mean 2.86% at a similar observed budget: promising average accuracy gain,
+not an all-seed win. New-base fallback spelling remains poor; extra layers
+do not consistently improve the new base. Restore all saved predictions with
+`python3 neural_base_comparison.py --analyze-run 10255643d34e41749c6bcc1f68ee8b5c`.
+All 60 states reproduce all 15,360 recorded continuations exactly.
+Reduced L2 training work does not imply faster generation; restored inference
+CPU is higher than both the original and the plain new base.
+
+Open the **Base Model Lab** tab (production `http://localhost:3001/?view=base-lab`,
+or the Vite client's same query path). It starts with authored text `ab ab ab `
+and a fresh seed-17 instance of the real `NeuralModel`, not the active
+Acts/Corinthians checkpoint.
+
+Use **Next step** / **Back a step**, or the 11 stage buttons:
+alphabet and token IDs → seeded parameters → context/target → embeddings →
+hidden activations → logits → probabilities → target loss → backpropagation →
+SGD weight update → prediction and whole-string loss after the update.
+Hidden/output weighted sums can be expanded into their individual products.
+The parameter inspector pages through every initial value or exact
+before/gradient/change/after value in all five parameter groups.
+
+**Train next character example** extends a reproducible training prefix by one
+update (up to 32), cycling through the entered string in source order. One
+update is not a sentence or a pass. **Build / reset teaching model** applies
+new text/rate and returns to the first update. Step navigation reveals an
+already computed trace; it does not trigger additional training. Tiny-input
+limits are intentional: printable ASCII, at most 128 characters and 24
+distinct characters. Inputs and teaching state are not persisted.
+
+`POST /api/base-model-lab/trace` runs `neural_base_lab.py`, which calls the
+shared base's actual forward, backpropagation and update methods, reads the
+displayed source from that implementation, and includes its hash. It never
+loads chat weights, reads transcript training data, saves model state or
+changes memories. It is not the existing legacy extraction/model lab.
+Diagrams are explicitly schematic; grids and tables contain the actual
+values. Loss is measured on the tiny training string, not an unseen test.
+See [the walkthrough notes](docs/FROM_SCRATCH.md#visual-base-model-walkthrough).
 
 When a galaxy is promoted out of Under evaluation, its member memories and
 associated replies move with it. Its parent tether to Under evaluation is
@@ -334,6 +650,20 @@ skeletons were wrong 1 time in 560,404 checks (95% upper bound 8.5e-6, under the
 1-in-100,000 target). This holds for one Bible translation only. See
 [the record](docs/FROM_SCRATCH.md#strict-skeletons-hidden-or-missing-letters-that-resolve-one-way).
 
+**Broader fragment comparison (not active training):** a separate local inventory
+in `.data/possible-words-expanded-scowl-2020.12.07/` unions all 358 SCOWL
+2020.12.07 final lists through size 95 with the existing list: 644,145 distinct
+lowercased entries, retaining compounds, names and variants. Source archive,
+hashes, full notices and fragment match lists are preserved. This historical,
+deliberately inclusive inventory is not all English or Oxford/Webster; its
+largest lists include questionable entries. Most earlier small-list unique
+keys fail here: `wev` matches 11 entries, `couldn` four, and `etz` 140.
+`ven't` and `esn'` still match only `haven't` and `doesn't`, respectively.
+No replacement of existing possibilities, model changes or new training occurs.
+SCOWL/UKACD notice: Copyright (c) J Ross Beresford 1993-1999.
+All Rights Reserved. Retain the full accompanying `Copyright` document for use
+or redistribution; these are third-party lexical data, not original project data.
+
 The **Generation** tab now includes a separate, from-scratch character neural
 network: four-character context, 8-value embeddings, a 16-unit tanh hidden
 layer, softmax predictions, cross-entropy loss, hand-written backpropagation,
@@ -342,12 +672,13 @@ Parameter count depends on the training-only vocabulary and is shown exactly.
 This is a tiny neural language-model experiment, not an LLM or a replacement
 for the existing character-count generator.
 
-**Live unit path (opt-in):** on the Generation tab, enable **Use live skeleton
-units for training and generation** before training reviewed text. The model
-learns a mixed vocabulary of confirmed words and individual characters.
-Known units take one output decision; unknown words, names, casing, punctuation,
-and whitespace are preserved as characters. A partial prompt is never forcibly
-completed. Generation enforces boundaries around emitted whole units.
+**Expanded recognition (opt-in):** enable **Use expanded only-state recognition**
+before training reviewed text. Both modes use the same character-only vocabulary,
+parameters and four-character context. Exact recognized forms skip their internal
+spelling updates; first characters and surrounding choices still train.
+Generation supplies a suffix without neural predictions only when a prefix is
+unique across the declared possible set. Ambiguous prefixes remain predictions;
+boundaries around rule-completed forms are enforced.
 
 Build the local reusable bank once from the already approved Bible learning and
 development books (never the locked books):
@@ -356,11 +687,242 @@ development books (never the locked books):
 python3 neural_skeleton_runtime.py build
 ```
 
-The UI reports target reductions and whole-unit emissions. **Generate from saved
-neural checkpoint** reuses saved weights and the exact unit mapping, even if the
-bank is later rebuilt or removed. The baseline stays available with the option
-off. This changes neural tokenization; it does not replace chat or automatically
-train on memories. See [runtime details](docs/FROM_SCRATCH.md#live-skeleton-units-in-neural-training-and-generation).
+The UI reports skipped updates and rule-supplied characters. **Generate from saved
+neural checkpoint** restores the weights and recognition rules without the global
+bank. The baseline stays available. This does not change neural tokenization,
+replace chat or automatically train on memories. Earlier whole-word-output
+checkpoints remain loadable as legacy experiments, not the intended method.
+See [the correction](docs/FROM_SCRATCH.md#corrected-character-only-recognition-and-retest).
+
+**Measured comparison:** `python3 neural_unit_benchmark.py --acknowledge-review`
+runs three paired seeds on previously approved Acts 6/7 text, with equal-pass
+and equal-update budgets and identical next-word questions. The earlier expanded-
+output experiment was slower; it is retained with `--legacy-units`. The corrected
+character-only path skips spelling work without adding output classes. Neither
+comparison establishes coherent answers or general-English accuracy. Results
+appear in Generation; see [the comparison record](docs/FROM_SCRATCH.md#paired-live-unit-efficiency-comparison).
+
+**Larger retest:** add `--large` for complete Acts 6-12 training, Acts 13-14
+evaluation, five paired seeds, 256 shared next-word questions, and equal-pass /
+120,000-update budgets. The saved larger run used **30% less update CPU time**
+at four passes (65.75s baseline, 46.08s recognition). However, its shared
+all-character prediction loss was worse (2.685 baseline, 2.959 recognition).
+This confirms skipped-update savings, not equal overall quality or coherent
+answers. See [the larger-run results](docs/FROM_SCRATCH.md#larger-recognition-only-comparison).
+
+**Three-way comparison:** add the baseline-plus-rules arm to those saved checkpoints:
+`python3 neural_unit_benchmark.py --acknowledge-review --add-combined 41624f6d045f4a6b9d202ed2cb877b67`.
+This keeps every baseline training update and applies the same only-state
+generation rules. It reuses exact baseline weights and training timings rather
+than retraining identical weights. A new report preserves the original evidence,
+compares all three arms, and freshly measures equal-update generation samples.
+The combined arm matched baseline quality at every saved milestone, but no
+rules activated in its probes or the fresh samples: it avoids skipped-update
+degradation without yet demonstrating an added benefit.
+See [the combined comparison](docs/FROM_SCRATCH.md#baseline-plus-rules-comparison).
+
+**Atomic indexed-onlies test:** `python3 neural_unit_benchmark.py --acknowledge-review --indexed-onlies`
+tests the clarified representation: one indexed pattern is one training target,
+context position and generation selection. It reuses the existing unit codec,
+not the skip-spelling path; the live training checkbox is unchanged.
+The three-seed test emitted 73 indexed patterns with fewer generation decisions,
+but training was about 48% slower at equal passes and quality did not improve
+overall. See [the atomic test](docs/FROM_SCRATCH.md#atomic-indexed-onlies-test).
+
+**Separated placement index + remainder base:**
+`python3 neural_index_pipeline.py --acknowledge-review` removes entire indexed
+occurrences from the base's training text. A separate context-count mechanism
+learns insertion; the base has no indexed outputs or embeddings. The small
+three-seed test used about 35% less total training CPU, including index learning,
+and fewer generation calls, but word edit distance worsened. This is an isolated
+experiment, not a replacement for live training.
+See [the separated test](docs/FROM_SCRATCH.md#separate-placement-index-and-remainder-base).
+Add `--large` for complete Acts 6-12 training / Acts 13-14 evaluation,
+five paired seeds and 256 shared word probes; the learning policy and
+1/2/4-pass checkpoints remain unchanged.
+The larger run used 30,905 training characters: total training CPU was
+64.81s baseline / 51.39s separated (~21% less). Word accuracy was
+1.25% / 2.73%, but edit distance remained slightly worse (0.879 / 0.888).
+The unchanged 128-pattern cap removed 20.6% of the training characters.
+Short generation samples also used ~21% less CPU; coherent output is not established.
+
+**Different-corpus test:** run
+`python3 neural_index_pipeline.py --acknowledge-review --corpus fixtures/neural-everyday-prose.json`
+for newly AI-authored workshop prose (1,942 training / 957 evaluation characters),
+with explicit provenance in the fixture. The existing pattern bank remains fixed.
+At four passes, total CPU was 3.23s baseline / 2.22s separated (~31% less),
+but both word accuracy (5.56% / 2.78%) and edit distance favored baseline.
+This controlled artificial corpus does not establish real-world transfer.
+See [the prose comparison](docs/FROM_SCRATCH.md#different-corpus-everyday-prose).
+
+**Candidate cascade:** add `--candidate-layers` to the small prose command to
+compare base alone, Layer 0 + base, Layers 0-1 + base, and Layers 0-2 + base.
+Layer 0's seven seed configurations remain unchanged; Layer 1 indexes existing
+whole-form candidates, and Layer 2 tests repeated alphabetic 3/4-character
+blocks plus hidden-backed complete matches. No literal missing characters
+are guessed, and the old generation exclusions remain deferred.
+The first run cut training CPU ~51% with Layers 0-2, but worsened quality.
+See [the four-arm comparison](docs/FROM_SCRATCH.md#four-arm-candidate-cascade).
+
+**Corrected L1 (current experiment):** use `--candidate-layers --unique-l1`.
+This replaces the previous whole-word eligibility rule with the shortest
+unique contiguous fragment, checked against the expanded 644,145-entry
+inventory plus all training words. No full-word fallback: each key must be
+shorter than its complete payload and have exactly one normalized owner.
+The entire exact bounded word is extracted; base learns only the remainder.
+The old whole-word cascade/fraction flags remain historical controls, not
+the corrected L1 definition. Base/L0/corrected-L01 small prose comparison
+selected `eturns → returns` and `nplugge → unplugged`, removing 16 additional
+characters. Four-pass accuracy was 5.56/5.56/15.97%, edit distance
+.832/.792/.727, but corrected L1 lost on word accuracy at earlier milestones.
+No stable quality or efficiency win is established. See
+[the corrected trial](docs/FROM_SCRATCH.md#corrected-l1-unique-fragments).
+
+**Atomic contextual L01:** use `--candidate-layers --unique-l1 --atomic-l01`
+with the same corpus for three fresh arms: base, corrected remainder-only
+L01, and corrected atomic L01. Each recognized reference becomes one target
+and one context position; the neural model learns its placement and what
+follows it. The fixed decoder supplies spelling. No pretraining, injection,
+spelling replay or separate placement learner in the atomic arm.
+Four-pass word accuracy was 5.56/15.97/5.56%, edit .832/.727/.788;
+atomic training CPU was ~10% higher than base. Atomic size is 53 outputs /
+1,853 parameters versus 44 / 1,628 for the controls. None of the 48 common
+evaluation probes targets an L1 word or follows a recent reference; sample
+references were L0 only. This does not demonstrate learned L1 usage.
+See [the atomic trial](docs/FROM_SCRATCH.md#atomic-contextual-l01).
+
+**Matched pretraining and refresh:** use `--candidate-layers --unique-l1
+--pretrain-l01 --matched-reinforcement`. Both character and remainder-L01
+arms restore identical per-seed pretrained weights and receive one extra
+isolated literal pass for every recognized source occurrence (19 refreshes,
+67 extra character updates per pass each). Both use source-order passage
+updates to align replay timing, unlike earlier shuffled trials. Four-pass
+accuracy was 2.78% character / 10.42% indexed; edit .842/.801; total CPU
+5.785/5.698s including pretraining and replay. The character arm won at two
+passes; no consistent improvement or permanent spelling retention established.
+See [the matched trial](docs/FROM_SCRATCH.md#matched-pretraining-and-occurrence-reinforcement).
+
+**Whole Acts learning run:** add `--all-acts` to the matched command (omit
+`--corpus`). Both fresh arms train on all 28 chapters, including previously
+held-out chapters, with identical per-seed pretraining and occurrence refreshes.
+These are explicitly **in-sample learning checks, not held-out evaluation**.
+The runner requires 20 distinct recognized L1 occurrence targets before
+training and merges them with 256 general probes, deduplicating offsets.
+Focused scores and their support are displayed separately. Historical locked
+results are preserved, but Acts is not unseen evidence for this new run.
+First whole-book result: 124,762 characters, 124 L1 forms, 20 dedicated targets
+across 18 words. Four-pass in-sample accuracy was only .12% base / .48%
+indexed; dedicated targets scored 0/20 in every base seed and 1/20, 0/20,
+0/20 indexed. These poor scores do not demonstrate meaningful learning gains.
+
+**Historical layered app chat (retired):** the whole-Acts layered remainder model was initially selected:
+run `59fbb1a0a36144e588ac1faae14d9654`, arm `layers_01`, seed 17, four passes.
+Seed 17 is the first protocol seed, not a best-score selection. This is the
+2,203-parameter neural model **plus its learned placement index**, not the
+atomic/injected variant or the pretraining-only checkpoint. Its output is
+experimental continuation, not a conversationally trained answer or scripture.
+The Corinthians continuation below later replaced it. Both are now retired
+from active chat in favor of the layer-free New Base; their checkpoints remain preserved.
+
+`neural_chat.py` stores a checksum-pinned local checkpoint and selection in
+`.data/neural-chat/`; `GET /api/chat-model` reports the active identity.
+New benchmark runs and Generation-panel training do not replace this selection.
+Chat saves exchanges and per-reply checkpoint provenance in `chat_memory.json`,
+but does not update neural weights/index or ingest prompts into the legacy
+generator. Historical neural ratings were review-only; the current conversation
+learner trains explicitly Relevant pairs and submitted corrections as described
+above. Optional
+model-lab comparisons still use the separate legacy generator and never
+override the active neural response. Missing/corrupt active checkpoints cause
+an explicit API error, not a silent fallback.
+
+Historical rollback only (not the working model):
+```sh
+python3 neural_chat.py activate --run-id 59fbb1a0a36144e588ac1faae14d9654 --seed 17 --passes 4
+python3 neural_chat.py status
+```
+The saved experiment is required for activation. Deployments without an active
+selection retain the previous generator/retrieval behavior. To roll back,
+rename `.data/neural-chat/active.json` to an unused backup filename; retain the
+checkpoint and legacy generator data. See [the runtime notes](docs/FROM_SCRATCH.md#active-layered-neural-chat).
+
+**Corinthians continuation:** `neural_continuation.py` continues both arms of
+the active checkpoint's paired experiment on **all of 1 and 2 Corinthians**,
+using the same publisher's public-domain WEB text (29 chapters, 694 verses).
+Raw source, extracted verse text, publisher rights notice and hashes are kept
+in `.data/corinthians-web-staged/`. The current approval covers both complete
+books for four additional passes, comparison, and subsequent layered activation.
+
+```sh
+# Stage once; existing source snapshots are never overwritten.
+python3 neural_continuation.py stage --acknowledge-review
+python3 neural_continuation.py train --acknowledge-review --activate
+```
+
+Training resumes the selected layered seed **and its corresponding baseline**
+from saved final weights, not fresh weights or initial pretraining. Existing
+layer references and placement counts survive; L1 eligibility is rechecked
+against the expanded dictionary plus all prior/new training words. Newly
+eligible words are appended without renumbering references. Both arms receive
+the same occurrence-triggered literal refreshes and source-order passes.
+Old neural token IDs/weights are preserved if new characters need appending;
+new rows copy the arm's unknown-token representation (which changes softmax
+normalization). This Corinthians snapshot needs no new characters.
+
+Checkpoints at one, two and four additional passes include **in-sample**
+Corinthians word checks and Acts retention checks, before/after, using one
+paired seed. Acts is not replayed; retaining old knowledge is measured, not
+guaranteed. These are not held-out generalization or multi-seed results.
+The prior chat checkpoint stays active until both arms complete. Activation
+refuses to overwrite a selection changed during training. Original
+checkpoints remain preserved; reports record hashes, parent lineage and code
+versions. Omit `--activate` to retain the current selection after training.
+The latest-benchmark panel remains historical; active chat reports its own
+selection and cumulative source history separately.
+
+Completed continuation `1f7ed40a7b614dbba3c612a572782ca1` was previously active
+(layered seed 17, four **additional** passes). The neural model remains 2,203
+parameters; L1 grows from 124 to 176 forms. On 256 fixed in-sample Corinthians
+word probes, baseline accuracy changed .78% → 1.95%; layered 1.17% → 1.17%.
+On 256 fixed Acts retention probes, baseline .39% → 3.12%; layered
+1.17% → .39%. The layered model did not improve new-book accuracy and lost
+retention on these probes; activating it is the user's choice, not a claim
+that it outperformed the baseline or became meaningfully smarter.
+
+**Pretraining and protected injection:** add `--pretrain-l01 --inject-l01` to
+that corrected command. Each seed starts fresh, trains only the seven literal
+L0 payloads and the two selected L1 words for 200 passes, and saves a reusable
+pretraining-only checkpoint. Two extra arms start from those exact weights:
+ordinary remainder training, and remainder training conditioned on frozen
+16-value reference vectors. Indexed targets are not replayed. The frozen
+model/vectors remain intact; active neural weights and their interpretation
+can still change. Four-pass accuracy base/corrected/pretrained/injected was
+5.56/15.97/9.72/8.33%; total training CPU includes ~2.52s pretraining per
+pretrained arm. Protected storage worked, but injection did not improve quality
+over either corrected L01 or ordinary pretraining. See
+[the protected trial](docs/FROM_SCRATCH.md#pretraining-and-protected-reference-injection).
+
+**Selective L1 trial:** add `--selective-l1` to that command to compare base,
+L0, selective L01 and full L01. A fixed training-only gate requires repeated,
+high-purity preceding contexts and potential character savings. On this small
+corpus, none of 85 forms qualified; the selective arm reproduced L0 exactly.
+This did not identify an intermediate speed/quality sweet spot.
+See [the selective trial](docs/FROM_SCRATCH.md#selective-l1-trial).
+
+**Intermediate L1 coverage:** use `--candidate-layers --savings-l1` with the
+same prose corpus to compare base, L0, top 25%/50% of repeated L1 candidates,
+and full L01. Training-only character savings rank the forms; counts round up.
+Five/nine of 18 repeated forms were selected. At four passes the 25% arm
+matched base word accuracy with ~5% less training CPU and slightly better
+edit distance, but neither intermediate arm beat L0's edit distance.
+The advantage was not consistent across milestones; no sweet spot established.
+See [the fractional comparison](docs/FROM_SCRATCH.md#intermediate-l1-coverage).
+
+**L2 alone:** use `--candidate-layers --l2-only` with the same prose corpus.
+This disables L0/L1 and discovers L2 candidates directly from training.
+The first paired run saved ~52% training CPU but worsened word accuracy
+(0.69% vs 5.56% baseline) and edit distance (0.953 vs 0.832).
+See [the standalone ablation](docs/FROM_SCRATCH.md#standalone-l2-ablation).
 
 Start with **Run synthetic learning check**. This original repeating-pattern
 fixture demonstrates weight updates, not generalization. For real experiments,
@@ -379,10 +941,10 @@ and then describe it as an untouched final test.
 Full submitted text, provenance, hashes, weights, and report are saved locally
 under `.data/neural-experiments/<run_id>.json`; `latest.json` holds the latest
 report. These ignored files can contain sensitive text. The character baseline
-does not apply or soften Layer 0/1 rules; the optional unit path uses the frozen
-bank to select confirmed units, not to assert an incomplete word is certain.
-Mixed-token loss is per unit/character decision, including an end marker, not
-directly comparable to baseline character loss. The bank contains prior Bible
+does not apply or soften Layer 0/1 rules; the optional recognition path uses the
+bank to avoid relearning confirmed spelling. Its loss covers only unskipped
+targets, so it is not directly comparable to baseline all-character loss.
+No word output classes or end marker are added. The bank contains prior Bible
 learning/development evidence, so arbitrary held-out text is not necessarily
 unseen by that bank. The existing four-mode chat lab is unchanged.
 
@@ -625,9 +1187,11 @@ The graph's prompt evaluation labels whether a response is a retrieved memory
 excerpt or experimental local character output, and shows approved generator
 source titles. Response useful/Needs correction and optional user corrections
 are stored separately in `.data/response-feedback.json`, with response IDs and
-content hashes. They remain unapproved and do not automatically train either
-model. Grade cited memories separately to train retrieval. Generated output is
-never added to the generator corpus automatically.
+content hashes. Unmarked answers do not train. In current conversation chat,
+Relevant and submitted corrections explicitly approve immediate neural updates;
+successful feedback records include the trained checkpoint hash.
+Grade cited memories separately to train retrieval. Generated output is
+never added to the legacy generator corpus automatically.
 
 For the fastest in-app workflow, open `/graph`, enter a prompt in **Prompt
 training**, and press Enter. Shift+Enter keeps a newline. The current question, results, and

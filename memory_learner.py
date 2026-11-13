@@ -137,20 +137,36 @@ class MemoryLearner:
                 and item.get("memory_sha256") == memory_hash(self.by_id[item["memory_id"]])
                 and text_hash(item["query"]) in self.review_state["queries"]]
 
-    def response_feedback(self, response_id: str, rating: str, correction: str = "") -> dict:
+    def response_feedback(self, response_id: str, rating: str, correction: str = "",
+                          neural_training: dict | None = None) -> dict:
         response = self.records.get(response_id)
         if not response or response["role"] != "Assistant" or response.get("source") not in {"local-retrieval", "local-generated"}:
             raise ValueError("Unknown local model response")
         if rating not in ("useful", "needs_correction") or not isinstance(correction, str) or len(correction) > 2000:
             raise ValueError("Response feedback requires a valid rating and correction up to 2000 characters")
+        if neural_training is not None:
+            checksum = neural_training.get("checkpoint_sha256")
+            if (not neural_training.get("trained") or not isinstance(checksum, str) or len(checksum) != 64
+                    or any(char not in "0123456789abcdef" for char in checksum)):
+                raise ValueError("Invalid correction training evidence")
+            raw = (self.path.parent / "neural-training" / f"{checksum}.json").read_bytes()
+            if hashlib.sha256(raw).hexdigest() != checksum:
+                raise ValueError("Correction training evidence hash mismatch")
+            approved = json.loads(raw)["evidence"].get("approved_corrections", [])
+            approved_answer = response["text"].strip() if rating == "useful" else correction.strip()
+            if not any(item["response_id"] == response_id and item["row"]["answer"] == approved_answer
+                       and item["sha256"] == neural_training.get("reviewed_pair_sha256") for item in approved):
+                raise ValueError("Correction is absent from trained checkpoint approval")
         path = self.path.with_name("response-feedback.json")
         saved = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {"version": 1, "items": []}
         saved["items"] = [item for item in saved["items"] if item["response_id"] != response_id] + [{
             "response_id": response_id, "response_sha256": memory_hash(response), "rating": rating,
-            "correction": correction.strip(), "source": "user-response-feedback", "training_approved": False,
+            "correction": correction.strip(), "source": "user-response-feedback",
+            "training_approved": neural_training is not None, "neural_training": neural_training,
         }]
         atomic_json(path, saved)
-        return {"ok": True, "response_id": response_id, "rating": rating, "used_for_training": False}
+        return {"ok": True, "response_id": response_id, "rating": rating,
+                "used_for_training": neural_training is not None}
 
     def train(self) -> dict:
         examples = self.eligible_feedback()
@@ -215,7 +231,8 @@ def main() -> None:
     elif args.command == "review":
         result = learner.review(payload.get("memory_ids", []), payload.get("queries", []), payload.get("acknowledge", False))
     elif args.command == "response-feedback":
-        result = learner.response_feedback(payload.get("response_id", ""), payload.get("rating", ""), payload.get("correction", ""))
+        result = learner.response_feedback(payload.get("response_id", ""), payload.get("rating", ""),
+                                          payload.get("correction", ""), payload.get("neural_training"))
     else:
         result = learner.status()
     print(json.dumps(result, allow_nan=False))

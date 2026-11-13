@@ -448,24 +448,39 @@ function renderModelResponse() {
   document.getElementById("model-response-panel").hidden = !evaluation;
   if (evaluation) {
     const reply = evaluation.reply;
-    const generated = evaluation.mode === "local-character-ngram";
-    document.getElementById("model-response-label").textContent = generated ? "Experimental local character output" : "Retrieved memory excerpt";
+    const conversation = evaluation.mode === "local-conversation-neural";
+    const neural = ["local-layered-neural", "local-base-neural", "local-conversation-neural"].includes(evaluation.mode);
+    const generated = neural || evaluation.mode === "local-character-ngram";
+    document.getElementById("model-response-label").textContent = neural ? (evaluation.mode === "local-conversation-neural" ? "Persistent narrow-task conversation learner" : evaluation.mode === "local-base-neural" ? "Experimental layer-free New Base continuation" : "Historical L0/L1 neural continuation") : generated ? "Experimental local character output" : "Retrieved memory excerpt";
     document.getElementById("model-response").textContent = reply.length > 650 ? reply.slice(0, 647).trimEnd() + "..." : reply;
     const sources = (evaluation.training_sources || []).map(source => source.title).filter(Boolean);
     document.getElementById("model-response-meta").textContent = generated
-      ? `Experimental, not a grounded answer. Generator ${evaluation.generation}. Training sources: ${sources.join(", ") || "unknown"}.`
+      ? neural ? `Not a grounded answer or scripture. Neural run ${evaluation.chat_model.run_id}, seed ${evaluation.chat_model.seed}, passes ${evaluation.chat_model.passes}. ${conversation ? "Unmarked replies do not train. Relevant trains the saved answer; entering and submitting a correction trains the edited answer." : "No online neural training."}`
+        : `Experimental, not a grounded answer. Generator ${evaluation.generation}. Training sources: ${sources.join(", ") || "unknown"}.`
       : "Selected from stored conversation memory.";
+    const correction = document.getElementById("response-correction");
+    correction.maxLength = conversation ? 95 : 2000;
+    correction.placeholder = conversation ? "Correction: one line, up to 95 characters. Submit with Needs correction to train now." : "Your correction (optional)";
+    document.getElementById("response-useful").textContent = conversation ? "Relevant" : "Response useful";
+    document.getElementById("response-needs-correction").title = conversation
+      ? "An entered correction approves immediate weight training; without text, only record the judgment." : "Record response feedback";
   }
   const rated = evaluation?.response_rating;
-  document.getElementById("response-feedback-controls").hidden = !!rated;
+  const trained = evaluation?.neural_training?.trained;
+  const awaitingCorrection = evaluation?.mode === "local-conversation-neural" && rated === "needs_correction" && !trained;
+  document.getElementById("response-feedback-controls").hidden = !!rated && !awaitingCorrection;
   document.getElementById("response-evaluation-status").hidden = !rated;
-  if (rated) document.getElementById("response-evaluation-status").textContent = `Evaluated: ${rated === "useful" ? "Useful" : "Needs correction"}`;
+  if (rated) document.getElementById("response-evaluation-status").textContent = trained
+    ? "Approved answer trained, verified and active in chat."
+    : awaitingCorrection ? "No weight update. Enter a correction above and submit Needs correction to train it."
+      : `Evaluated: ${rated === "useful" ? "Useful" : "Needs correction"}`;
 }
 async function recordResponseFeedback(rating) {
   if (!state.currentEvaluation || state.responseFeedbackPending) return;
   state.responseFeedbackPending = true;
   const responseButtons = document.querySelectorAll("#response-feedback-controls button");
   responseButtons.forEach(button => { button.disabled = true; });
+  announce("Submitting feedback; explicitly approved conversation answers train before confirmation.");
   try {
     const response = await fetch("http://localhost:3001/api/response-feedback", {
       method: "POST", headers: {"Content-Type": "application/json"},
@@ -474,10 +489,12 @@ async function recordResponseFeedback(rating) {
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || "Response feedback was not saved");
     state.currentEvaluation.response_rating = rating;
+    state.currentEvaluation.neural_training = result.neural_training;
     sessionStorage.setItem("latest-memory-evaluation", JSON.stringify(state.currentEvaluation));
     renderModelResponse();
     state.latestJudgment = {query: state.query, responseFeedback: true};
-    announce("Response feedback saved for review; not used as an automatic training target.");
+    announce(result.neural_training?.trained ? "Approved answer trained, verified and active in chat."
+      : "Feedback recorded without neural weight training.");
   } catch (error) { document.getElementById("event").textContent = error.message; }
   finally { state.responseFeedbackPending = false; responseButtons.forEach(button => { button.disabled = false; }); }
 }

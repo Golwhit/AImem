@@ -8,6 +8,7 @@ from unittest.mock import patch
 import neural_skeletons
 from neural_experiment import NeuralModel, generate_checkpoint, train_experiment
 from neural_skeleton_runtime import BANK_PATH, END, UnitCodec, build_bank, digest, load_bank
+from neural_character_onlies import CharacterOnlies
 
 
 def fixture_bank(root: Path) -> dict:
@@ -72,6 +73,29 @@ class SkeletonRuntimeTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "Invalid runtime"):
                 UnitCodec({"that": {"pattern": "*hat", "kind": "hidden1"}}, {})
 
+    def test_indexed_pattern_is_one_target_and_one_context_position(self):
+        codec = UnitCodec({"that": {"pattern": "th*t", "kind": "hidden1"}}, {})
+        model = NeuralModel(sorted(set("that x") | {"that", END}))
+        examples = codec.examples(model, "that x")
+        self.assertEqual(len(examples), 4)
+        self.assertEqual(examples[0], ([0, 0, 0, 0], model.tokens["that"]))
+        self.assertEqual(examples[1], ([0, 0, 0, model.tokens["that"]], model.tokens[" "]))
+        self.assertEqual(examples[2], ([0, 0, model.tokens["that"], model.tokens[" "]], model.tokens["x"]))
+        contexts = []
+
+        def forward(context):
+            contexts.append(context[:])
+            row = [0.0] * model.size
+            row[model.tokens["that"] if len(contexts) == 1 else model.tokens[" "]] = 1
+            return [], [], row
+
+        with patch.object(model, "forward", side_effect=forward):
+            generated = codec.sample(model, "", length=5)
+        self.assertEqual(generated["text"], "that ")
+        self.assertEqual(generated["decisions"], 2)
+        self.assertEqual(generated["unit_characters"], 4)
+        self.assertEqual(contexts, [[0, 0, 0, 0], [0, 0, 0, model.tokens["that"]]])
+
     def test_generation_emits_complete_units_and_enforces_both_boundaries(self):
         codec = UnitCodec({"that": {"pattern": "th*t", "kind": "hidden1"}}, {})
         model = NeuralModel(sorted(set("that x") | {"that", END}))
@@ -83,6 +107,12 @@ class SkeletonRuntimeTests(unittest.TestCase):
             return [], [], probabilities
 
         with patch.object(model, "forward", side_effect=forward):
+            context = [0] * model.context
+            distribution = codec.distribution(model, context, "that", after_unit=True, remaining=10)
+            self.assertAlmostEqual(sum(distribution), 1.0)
+            self.assertEqual(distribution[model.tokens["that"]], 0.0)
+            self.assertEqual(distribution[model.tokens["x"]], 0.0)
+            self.assertEqual(distribution[0:2], [0.0, 0.0])
             result = codec.sample(model, "", length=10)
             self.assertEqual(result["text"], "that that ")
             self.assertEqual(result["unit_occurrences"], 2)
@@ -98,22 +128,23 @@ class SkeletonRuntimeTests(unittest.TestCase):
             payload = {"training_text": "that with that. " * 6, "held_out_text": "with that unknown.",
                        "source": "Original test text", "acknowledge_review": True,
                        "steps": 20, "skeleton_units": True}
-            report = train_experiment(payload, root)
-            second = train_experiment({**payload, "held_out_text": "that novel words."}, root)
+            rules = CharacterOnlies({"that", "with"}, {"tha": "that"}, {"fixture": True})
+            with patch.object(CharacterOnlies, "cached", return_value=rules):
+                report = train_experiment(payload, root)
+                second = train_experiment({**payload, "held_out_text": "that novel words."}, root)
             path = root / ".data/neural-experiments"
             first_checkpoint = json.loads((path / f"{report['run_id']}.json").read_text())
             second_checkpoint = json.loads((path / f"{second['run_id']}.json").read_text())
             self.assertEqual(first_checkpoint["weights"], second_checkpoint["weights"])
             self.assertGreater(report["changed_parameters"], 0)
             self.assertGreater(report["unit_runtime"]["training"]["decisions_saved"], 0)
-            self.assertIn("that", first_checkpoint["characters"])
-            unit_index = first_checkpoint["characters"].index("that") + 2
-            self.assertNotEqual(first_checkpoint["weights"]["output_bias"][unit_index], 0.0)
+            self.assertEqual(first_checkpoint["characters"], sorted(set(payload["training_text"])))
+            self.assertTrue(all(len(c) == 1 for c in first_checkpoint["characters"]))
             (root / BANK_PATH).unlink()
             generated = generate_checkpoint({"run_id": report["run_id"], "prompt": report["sample_prompt"]}, root)
             self.assertEqual(generated["text"], report["sample"])
-            self.assertEqual(generated["emitted_units"], report["unit_runtime"]["generation"]["emitted_units"])
-            self.assertEqual(report["loss_unit"], "mixed unit/character decision (including end marker)")
+            self.assertEqual(generated["forced_characters"], report["unit_runtime"]["generation"]["forced_characters"])
+            self.assertEqual(report["loss_unit"], "unskipped character target")
 
     def test_bad_requests_and_missing_or_corrupt_bank_fail_explicitly(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -243,6 +243,15 @@ class LearnerTests(unittest.TestCase):
                 with urlopen(Request(base + path, data=data, headers={"Content-Type": "application/json"}), timeout=30) as response:
                     return json.load(response)
 
+            from neural_base_lab import trace
+            transcript_before_lab = (self.root / "chat_memory.json").read_bytes()
+            lab_trace = request("/api/base-model-lab/trace", {"text": "ab ab ", "updates": 3})
+            self.assertEqual(lab_trace, trace({"text": "ab ab ", "updates": 3}))
+            self.assertEqual((self.root / "chat_memory.json").read_bytes(), transcript_before_lab)
+            with self.assertRaises(HTTPError) as invalid_trace:
+                request("/api/base-model-lab/trace", {"updates": 1000})
+            self.assertEqual(invalid_trace.exception.code, 400)
+            invalid_trace.exception.close()
             neural = request("/api/neural/train", {"synthetic": True, "steps": 5})
             saved_neural = request("/api/neural/generate", {
                 "run_id": neural["run_id"], "prompt": neural["sample_prompt"],
@@ -438,6 +447,130 @@ class LearnerTests(unittest.TestCase):
             self.assertEqual(request('/api/generator')['document_count'], 4)
             capture_after_lab_failure = json.loads((self.root / 'chat_memory.json').read_text())
             self.assertEqual(len(capture_after_lab_failure['messages']), len(still_saved['messages']) + 2)
+            from test_neural_chat import chat_fixture
+            from neural_chat import activate, generate, DIRECTORY
+            run_id = chat_fixture(self.root)
+            active = activate(self.root, run_id)
+            self.assertEqual(request("/api/chat-model")["checkpoint_sha256"], active["checkpoint_sha256"])
+            expected = generate(self.root, {"prompt": "The ", "max_chars": 320})
+            checkpoint_path = self.root / DIRECTORY / f"{active['checkpoint_sha256']}.json"
+            before = checkpoint_path.read_bytes()
+            layered = request("/api/chat", {"message": "The ", "include_in_generator": True})
+            self.assertEqual(layered["mode"], "local-layered-neural")
+            self.assertEqual(layered["reply"], expected["text"])
+            self.assertEqual(layered["chat_model"]["run_id"], run_id)
+            self.assertIsNone(layered["response_source_id"])
+            self.assertEqual(layered["generator_learning"]["reason"], "fixed_neural_checkpoint")
+            self.assertEqual(request("/api/generator")["document_count"], 4)
+            stored = json.loads((self.root / "chat_memory.json").read_text())["messages"][-1]
+            self.assertEqual(stored["source"], "local-generated")
+            self.assertEqual(stored["model_provenance"]["checkpoint_sha256"], active["checkpoint_sha256"])
+            self.assertEqual(checkpoint_path.read_bytes(), before)
+            lab_directory.unlink()
+            (self.root / '.data' / 'model-lab-archive').rename(lab_directory)
+            compared = request("/api/chat", {"message": "The ", "include_lab": True})
+            self.assertIsNotNone(compared["lab"])
+            self.assertEqual(compared["mode"], "local-layered-neural")
+            self.assertEqual(compared["reply"], expected["text"])
+            self.assertEqual(checkpoint_path.read_bytes(), before)
+            checkpoint_path.write_bytes(before + b" ")
+            with self.assertRaises(HTTPError) as failed_active:
+                request("/api/chat", {"message": "test"})
+            self.assertEqual(failed_active.exception.code, 500)
+            failed_active.exception.close()
+            with self.assertRaises(HTTPError) as failed_status:
+                request("/api/chat-model")
+            self.assertEqual(failed_status.exception.code, 500)
+            failed_status.exception.close()
+            from test_neural_chat import base_chat_fixture
+            from neural_chat import activate_base
+            base_run = base_chat_fixture(self.root)
+            working = activate_base(self.root, base_run)
+            self.assertEqual(request("/api/chat-model")["arm"], "new")
+            expected_base = generate(self.root, {"prompt": "The ", "max_chars": 320})
+            base_path = self.root / DIRECTORY / f"{working['checkpoint_sha256']}.json"
+            base_before = base_path.read_bytes()
+            base_reply = request("/api/chat", {"message": "The ", "include_in_generator": True})
+            self.assertEqual(base_reply["mode"], "local-base-neural")
+            self.assertEqual(base_reply["reply"], expected_base["text"])
+            self.assertEqual(base_reply["chat_model"]["comparison_baseline"]["arm"], "original")
+            self.assertEqual(base_reply["generator_learning"]["reason"], "fixed_neural_checkpoint")
+            self.assertEqual(request("/api/generator")["document_count"], 4)
+            self.assertEqual(base_path.read_bytes(), base_before)
+            stored = json.loads((self.root / "chat_memory.json").read_text())["messages"][-1]
+            self.assertEqual(stored["model_provenance"]["arm"], "new")
+            base_path.write_bytes(base_before + b" ")
+            with self.assertRaises(HTTPError) as failed_base:
+                request("/api/chat", {"message": "test"})
+            self.assertEqual(failed_base.exception.code, 500)
+            failed_base.exception.close()
+            from neural_chat import CONVERSATION_MODEL
+            from hashlib import sha256
+            from neural_base_comparison import WordBase
+            from neural_conversation_context import build
+            from neural_plasticity import initialize
+            teaching = [{"turns": [{"role": "user", "content": "A cat?"}], "answer": "A cat."}]
+            conversation, _ = build(WordBase("A cat? user assistant: \n.", 17), teaching, "long_identities")
+            conversation = initialize(conversation, "fresh_scaled", 17)
+            network = conversation.model
+            network.weights["output"] = [0.0] * len(network.weights["output"])
+            network.weights["output_bias"] = [0.0] * network.size
+            network.weights["output_bias"][network.tokens["char:a"]] = 20.0
+            raw = json.dumps({"state": conversation.snapshot()}).encode()
+            checksum = sha256(raw).hexdigest()
+            (self.root / DIRECTORY / f"{checksum}.json").write_bytes(raw)
+            selection = {**working, "model": CONVERSATION_MODEL, "arm": "conversation",
+                         "checkpoint_sha256": checksum, "passes": 1, "training_round": 1}
+            (self.root / DIRECTORY / "active.json").write_text(json.dumps(selection))
+            learned = request("/api/chat", {"message": "A cat?", "include_in_generator": True})
+            self.assertEqual(learned["mode"], "local-conversation-neural")
+            self.assertEqual(learned["reply"], "a" * 96)
+            self.assertEqual(learned["generator_learning"]["reason"], "fixed_neural_checkpoint")
+            self.assertEqual((self.root / DIRECTORY / f"{checksum}.json").read_bytes(), raw)
+            saved_message = json.loads((self.root / "chat_memory.json").read_text())["messages"][-1]
+            self.assertEqual(saved_message["model_provenance"]["model"], CONVERSATION_MODEL)
+            # Unmarked chat and a needs-correction rating do not change weights.
+            untrained = request("/api/response-feedback", {
+                "response_id": learned["response_memory_id"], "rating": "needs_correction"})
+            self.assertFalse(untrained["used_for_training"])
+            self.assertEqual((self.root / DIRECTORY / f"{checksum}.json").read_bytes(), raw)
+            from neural_conversation_meal import curriculum, FIXTURE
+            from neural_conversation_trial import canonical, prompt_for
+            from original_generator import atomic_json
+            fixture = self.root / FIXTURE
+            atomic_json(fixture, curriculum())
+            teaching_data = curriculum()["train"]
+            teaching_text = "".join(prompt_for(row) + row["answer"] for row in teaching_data) + "A cat?"
+            feedback_base, _ = build(WordBase(teaching_text, 17), teaching_data, "long_identities")
+            conversation = initialize(feedback_base, "fresh_scaled", 17)
+            evidence = {"run_id": "c" * 32, "round": 1,
+                        "reviewed_file_sha256": sha256(fixture.read_bytes()).hexdigest()}
+            train_raw = canonical({"state": conversation.snapshot(), "evidence": evidence})
+            train_hash = sha256(train_raw).hexdigest()
+            training = self.root / ".data/neural-training"
+            training.mkdir(parents=True, exist_ok=True)
+            (training / f"{train_hash}.json").write_bytes(train_raw)
+            (self.root / DIRECTORY / f"{train_hash}.json").write_bytes(train_raw)
+            atomic_json(training / "progress.json", {**evidence, "checkpoint_sha256": train_hash})
+            atomic_json(self.root / DIRECTORY / "active.json", {**selection, "checkpoint_sha256": train_hash})
+            corrected = request("/api/response-feedback", {
+                "response_id": learned["response_memory_id"], "rating": "needs_correction",
+                "correction": "Z."})
+            self.assertTrue(corrected["used_for_training"])
+            self.assertTrue(corrected["neural_training"]["trained"])
+            correction_hash = corrected["neural_training"]["checkpoint_sha256"]
+            self.assertNotEqual(correction_hash, train_hash)
+            new_reply = request("/api/chat", {"message": "A cat?"})
+            self.assertEqual(new_reply["reply"], "Z.")
+            relevant = request("/api/response-feedback", {
+                "response_id": new_reply["response_memory_id"], "rating": "useful"})
+            self.assertTrue(relevant["used_for_training"])
+            self.assertTrue(relevant["neural_training"]["trained"])
+            feedback_rows = json.loads((self.root / ".data/response-feedback.json").read_text())["items"]
+            feedback_row = next(row for row in feedback_rows if row["response_id"] == new_reply["response_memory_id"])
+            self.assertTrue(feedback_row["training_approved"])
+            self.assertEqual(feedback_row["neural_training"]["checkpoint_sha256"],
+                             relevant["neural_training"]["checkpoint_sha256"])
         finally:
             process.terminate()
             process.communicate(timeout=10)

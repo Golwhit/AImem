@@ -18,6 +18,7 @@ def add_cycle(
     assistant_topics: list[str],
     session_id: str | None = None,
     origin: str = "app",
+    model_provenance: dict | None = None,
 ) -> int:
     transcript = json.loads(memory_path.read_text(encoding="utf-8"))
     messages = transcript["messages"]
@@ -82,6 +83,8 @@ def add_cycle(
             "created_cycle": cycle,
         },
     ]
+    if model_provenance is not None:
+        new_messages[1]["model_provenance"] = model_provenance
     previous = messages[-1]
     for message in new_messages:
         message["created_cycle"] = cycle
@@ -154,6 +157,7 @@ def main() -> None:
     parser.add_argument("--assistant", help="Text of the assistant reply to remember.")
     parser.add_argument("--session-id", help="Conversation identifier for cluster evidence.")
     parser.add_argument("--source", default="app", help="Origin of this exchange.")
+    parser.add_argument("--model-provenance", type=json.loads, help="Pinned model metadata for the assistant reply.")
     parser.add_argument(
         "--user-topic",
         action="append",
@@ -207,6 +211,7 @@ def main() -> None:
         args.assistant_topic,
         args.session_id,
         args.source,
+        args.model_provenance,
     )
     generate_visualization()
     print(f"Saved conversation cycle {cycle} to {memory_path.name} and refreshed memory_graph.html.")
