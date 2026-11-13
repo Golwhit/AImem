@@ -169,7 +169,7 @@ HTML = r"""<!doctype html>
     .node.created circle.core { fill: #0f5e78 !important; stroke: #ecfeff !important; stroke-width: .8 !important; filter: drop-shadow(0 0 6px rgba(34,211,238,.28)); }
     .node.topic circle.core { fill: #26324f; stroke: #b0c4ff; stroke-width: .35; opacity: .98; }
     .node.topic.selected circle.core { fill: #0f5e78; stroke: #67e8f9; stroke-width: .7; }
-    .node.dimmed { opacity: .18; }
+    .node.dimmed { opacity: .5; }
     .node.match circle.core { stroke: var(--violet); filter: drop-shadow(0 0 7px rgba(167,139,250,.4)); }
     .node.related circle.core { stroke: #7be0c4; }
     .node.memory circle.core { fill: #3f5f9a; stroke: #bfdbfe; }
