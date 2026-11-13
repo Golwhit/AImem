@@ -146,6 +146,9 @@ re-ran after each pair, and this is not the batch submission the draft describes
   baseline of 0.5596, an improvement of 0.0015 (the gate needs more than 0.001).
 - Training examples: 45. Validation examples: 15 across 7 held-out queries.
 - Feedback entries: 114.
+- Rolled back on the user's instruction to generation 0: initial weights
+  `[3.0, 0.5, 1.0, 0.5]`, intercept -2.0. All 114 judgments were kept. The
+  generation-3 state is backed up privately in `.data/learner-graded.gen3-backup.json`.
 
 ## Phrasing Variants (User Verified)
 
