@@ -535,6 +535,7 @@ state.nodes.forEach(node => {
   node.domain = domainForNode(node);
 });
 const SPLIT_RADIUS = 180;
+const SUN_RADIUS = 100;
 function layoutStats(nodes) {
   const messages = nodes.filter(node => node.kind === "message");
   const salience = messages.reduce((sum, node) => sum + Math.min(1, learnedScore(node)), 0) / Math.max(1, messages.length);
@@ -647,7 +648,8 @@ function domainLayoutFor(domain, nodes) {
   const cluster = initialGraph.clusters?.[domain];
   const labels = {memory: "AI memory", scripture: "Scripture", food: "Food", finance: "Finance", evaluation: "Under evaluation", "evaluation-2": "Under evaluation II", entertainment: "Entertainment", other: "Other"};
   const {messages, salience, raw} = layoutStats(nodes);
-  const radius = Math.min(SPLIT_RADIUS, raw);
+  const overflow = layoutStats(state.nodes.filter(node => node.domain === "evaluation")).raw >= SPLIT_RADIUS;
+  const radius = domain.startsWith("evaluation") && overflow ? SUN_RADIUS : Math.min(SPLIT_RADIUS, raw);
   return {center: {x: 0, y: 0}, radius, label: cluster?.label || labels[domain] || domain, subtitle: `${messages.length} memories`, messages: messages.length, salience, styleDomain: domain === "evaluation-2" ? "evaluation" : domain};
 }
 const domainLayouts = new Map();

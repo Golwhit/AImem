@@ -387,7 +387,8 @@ When Under evaluation grows past its maximum drawn radius, the graph splits it
 into two suns labeled Under evaluation and Under evaluation II. The split is
 computed once at page load from the link structure: memories with stronger
 mutual connections stay together, and the weakest-tied memories are pulled to
-the second sun. Each sun is then relaxed by a deterministic force layout so
+the second sun. Each sun is drawn at a fixed radius (`SUN_RADIUS` in
+`generate_html_graph.py`) and then relaxed by a deterministic force layout so
 connections pull related memories close and weaker links drag toward the new
 sun. This is a display-only split; it does not change membership or weights.
 
