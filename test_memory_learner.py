@@ -84,6 +84,7 @@ class LearnerTests(unittest.TestCase):
             {"id": "answer", "role": "Assistant", "text": "fabricated retrievalword", "source": "local-retrieval"},
             {"id": "generated", "role": "Assistant", "text": "fabricated generatedword", "source": "local-generated"},
         ])
+        result = learner.feedback("apples", "food", "related_context")
         self.assertEqual(result["target"], 0.5)
         self.assertEqual(learner.state["feedback"][0]["label"], "related_context")
         self.assertNotIn("retrievalword", learner.vocabulary)
