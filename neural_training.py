@@ -123,11 +123,13 @@ def health_problem(points: list[dict]) -> str | None:
     return None
 
 
-def run(root: Path, *, cpu_seconds: float = 300.0) -> dict:
+def run(root: Path, *, cpu_seconds: float = 300.0, rate: float = .1) -> dict:
     raw = (root / FIXTURE).read_bytes()
     reviewed_sha256 = digest(raw)
     if type(cpu_seconds) not in (int, float) or not 1 <= cpu_seconds <= 900:
         raise ValueError("Round budget must be 1-900 CPU seconds")
+    if type(rate) not in (int, float) or not 0 < rate <= .1:
+        raise ValueError("Round learning rate must be in (0, 0.1]")
     data = json.loads(raw)
     validate_curriculum(data)
     directory = root / DIRECTORY
@@ -182,7 +184,7 @@ def run(root: Path, *, cpu_seconds: float = 300.0) -> dict:
                        "test_sha256": digest(canonical(data["test"])),
                        "provenance": data["provenance"], "record_type": "User declaration, not legal clearance"},
             "recorded_at": datetime.now(timezone.utc).isoformat(),
-            "rate": .1, "seed": seed, "cpu_seconds": cpu_seconds,
+            "rate": rate, "seed": seed, "cpu_seconds": cpu_seconds,
             "policy": "Continue saved weights, never fresh initialization on resume. New deterministic target-draw "
                       "seed per round; no optimizer momentum to restore (plain SGD). Fixed rate and final endpoint, "
                       "no test-guided selection. Existing test set is development-only and not new evidence. "
@@ -200,8 +202,8 @@ def run(root: Path, *, cpu_seconds: float = 300.0) -> dict:
             path = target / "source" / name
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes((root / name).read_bytes())
-        print(f"Permanent round {round_number}: {run_id}, {cpu_seconds} update-CPU seconds", flush=True)
-        points = fit(model, teaching, seed=seed, rate=.1,
+        print(f"Permanent round {round_number}: {run_id}, {cpu_seconds} update-CPU seconds, rate {rate}", flush=True)
+        points = fit(model, teaching, seed=seed, rate=rate,
                      cpu_checkpoints=(cpu_seconds / 5, cpu_seconds))
         state = json.loads(json.dumps(model.snapshot(), allow_nan=False))
         atomic_json(target / "trained.json", {"state": state, "checkpoints": points})
@@ -213,7 +215,7 @@ def run(root: Path, *, cpu_seconds: float = 300.0) -> dict:
         report["test"] = assess(restored, data["test"])
         report["test_pairs"] = paired_scores(report["test"])
         report["evaluation_cpu_seconds"] = time.process_time() - start
-        replayed = replay(initial, teaching, seed=seed, rate=.1, checkpoints=points)
+        replayed = replay(initial, teaching, seed=seed, rate=rate, checkpoints=points)
         if replayed.snapshot() != state or assess(replayed, data["test"]) != report["test"]:
             raise AssertionError("Permanent round full weights or test outputs differ on replay")
         report["validation"] = {"full_weights_and_milestones_replay_exact": True,
@@ -249,6 +251,7 @@ def run(root: Path, *, cpu_seconds: float = 300.0) -> dict:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--cpu-seconds", type=float, default=300.0)
+    parser.add_argument("--rate", type=float, default=.1, help="Plain SGD rate for this round (0, 0.1]")
     parser.add_argument("--activate", action="store_true")
     parser.add_argument("--activate-after", action="store_true",
                         help="Promote after this training round completes and replays exactly")
@@ -262,6 +265,8 @@ if __name__ == "__main__":
     elif args.rollback:
         print(json.dumps(rollback(root)))
     else:
-        run(root, cpu_seconds=args.cpu_seconds)
+        report = run(root, cpu_seconds=args.cpu_seconds, rate=args.rate)
         if args.activate_after:
+            if report["status"] != "completed":
+                parser.exit(1, f"Round {report['round']} was {report['status']}; not activating\n")
             print(json.dumps(activate(root)))
