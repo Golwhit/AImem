@@ -1029,7 +1029,9 @@ function render() {
     const y = layout.center.y - layout.radius;
     if (isBaby(domain)) {
       const hover = el("circle", {cx: layout.center.x, cy: layout.center.y, r: layout.radius + 4, fill: "rgba(0,0,0,0)"});
-      hover.append(el("title", {}, `${layout.label} (${layout.messages} messages)`));
+      const shown = nodes.slice(0, 10).map(node => `• ${node.content.replace(/\s+/g, " ").slice(0, 90)}`);
+      const more = nodes.length > shown.length ? [`…and ${nodes.length - shown.length} more`] : [];
+      hover.append(el("title", {}, [`${layout.label} (${layout.messages} messages)`, ...shown, ...more].join("\n")));
       backdropLayer.append(hover);
       return;
     }
