@@ -134,4 +134,23 @@ direct answer, `You 47` unrelated; Starting Small `You 71` direct answer,
 Training outcome: the held-out candidate was **rejected** (validation loss
 0.7348 vs. baseline 0.6615). The active model is unchanged at generation 0.
 
+## Phrasing Variants (User Verified)
+
+Assistant-drafted paraphrases of the four approved questions. The user verified
+all eight. Each keeps its base question's meaning and label. They have not been
+submitted to the review gate or trained.
+
+- GPU Lanes (base: standalone full x16 rather than shared lanes)
+  - "Do the GPUs each need their own full x16 link, not shared lanes?"
+  - "Will every GPU need a dedicated x16 slot instead of splitting lanes?"
+- Organic Growth (base: grow organically from our interactions)
+  - "Should memory topics emerge over time from what we talk about, rather than being fixed up front?"
+  - "Do we want new memory topics to form on their own from our conversations?"
+- Coaching (base: documentation and coaching to understand the work)
+  - "Would you like the docs and coaching so you can follow what the work is?"
+  - "Should I explain the work as we go so you understand it?"
+- Starting Small (base: viable miniature model built from scratch)
+  - "Should we begin with a small working model that we build from scratch?"
+  - "Is a viable, miniature from-scratch model the right place to start?"
+
 For how the calculations work, see [Building Our Learning Core](FROM_SCRATCH.md).
