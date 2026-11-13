@@ -179,8 +179,8 @@ HTML = r"""<!doctype html>
     .node.topic.food circle.core { fill: #2f5b2a; stroke: #86efac; }
     .node.finance circle.core { fill: #3f2f12; stroke: #f59e0b; }
     .node.topic.finance circle.core { fill: #63471d; stroke: #fbbf24; }
-    .node.evaluation circle.core { fill: #e879f9; stroke: #fdf4ff; stroke-width: .9; filter: drop-shadow(0 0 3px rgba(232,121,249,.85)); }
-    .node.topic.evaluation circle.core { fill: #f0abfc; stroke: #ffffff; stroke-width: .9; filter: drop-shadow(0 0 3px rgba(240,171,252,.85)); }
+    .node.evaluation circle.core { fill: #46316d; stroke: #c084fc; }
+    .node.topic.evaluation circle.core { fill: #5b3d8c; stroke: #ddd6fe; }
     .node.entertainment circle.core { fill: #1f3d62; stroke: #60a5fa; }
     .node.topic.entertainment circle.core { fill: #26507f; stroke: #bfdbfe; }
     .node.bridge circle.core { stroke-dasharray: 2 3; }
@@ -714,7 +714,7 @@ function domainLayoutFor(domain, nodes) {
 }
 const domainLayouts = new Map();
 function memoryRadius(node) {
-  return 2.5 + 3.5 * Math.sqrt(Math.min(1, learnedScore(node))) + (node.consolidated ? 0.75 : 0) + (node.domain === "evaluation" ? 1 : 0);
+  return 2.5 + 3.5 * Math.sqrt(Math.min(1, learnedScore(node))) + (node.consolidated ? 0.75 : 0);
 }
 function linkWeightsFor(domain) {
   const keyById = new Map(state.nodes.map(node => [node.id, node.layoutKey || node.domain || "memory"]));
