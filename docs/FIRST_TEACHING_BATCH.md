@@ -112,4 +112,26 @@ Approval is a user declaration, not legal clearance. These assistant-proposed
 questions and labels also need review; merely reaching twelve judgments is
 not approval. Never automatically import this draft into training.
 
+## Review Decisions
+
+Recorded from the user's review. Not yet submitted to training.
+
+- GPU Lanes: approved. `You 47` relevant. `You 76` labeled Unrelated by the user.
+- Hosted AI: rejected.
+- Viewer Dependencies: rejected.
+- Organic Growth: approved.
+- Coaching: approved. `You 47` labeled Unrelated by the user.
+- Starting Small: approved.
+
+Approved questions: 4 (GPU Lanes, Organic Growth, Coaching, Starting Small).
+Rejected: 2 (Hosted AI, Viewer Dependencies).
+
+Submitted labels: GPU Lanes `You 47` related context, `You 76` unrelated;
+Organic Growth `You 68` direct answer, `You 48` unrelated; Coaching `You 76`
+direct answer, `You 47` unrelated; Starting Small `You 71` direct answer,
+`You 48` unrelated. All eight were recorded in the review gate.
+
+Training outcome: the held-out candidate was **rejected** (validation loss
+0.7348 vs. baseline 0.6615). The active model is unchanged at generation 0.
+
 For how the calculations work, see [Building Our Learning Core](FROM_SCRATCH.md).
