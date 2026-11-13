@@ -792,7 +792,9 @@ function updateLayout() {
       }
       const angle = index * Math.PI * (3 - Math.sqrt(5));
       const distance = (layout.radius - 28) * Math.sqrt((index + 0.5) / Math.max(1, nodes.length));
-      positions[node.id] = {x: layout.center.x + distance * Math.cos(angle), y: layout.center.y + distance * Math.sin(angle), depth: (Math.sin(angle) + 1) / 2};
+      const reach = Math.max(1, layout.radius - 28);
+      const sphereDepth = Math.sqrt(Math.max(0, 1 - (distance / reach) ** 2));
+      positions[node.id] = {x: layout.center.x + distance * Math.cos(angle), y: layout.center.y + distance * Math.sin(angle), depth: sphereDepth};
     });
   });
 }
