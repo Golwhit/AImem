@@ -1027,6 +1027,12 @@ function render() {
     if (!nodes.length) return;
     const style = layout.styleDomain || domain;
     const y = layout.center.y - layout.radius;
+    if (isBaby(domain)) {
+      const hover = el("circle", {cx: layout.center.x, cy: layout.center.y, r: layout.radius + 4, fill: "rgba(0,0,0,0)"});
+      hover.append(el("title", {}, `${layout.label} (${layout.messages} messages)`));
+      backdropLayer.append(hover);
+      return;
+    }
     backdropLayer.append(el("ellipse", {cx: layout.center.x + 5, cy: layout.center.y + 12, rx: layout.radius, ry: layout.radius, class: "region-shadow"}));
     const boundary = el("circle", {
       cx: layout.center.x, cy: layout.center.y, r: layout.radius,
@@ -1035,12 +1041,6 @@ function render() {
     boundary.append(el("title", {}, `${layout.label}: radius ${layout.radius.toFixed(1)}; ${layout.messages} messages; mean capped salience ${layout.salience.toFixed(2)}. Size is visual salience, not intelligence or training approval.`));
     backdropLayer.append(boundary);
     backdropLayer.append(el("circle", {cx: layout.center.x, cy: layout.center.y, r: layout.radius, fill: "url(#region-shading)", class: "region-depth"}));
-    if (isBaby(domain)) {
-      const hover = el("circle", {cx: layout.center.x, cy: layout.center.y, r: layout.radius + 4, fill: "rgba(0,0,0,0)"});
-      hover.append(el("title", {}, `${layout.label} (${layout.messages} messages)`));
-      backdropLayer.append(hover);
-      return;
-    }
     backdropLayer.append(el("text", {x: layout.center.x, y: y + 22, class: `cluster-title ${style}`, "text-anchor": "middle"}, layout.label));
     if (layout.subtitle) {
       backdropLayer.append(el("text", {x: layout.center.x, y: y + 38, class: `cluster-subtitle ${style}`, "text-anchor": "middle"}, layout.subtitle));
