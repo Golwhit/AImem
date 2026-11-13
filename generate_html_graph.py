@@ -162,7 +162,7 @@ HTML = r"""<!doctype html>
     .edge.recalled { stroke: #67e8f9; opacity: .98; filter: drop-shadow(0 0 4px rgba(103,232,249,.7)); }
     .edge-label { fill: #9ba9c6; font-size: 11px; text-anchor: middle; paint-order: stroke; stroke: #11192e; stroke-width: 5px; stroke-linejoin: round; }
     .node { cursor: pointer; outline: none; }
-    .node circle.core { fill: #3b4f7a; stroke: #cfe0ff; stroke-width: .6; transition: fill .2s, stroke .2s, r .2s; }
+    .node circle.core { fill: #5a78b8; stroke: #e6f0ff; stroke-width: .8; transition: fill .2s, stroke .2s, r .2s; }
     .node:hover circle.core, .node:focus circle.core { stroke: white; }
     .node.selected circle.core { fill: #0f5e78; stroke: #67e8f9; stroke-width: .7; }
     .node.consolidated circle.core { stroke: var(--green); }
