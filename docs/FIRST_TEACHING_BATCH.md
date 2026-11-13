@@ -134,11 +134,24 @@ direct answer, `You 47` unrelated; Starting Small `You 71` direct answer,
 Training outcome: the held-out candidate was **rejected** (validation loss
 0.7348 vs. baseline 0.6615). The active model is unchanged at generation 0.
 
+## Phrasing Variant Submission Outcome
+
+Submitted through the review gate on the user's instruction. The eight variants
+were reviewed with their base memories' labels, one pair at a time. The gate
+re-ran after each pair, and this is not the batch submission the draft describes.
+
+- Intermediate runs: three candidates were accepted during submission, then the
+  later ones were rejected or superseded.
+- Final state: accepted at generation 3. Validation loss 0.5582 against a
+  baseline of 0.5596, an improvement of 0.0015 (the gate needs more than 0.001).
+- Training examples: 45. Validation examples: 15 across 7 held-out queries.
+- Feedback entries: 114.
+
 ## Phrasing Variants (User Verified)
 
 Assistant-drafted paraphrases of the four approved questions. The user verified
-all eight. Each keeps its base question's meaning and label. They have not been
-submitted to the review gate or trained.
+all eight. Each keeps its base question's meaning and label. They were submitted
+to the review gate; see the outcome above.
 
 - GPU Lanes (base: standalone full x16 rather than shared lanes)
   - "Do the GPUs each need their own full x16 link, not shared lanes?"
