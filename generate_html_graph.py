@@ -536,6 +536,14 @@ state.nodes.forEach(node => {
 });
 const SPLIT_RADIUS = 180;
 const SUN_RADIUS = 100;
+const BLAST_DISTANCE = 200;
+const SUN_SPREAD = 0.5;
+const BABY_RADIUS = 40;
+const BABY_INTERACTIONS = 5;
+function isBaby(domain) {
+  const cluster = initialGraph.clusters?.[domain];
+  return Boolean(cluster?.promoted) && (cluster.interactions || 0) < BABY_INTERACTIONS;
+}
 function layoutStats(nodes) {
   const messages = nodes.filter(node => node.kind === "message");
   const salience = messages.reduce((sum, node) => sum + Math.min(1, learnedScore(node)), 0) / Math.max(1, messages.length);
@@ -649,27 +657,62 @@ function domainLayoutFor(domain, nodes) {
   const labels = {memory: "AI memory", scripture: "Scripture", food: "Food", finance: "Finance", evaluation: "Under evaluation", "evaluation-2": "Under evaluation II", entertainment: "Entertainment", other: "Other"};
   const {messages, salience, raw} = layoutStats(nodes);
   const overflow = layoutStats(state.nodes.filter(node => node.domain === "evaluation")).raw >= SPLIT_RADIUS;
-  const radius = domain.startsWith("evaluation") && overflow ? SUN_RADIUS : Math.min(SPLIT_RADIUS, raw);
+  const radius = domain.startsWith("evaluation") && overflow ? SUN_RADIUS : isBaby(domain) ? BABY_RADIUS : Math.min(SPLIT_RADIUS, raw);
   return {center: {x: 0, y: 0}, radius, label: cluster?.label || labels[domain] || domain, subtitle: `${messages.length} memories`, messages: messages.length, salience, styleDomain: domain === "evaluation-2" ? "evaluation" : domain};
 }
 const domainLayouts = new Map();
 function memoryRadius(node) {
   return 2.5 + 3.5 * Math.sqrt(Math.min(1, learnedScore(node))) + (node.consolidated ? 0.75 : 0);
 }
+function nearestSunFor(domain) {
+  const keyById = new Map(state.nodes.map(node => [node.id, node.layoutKey || node.domain || "memory"]));
+  const totals = new Map();
+  const suns = ["evaluation", "evaluation-2"];
+  state.links.forEach(link => {
+    if (link.kind === "parent") return;
+    const a = keyById.get(link.source), b = keyById.get(link.target);
+    const w = Number(link.strength) || 0.3;
+    if (a === domain && suns.includes(b)) totals.set(b, (totals.get(b) || 0) + w);
+    if (b === domain && suns.includes(a)) totals.set(a, (totals.get(a) || 0) + w);
+  });
+  return [...totals.entries()].sort((x, y) => y[1] - x[1])[0]?.[0] || null;
+}
 function updateLayout() {
   domainGroups.forEach(([domain, nodes]) => domainLayouts.set(domain, domainLayoutFor(domain, nodes)));
-  const satellites = [...domainLayouts.keys()].filter(domain => domain !== "memory").sort();
+  const babySuns = new Map();
+  domainLayouts.forEach((_, domain) => {
+    if (!isBaby(domain)) return;
+    const sun = nearestSunFor(domain);
+    if (sun && domainLayouts.has(sun)) babySuns.set(domain, sun);
+  });
+  const satellites = [...domainLayouts.keys()].filter(domain => domain !== "memory" && !babySuns.has(domain)).sort();
+  const split = domainLayouts.has("evaluation-2");
   const centerRadius = domainLayouts.get("memory")?.radius || 48;
   const satelliteRadius = Math.max(48, ...satellites.map(domain => domainLayouts.get(domain).radius));
   const orbit = Math.max(centerRadius + satelliteRadius + 65, satellites.length > 1 ? (2 * satelliteRadius + 45) / (2 * Math.sin(Math.PI / satellites.length)) : 0);
-  const extent = Math.max(380, orbit + satelliteRadius + 55);
+  const offsets = new Map([["memory", {x: 0, y: 0}]]);
+  satellites.forEach((domain, index) => {
+    const angle = -Math.PI / 2 + index * 2 * Math.PI / satellites.length;
+    const isSun = split && domain.startsWith("evaluation");
+    const spread = domain === "evaluation" ? -SUN_SPREAD : domain === "evaluation-2" ? SUN_SPREAD : 0;
+    const reach = isSun ? orbit + BLAST_DISTANCE : orbit;
+    offsets.set(domain, {x: reach * Math.cos(angle + (isSun ? spread : 0)), y: reach * Math.sin(angle + (isSun ? spread : 0))});
+  });
+  babySuns.forEach((sun, domain) => {
+    const sunOffset = offsets.get(sun);
+    const outward = Math.hypot(sunOffset.x, sunOffset.y) || 1;
+    const gap = domainLayouts.get(sun).radius + domainLayouts.get(domain).radius + 20;
+    offsets.set(domain, {x: sunOffset.x + sunOffset.x / outward * gap, y: sunOffset.y + sunOffset.y / outward * gap});
+  });
+  let reach = 0;
+  offsets.forEach((offset, domain) => { reach = Math.max(reach, Math.hypot(offset.x, offset.y) + domainLayouts.get(domain).radius); });
+  const extent = Math.max(380, reach + 55);
   const center = {x: extent, y: extent};
   viewExtent = extent;
   applyViewBox();
-  if (domainLayouts.has("memory")) domainLayouts.get("memory").center = center;
-  satellites.forEach((domain, index) => {
-    const angle = -Math.PI / 2 + index * 2 * Math.PI / satellites.length;
-    domainLayouts.get(domain).center = {x: center.x + orbit * Math.cos(angle), y: center.y + orbit * Math.sin(angle)};
+  domainLayouts.forEach((layout, domain) => {
+    const offset = offsets.get(domain) || {x: 0, y: 0};
+    layout.center = {x: center.x + offset.x, y: center.y + offset.y};
   });
   domainGroups.forEach(([domain, nodes]) => {
     const layout = domainLayouts.get(domain);

@@ -4249,8 +4249,11 @@ radius (`SPLIT_RADIUS` in `generate_html_graph.py`). The split uses a
 deterministic spectral bisection over the non-parent link weights, so strongly
 connected memories land on one sun and the weakest-tied ones on the other. Each
 sun is then relaxed with a Fruchterman-Reingold-style layout, which keeps tight
-connections close and drags weaker ones toward the second sun. Only the display
-changes; memberships and weights are untouched.
+connections close and drags weaker ones toward the second sun. The suns are then
+pushed apart by `BLAST_DISTANCE` so they sit well apart. A promoted galaxy with
+fewer than `BABY_INTERACTIONS` interactions is drawn as a small baby beside the
+sun it links to most. It stays promoted. Only the display changes; memberships
+and weights are untouched.
 
 The graph can now look for related user contributions inside an existing domain,
 such as AI memory. It removes broad parent words and conversational filler from
