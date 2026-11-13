@@ -1048,6 +1048,8 @@ function render() {
   });
   svg.append(backdropLayer);
   const edges = edgesBehind;
+  const edgesAbove = el("g");
+  svg.append(edgesAbove);
   const layoutKeyById = new Map(state.nodes.map(node => [node.id, node.layoutKey || node.domain || "memory"]));
   const focus = makeFocusSet();
   state.links.forEach(link => {
@@ -1081,7 +1083,8 @@ function render() {
     }
     const crossDomain = sourceDomain !== targetDomain;
     const created = createdIds.has(link.source) || createdIds.has(link.target) || link.created_cycle === state.cycles;
-    edges.append(el("line", {
+    const layer = created || active ? edgesAbove : edges;
+    layer.append(el("line", {
       x1: a.x, y1: a.y, x2: b.x, y2: b.y,
       class: `edge ${link.kind || "sequence"}${created ? " created" : ""}${active ? " recalled" : ""}${dimmed ? " dimmed" : ""}${crossDomain ? " cross-domain" : ""}`,
       "stroke-width": link.kind === "parent" ? 2 : 0.25 + link.strength * 1,
@@ -1091,8 +1094,8 @@ function render() {
       : link.kind === "parent" ? `${domainLayouts.get(sourceDomain).label} grew from ${domainLayouts.get(targetDomain).label} (separate membership; visual relationship only)`
       : link.kind === "transition" ? "Subject transition (not core membership)"
       : link.kind === "topic" ? "Shared topic" : "Adjacent turn";
-    edges.lastChild.append(el("title", {}, `${relation}: ${link.strength.toFixed(2)}`));
-    if (sunFade !== null) edges.lastChild.style.opacity = sunFade;
+    layer.lastChild.append(el("title", {}, `${relation}: ${link.strength.toFixed(2)}`));
+    if (sunFade !== null) layer.lastChild.style.opacity = sunFade;
   });
 
   [...state.nodes].sort((first, second) => positions[first.id].depth - positions[second.id].depth).forEach(node => {
