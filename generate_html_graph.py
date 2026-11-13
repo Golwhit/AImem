@@ -1111,7 +1111,7 @@ function render() {
     group.append(el("circle", {class: `pulse-ring${(state.active[node.id] || 0) > 0.05 || isCreated ? " animate" : ""}`, r: 2.75}));
     const radius = memoryRadius(node) * (0.8 + 0.4 * p.depth);
     const circle = el("circle", {class: "core", r: radius});
-    circle.style.opacity = (0.3 + 0.7 * p.depth).toFixed(2);
+    circle.style.opacity = (0.9 + 0.1 * p.depth).toFixed(2);
     const candidate = initialGraph.clusters?.[node.candidate_cluster];
     const evidence = candidate ? `\n${candidate.label}: ${candidate.promoted ? "Promoted" : "Under evaluation"}\n${candidate.reason}` : "";
     const title = el("title", {}, `${node.content}\nScore: ${value.toFixed(2)}\nHelpful: ${fb.helpful} · Corrections: ${fb.corrections} · Recalls: ${fb.recalls}${node.consolidated ? "\nConsolidated" : ""}${evidence}`);
