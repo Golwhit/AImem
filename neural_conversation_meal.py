@@ -366,10 +366,67 @@ def validate(root: Path, run_id: str) -> dict:
     return result
 
 
+def activate(root: Path, run_id: str, arm: str = "fresh_scaled", seed: int = 17) -> dict:
+    from neural_chat import CONVERSATION_MODEL, DIRECTORY as CHAT_DIRECTORY, status, validate_base_vocabulary
+
+    if len(run_id) != 32 or any(char not in "0123456789abcdef" for char in run_id):
+        raise ValueError("Invalid meal run ID")
+    if arm not in ARMS or seed not in SEEDS:
+        raise ValueError("Select a fresh_scaled or inherited_normalized arm and a protocol seed")
+    directory = root / ".data/neural-conversation-meal" / run_id
+    report = json.loads((directory / "report.json").read_text())
+    if report["status"] != "completed":
+        raise ValueError("Completed meal experiment required")
+    validation = json.loads((directory / "validation.json").read_text())
+    if (validation.get("exact_weight_and_test_replays") != len(report["trials"])
+            or not validation.get("protected_checkpoints_unchanged")):
+        raise ValueError("Only replay-validated meal runs may activate")
+    subset = report.get("full_subset", "meal64")
+    if not any(t["arm"] == arm and t["seed"] == seed and t["subset"] == subset for t in report["trials"]):
+        raise ValueError("Selected trial is not in the meal report")
+    raw_final = (directory / f"{arm}-{seed}-{subset}-final.json").read_bytes()
+    state = json.loads(raw_final)["state"]
+    validate_base_vocabulary(state)
+    model = PlasticityContext.restore(state)
+    chat = root / CHAT_DIRECTORY
+    previous_path = chat / "active.json"
+    previous = previous_path.read_bytes()
+    prior = json.loads(previous)
+    raw = json.dumps({"state": state, "index": None}, sort_keys=True, separators=(",", ":"),
+                     allow_nan=False).encode()
+    checksum = digest(raw)
+    if prior.get("checkpoint_sha256") == checksum:
+        return status(root)
+    record = {
+        "model": CONVERSATION_MODEL, "arm": "conversation", "run_id": run_id,
+        "seed": seed, "passes": 0, "training_round": None,
+        "checkpoint_sha256": checksum,
+        "parameters": sum(map(len, model.model.weights.values())),
+        "context": model.model.context, "vocabulary": model.model.size,
+        "label": "Conversation learning model (meal curriculum, replay-validated)",
+        "source": {"training": f"{subset} reviewed teaching exchanges",
+                   "run_id": run_id, "arm": arm, "subset": subset,
+                   "curriculum_sha256": report["review"]["canonical_file_sha256"]},
+        "comparison_baseline": prior.get("comparison_baseline"),
+        "rollback_selection_sha256": digest(previous),
+        "retired_layers": [0, 1, 2],
+        "selection_policy": f"User-approved replay-validated meal run; seed {seed} selected by protocol, "
+                            "not best-score selection.",
+        "note": "Experimental narrow-task model, not a grounded assistant. Single-turn input only. "
+                "Saved weights resume without retraining from scratch. No claim retained Acts knowledge.",
+    }
+    (chat / f"retired-selection-{digest(previous)}.json").write_bytes(previous)
+    (chat / f"{checksum}.json").write_bytes(raw)
+    atomic_json(previous_path, record)
+    return status(root)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--prepare", action="store_true")
     parser.add_argument("--validate-run")
+    parser.add_argument("--activate-run", help="Activate a replay-validated meal run's seed-17 trial as the chat model.")
+    parser.add_argument("--arm", default="fresh_scaled", choices=ARMS, help="Arm for --activate-run.")
     parser.add_argument("--size", type=int, default=64, choices=TEACHING_SIZES)
     parser.add_argument("--authored", action="store_true", help="Use the hand-authored 256 set with 64 held-out cases.")
     parser.add_argument("--budget", type=float, help="Total CPU-second training budget per trial; default is CPU_CHECKPOINTS.")
@@ -389,6 +446,8 @@ if __name__ == "__main__":
         print(f"{path}: SHA256 {digest(path.read_bytes())}")
     elif args.validate_run:
         validate(root, args.validate_run)
+    elif args.activate_run:
+        print(json.dumps(activate(root, args.activate_run, args.arm)))
     else:
         if args.budget:
             checkpoints = tuple(args.budget * (k + 1) / args.segments for k in range(args.segments))
