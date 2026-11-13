@@ -162,7 +162,7 @@ HTML = r"""<!doctype html>
     .edge.recalled { stroke: #67e8f9; opacity: .98; filter: drop-shadow(0 0 4px rgba(103,232,249,.7)); }
     .edge-label { fill: #9ba9c6; font-size: 11px; text-anchor: middle; paint-order: stroke; stroke: #11192e; stroke-width: 5px; stroke-linejoin: round; }
     .node { cursor: pointer; outline: none; }
-    .node circle.core { fill: #24304c; stroke: #9fb4e6; stroke-width: .45; transition: fill .2s, stroke .2s, r .2s; }
+    .node circle.core { fill: #3b4f7a; stroke: #cfe0ff; stroke-width: .6; transition: fill .2s, stroke .2s, r .2s; }
     .node:hover circle.core, .node:focus circle.core { stroke: white; }
     .node.selected circle.core { fill: #0f5e78; stroke: #67e8f9; stroke-width: .7; }
     .node.consolidated circle.core { stroke: var(--green); }
@@ -172,7 +172,7 @@ HTML = r"""<!doctype html>
     .node.dimmed { opacity: .18; }
     .node.match circle.core { stroke: var(--violet); filter: drop-shadow(0 0 7px rgba(167,139,250,.4)); }
     .node.related circle.core { stroke: #7be0c4; }
-    .node.memory circle.core { fill: #24304c; stroke: #93c5fd; }
+    .node.memory circle.core { fill: #3f5f9a; stroke: #bfdbfe; }
     .node.scripture circle.core { fill: #5b2143; stroke: #f472b6; }
     .node.topic.scripture circle.core { fill: #7a2e59; stroke: #f9a8d4; }
     .node.food circle.core { fill: #23421f; stroke: #4ade80; }
@@ -185,14 +185,14 @@ HTML = r"""<!doctype html>
     .node.topic.entertainment circle.core { fill: #26507f; stroke: #bfdbfe; }
     .node.bridge circle.core { stroke-dasharray: 2 3; }
     .node.user-important circle.core { stroke: var(--amber); stroke-width: 1.6; filter: drop-shadow(0 0 5px rgba(251,191,36,.75)); }
-    .cluster-bg { fill: rgba(14, 22, 39, .68); stroke: rgba(165,180,220,.16); stroke-width: 1.2; rx: 18; ry: 18; }
-    .cluster-bg.memory { fill: rgba(11, 32, 52, .84); stroke: rgba(103,232,249,.32); }
-    .cluster-bg.scripture { fill: rgba(56, 18, 47, .80); stroke: rgba(244,114,182,.44); stroke-dasharray: 7 6; }
-    .cluster-bg.food { fill: rgba(20, 42, 22, .80); stroke: rgba(134,239,172,.40); stroke-dasharray: 8 7; }
-    .cluster-bg.finance { fill: rgba(58, 37, 13, .80); stroke: rgba(251,191,36,.42); stroke-dasharray: 6 7; }
-    .cluster-bg.evaluation { fill: rgba(41, 27, 64, .80); stroke: rgba(196,181,253,.42); stroke-dasharray: 5 8; }
-    .cluster-bg.entertainment { fill: rgba(17, 34, 58, .80); stroke: rgba(147,197,253,.42); stroke-dasharray: 6 8; }
-    .cluster-bg.other { fill: rgba(52, 34, 11, .66); stroke: rgba(251,191,36,.30); }
+    .cluster-bg { fill: rgba(14, 22, 39, .2); stroke: rgba(165,180,220,.16); stroke-width: 1.2; rx: 18; ry: 18; }
+    .cluster-bg.memory { fill: rgba(11, 32, 52, .26); stroke: rgba(103,232,249,.32); }
+    .cluster-bg.scripture { fill: rgba(56, 18, 47, .24); stroke: rgba(244,114,182,.44); stroke-dasharray: 7 6; }
+    .cluster-bg.food { fill: rgba(20, 42, 22, .24); stroke: rgba(134,239,172,.40); stroke-dasharray: 8 7; }
+    .cluster-bg.finance { fill: rgba(58, 37, 13, .24); stroke: rgba(251,191,36,.42); stroke-dasharray: 6 7; }
+    .cluster-bg.evaluation { fill: rgba(41, 27, 64, .24); stroke: rgba(196,181,253,.42); stroke-dasharray: 5 8; }
+    .cluster-bg.entertainment { fill: rgba(17, 34, 58, .24); stroke: rgba(147,197,253,.42); stroke-dasharray: 6 8; }
+    .cluster-bg.other { fill: rgba(52, 34, 11, .2); stroke: rgba(251,191,36,.30); }
     .cluster-bg { stroke-dasharray: none !important; stroke-width: 1.6; }
     .region-shadow { fill: #000; opacity: .28; }
     .region-depth { pointer-events: none; }
@@ -1010,7 +1010,7 @@ function render() {
   svg.replaceChildren();
   const definitions = el("defs");
   const shading = el("radialGradient", {id: "region-shading", cx: "32%", cy: "25%", r: "75%"});
-  shading.append(el("stop", {offset: "0%", "stop-color": "#ffffff", "stop-opacity": ".13"}), el("stop", {offset: "50%", "stop-color": "#ffffff", "stop-opacity": ".02"}), el("stop", {offset: "100%", "stop-color": "#000000", "stop-opacity": ".5"}));
+  shading.append(el("stop", {offset: "0%", "stop-color": "#ffffff", "stop-opacity": ".10"}), el("stop", {offset: "50%", "stop-color": "#ffffff", "stop-opacity": ".01"}), el("stop", {offset: "100%", "stop-color": "#000000", "stop-opacity": ".18"}));
   definitions.append(shading);
   svg.append(definitions);
   const createdIds = newestMessageIds();
