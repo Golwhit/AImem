@@ -50,6 +50,7 @@ historical/retired, not a queue for further layer work unless explicitly reopene
 | Memory consolidation | Topic to explore | Review existing behavior and define what consolidation should preserve, combine, and make retrievable without losing provenance. |
 | Thought-development progression | Topic to explore | Define what progression means, how it relates to memories and consolidation, and what observable evidence would demonstrate it. |
 | Generative AI memory | Topic to explore | Define how the AI autonomously creates memories and adds them to the collective memory: what it may create, how each is marked as AI-generated with provenance, and whether it passes the explicit review gate before it can be trusted or used for training. |
+| Galaxy relation links (evaluation) | Experimental, keep for now | Review the yellow dashed `related` connectors (Git / Aimem with Commit / Push and AI Memory "AImem" messages, `apply_relations` in `memory_clusters.py`). Decide whether to keep them. Expect more connection types and behaviors as the graph grows, so decide on a general relation model rather than hard-coded pairs. |
 
 ## Boundaries
 
