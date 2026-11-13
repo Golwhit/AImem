@@ -199,6 +199,13 @@ HTML = r"""<!doctype html>
     .node circle.core { filter: drop-shadow(1px 2px 1px rgba(0,0,0,.65)); }
     .node-shine { fill: #fff; opacity: .48; pointer-events: none; }
     .cluster-subtitle { fill: var(--muted); font-size: 10px; text-anchor: middle; }
+    .baby-hover .baby-panel { display: none; }
+    .baby-hover.open .baby-panel { display: inline; }
+    .baby-panel-bg { fill: rgba(15, 23, 42, .95); stroke: #475569; stroke-width: 1; }
+    .baby-panel-title { fill: #eff6ff; font-size: 12px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
+    .baby-panel-sub { fill: var(--muted); font-size: 10px; }
+    .baby-row-text { fill: #cbd5e1; font-size: 11px; pointer-events: none; }
+    .baby-panel rect:not(.baby-panel-bg):hover + .baby-row-text { fill: #67e8f9; }
     .cluster-title { fill: #eff6ff; font-size: 12px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
     .cluster-title.scripture { fill: #f9a8d4; }
     .cluster-title.food { fill: #86efac; }
@@ -1027,14 +1034,7 @@ function render() {
     if (!nodes.length) return;
     const style = layout.styleDomain || domain;
     const y = layout.center.y - layout.radius;
-    if (isBaby(domain)) {
-      const hover = el("circle", {cx: layout.center.x, cy: layout.center.y, r: layout.radius + 4, fill: "rgba(0,0,0,0)"});
-      const shown = nodes.slice(0, 10).map(node => `• ${node.content.replace(/\s+/g, " ").slice(0, 90)}`);
-      const more = nodes.length > shown.length ? [`…and ${nodes.length - shown.length} more`] : [];
-      hover.append(el("title", {}, [`${layout.label} (${layout.messages} messages)`, ...shown, ...more].join("\n")));
-      backdropLayer.append(hover);
-      return;
-    }
+    if (isBaby(domain)) return;
     backdropLayer.append(el("ellipse", {cx: layout.center.x + 5, cy: layout.center.y + 12, rx: layout.radius, ry: layout.radius, class: "region-shadow"}));
     const boundary = el("circle", {
       cx: layout.center.x, cy: layout.center.y, r: layout.radius,
@@ -1100,11 +1100,17 @@ function render() {
     if (sunFade !== null) layer.lastChild.style.opacity = sunFade;
   });
 
+  const memoryDetails = node => {
+    const fb = node.feedback || defaultFeedback();
+    const candidate = initialGraph.clusters?.[node.candidate_cluster];
+    const evidence = candidate ? `\n${candidate.label}: ${candidate.promoted ? "Promoted" : "Under evaluation"}\n${candidate.reason}` : "";
+    return `${node.content}\nScore: ${learnedScore(node).toFixed(2)}\nHelpful: ${fb.helpful} · Corrections: ${fb.corrections} · Recalls: ${fb.recalls}${node.consolidated ? "\nConsolidated" : ""}${evidence}`;
+  };
+
   [...state.nodes].sort((first, second) => positions[first.id].depth - positions[second.id].depth).forEach(node => {
     const p = positions[node.id], value = learnedScore(node);
     const isMatch = queryMatches(node);
     const dimmed = focus.size > 0 && !focus.has(node.id);
-    const fb = node.feedback || defaultFeedback();
     const isCreated = createdIds.has(node.id);
     const group = el("g", {
       class: `node${state.selected === node.id ? " selected" : ""}${node.consolidated ? " consolidated" : ""}${node.userImportant ? " user-important" : ""}${node.kind === "topic" ? " topic" : ""}${node.domain ? ` ${styleDomainFor(node.domain)}` : ""}${isCreated ? " created" : ""}${isMatch ? " match" : ""}${dimmed ? " dimmed" : ""}`,
@@ -1117,16 +1123,40 @@ function render() {
     const radius = memoryRadius(node) * (0.8 + 0.4 * p.depth);
     const circle = el("circle", {class: "core", r: radius});
     circle.style.opacity = (0.9 + 0.1 * p.depth).toFixed(2);
-    const candidate = initialGraph.clusters?.[node.candidate_cluster];
-    const evidence = candidate ? `\n${candidate.label}: ${candidate.promoted ? "Promoted" : "Under evaluation"}\n${candidate.reason}` : "";
-    const title = el("title", {}, `${node.content}\nScore: ${value.toFixed(2)}\nHelpful: ${fb.helpful} · Corrections: ${fb.corrections} · Recalls: ${fb.recalls}${node.consolidated ? "\nConsolidated" : ""}${evidence}`);
-    circle.append(title);
+    if (!isBaby(node.layoutKey || "memory")) circle.append(el("title", {}, memoryDetails(node)));
     group.append(circle);
     group.append(el("circle", {class: "node-shine", cx: -radius * .3, cy: -radius * .35, r: radius * .24}));
     group.addEventListener("click", () => activate(node.id));
     group.addEventListener("keydown", event => {
       if (event.key === "Enter" || event.key === " ") { event.preventDefault(); activate(node.id); }
     });
+    svg.append(group);
+  });
+  domainLayouts.forEach((layout, domain) => {
+    const members = state.nodes.filter(node => (node.layoutKey || "memory") === domain);
+    if (!isBaby(domain) || !members.length) return;
+    const group = el("g", {class: "baby-hover"});
+    group.append(el("circle", {cx: layout.center.x, cy: layout.center.y, r: layout.radius + 4, fill: "rgba(0,0,0,0)"}));
+    const shown = members.slice(0, 10);
+    const rows = shown.length + (members.length > shown.length ? 1 : 0);
+    const height = 44 + rows * 16 + 8;
+    const left = layout.center.x + layout.radius + 12, top = layout.center.y - height / 2;
+    const panel = el("g", {class: "baby-panel"});
+    panel.append(el("rect", {x: left, y: top, width: 260, height, rx: 8, class: "baby-panel-bg"}));
+    panel.append(el("text", {x: left + 12, y: top + 20, class: "baby-panel-title"}, layout.label));
+    panel.append(el("text", {x: left + 12, y: top + 34, class: "baby-panel-sub"}, `${layout.messages} messages`));
+    shown.forEach((node, index) => {
+      const rowY = top + 44 + index * 16;
+      const hit = el("rect", {x: left + 6, y: rowY, width: 248, height: 16, fill: "rgba(0,0,0,0)"});
+      hit.append(el("title", {}, memoryDetails(node)));
+      hit.addEventListener("click", () => activate(node.id));
+      const text = node.content.replace(/\s+/g, " ");
+      panel.append(hit, el("text", {x: left + 12, y: rowY + 12, class: "baby-row-text"}, text.length > 44 ? `${text.slice(0, 43)}…` : text));
+    });
+    if (rows > shown.length) panel.append(el("text", {x: left + 12, y: top + 44 + shown.length * 16 + 12, class: "baby-panel-sub"}, `…and ${members.length - shown.length} more`));
+    group.append(panel);
+    group.addEventListener("mouseenter", () => group.classList.add("open"));
+    group.addEventListener("mouseleave", () => group.classList.remove("open"));
     svg.append(group);
   });
   updateStats();
