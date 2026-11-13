@@ -185,14 +185,14 @@ HTML = r"""<!doctype html>
     .node.topic.entertainment circle.core { fill: #26507f; stroke: #bfdbfe; }
     .node.bridge circle.core { stroke-dasharray: 2 3; }
     .node.user-important circle.core { stroke: var(--amber); stroke-width: 1.6; filter: drop-shadow(0 0 5px rgba(251,191,36,.75)); }
-    .cluster-bg { fill: rgba(14, 22, 39, .2); stroke: rgba(165,180,220,.16); stroke-width: 1.2; rx: 18; ry: 18; }
-    .cluster-bg.memory { fill: rgba(11, 32, 52, .26); stroke: rgba(103,232,249,.32); }
-    .cluster-bg.scripture { fill: rgba(56, 18, 47, .24); stroke: rgba(244,114,182,.44); stroke-dasharray: 7 6; }
-    .cluster-bg.food { fill: rgba(20, 42, 22, .24); stroke: rgba(134,239,172,.40); stroke-dasharray: 8 7; }
-    .cluster-bg.finance { fill: rgba(58, 37, 13, .24); stroke: rgba(251,191,36,.42); stroke-dasharray: 6 7; }
-    .cluster-bg.evaluation { fill: rgba(41, 27, 64, .24); stroke: rgba(196,181,253,.42); stroke-dasharray: 5 8; }
-    .cluster-bg.entertainment { fill: rgba(17, 34, 58, .24); stroke: rgba(147,197,253,.42); stroke-dasharray: 6 8; }
-    .cluster-bg.other { fill: rgba(52, 34, 11, .2); stroke: rgba(251,191,36,.30); }
+    .cluster-bg { fill: rgba(14, 22, 39, .34); stroke: rgba(165,180,220,.16); stroke-width: 1.2; rx: 18; ry: 18; }
+    .cluster-bg.memory { fill: rgba(11, 32, 52, .4); stroke: rgba(103,232,249,.32); }
+    .cluster-bg.scripture { fill: rgba(56, 18, 47, .38); stroke: rgba(244,114,182,.44); stroke-dasharray: 7 6; }
+    .cluster-bg.food { fill: rgba(20, 42, 22, .38); stroke: rgba(134,239,172,.40); stroke-dasharray: 8 7; }
+    .cluster-bg.finance { fill: rgba(58, 37, 13, .38); stroke: rgba(251,191,36,.42); stroke-dasharray: 6 7; }
+    .cluster-bg.evaluation { fill: rgba(41, 27, 64, .38); stroke: rgba(196,181,253,.42); stroke-dasharray: 5 8; }
+    .cluster-bg.entertainment { fill: rgba(17, 34, 58, .38); stroke: rgba(147,197,253,.42); stroke-dasharray: 6 8; }
+    .cluster-bg.other { fill: rgba(52, 34, 11, .34); stroke: rgba(251,191,36,.30); }
     .cluster-bg { stroke-dasharray: none !important; stroke-width: 1.6; }
     .region-shadow { fill: #000; opacity: .28; }
     .region-depth { pointer-events: none; }
