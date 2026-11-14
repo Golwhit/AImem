@@ -7,9 +7,16 @@ order. Design topics need agreement before implementation.
 base is the preserved comparison control. Layer-related entries below are
 historical/retired, not a queue for further layer work unless explicitly reopened.
 
-**Latest chat selection:** Active-weight continuation round
-`7dbfe18aa27b4fdf9aac6dcdb3f98a6e` was replay-validated and activated.
-Its development pairs rose from 13/32 to 14/32 while individual exact
+**Chat selection observed 2026-11-13:** Round 24,
+`fae295fa9f434f89aac874a2505fbfbe`, was an explicitly submitted correction,
+completed and replay-validated; active chat and permanent progress both
+selected checkpoint `ea715f7f3c3f46399974133a872157a84eefff20438d2772165f2d8d2fb5fd1c`.
+The selection may advance with subsequent feedback. See the
+[remote training handoff](REMOTE_TRAINING_HANDOFF.md) for the observed private
+state, transfer requirements, and unimplemented GPU/import/resume work.
+
+Earlier active-weight continuation round `7dbfe18aa27b4fdf9aac6dcdb3f98a6e`
+was replay-validated and activated. Its development pairs rose from 13/32 to 14/32 while individual exact
 answers fell from 33/64 to 31/64; approved-feedback accuracy stayed at 1/16.
 Its parent, authored 256 run `9d4a3b98e4c544e4aad653b77a11e4c8` at
 192 CPU-seconds, remains available for rollback. The live prompt "Mira has
@@ -18,7 +25,8 @@ development-gated result establishes general conversation quality. A
 384-second comparison scored 13/32 pairs for seed 17; it has not been
 replay-validated or activated.
 The larger-meal row below records the earlier 96-second activation and
-comparison history; the latest selection above supersedes its activation status.
+comparison history; the observed round-24 selection above supersedes its
+activation status.
 
 Active-weight continuation now has a separate guarded training path for the
 approved authored fixture and previously approved feedback; each candidate

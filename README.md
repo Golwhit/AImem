@@ -6,6 +6,8 @@ Ongoing work and discussion topics are tracked in the
 [project backlog](docs/TASKS.md).
 Application versions follow the [versioning policy](docs/VERSIONING.md);
 the [versioned session log](docs/SESSION_LOG.md) records each checkpoint.
+For work on another machine, read the
+[remote training and reintegration handoff](docs/REMOTE_TRAINING_HANDOFF.md).
 The memory graph displays its generated application version in a small
 bottom-right badge inside the galaxy canvas. Regenerate the graph after a version bump.
 

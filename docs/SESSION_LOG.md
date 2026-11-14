@@ -4,6 +4,28 @@ Newest application checkpoint first. Entries map delivered versions to the
 session that produced them; historical conversation memory remains separate.
 See [versioning policy](VERSIONING.md) for bump and release rules.
 
+## 0.7.0 - 2026-11-13
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: minor
+
+### Changes
+
+- Since the 0.6.0 checkpoint, refined the memory graph's galaxy presentation
+  and relation links, recorded user-reviewed teaching material, and added
+  guarded activation and continuation from active conversation weights.
+  These features were committed previously, including `99ced75` and
+  `9acbced`; this version synchronizes the previously unversioned work.
+- Added the [remote training handoff](REMOTE_TRAINING_HANDOFF.md), documenting
+  the observed round-24 checkpoint, private transfer boundaries, replay and
+  rollback requirements, and GPU and partial-resume work that remains to be
+  designed. Updated the backlog's stale active-selection summary.
+- Validation: `npm run version:check`, `npm run test:version`, and
+  `npm run build` passed. The 12 targeted active-training,
+  permanent-training, and correction tests passed before this documentation
+  checkpoint. Checkpoint, report, fixture, and immediate rollback hashes
+  were verified locally; no transfer or GPU test was run.
+
 ## 0.6.0 - 2026-11-10
 
 Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
