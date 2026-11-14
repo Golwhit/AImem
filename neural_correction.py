@@ -11,7 +11,7 @@ from uuid import uuid4
 from neural_base_comparison import digest
 from neural_chat import CONVERSATION_MODEL, load_active
 from neural_continuation import extend_alphabet
-from neural_conversation_meal import FIXTURE
+from neural_conversation_meal import AUTHORED_FIXTURE, FIXTURE
 from neural_conversation_trial import answer_examples, assess, canonical, prompt_for
 from neural_plasticity import PlasticityContext, diagnostics
 from neural_training import DIRECTORY, MAX_SATURATION, activate, load_progress
@@ -73,7 +73,10 @@ def train_correction(root: Path, payload: dict) -> dict:
                          "approval": ("User clicked Relevant on this exact saved prompt/answer pair" if relevant
                                       else "User submitted exact prompt/correction pair through Train correction now"),
                          "provenance": "Explicit user feedback; declaration, not legal clearance"})
-        raw = (root / FIXTURE).read_bytes()
+        fixture = parent.get("fixture", FIXTURE)
+        if fixture not in (FIXTURE, AUTHORED_FIXTURE):
+            raise ValueError("Unsupported approved teaching fixture")
+        raw = (root / fixture).read_bytes()
         if digest(raw) != parent["reviewed_file_sha256"]:
             raise ValueError("Approved base teaching file changed")
         base_rows = json.loads(raw)["train"]
@@ -159,6 +162,8 @@ def train_correction(root: Path, payload: dict) -> dict:
                     "reviewed_file_sha256": parent["reviewed_file_sha256"],
                     "report_sha256": digest((target / "report.json").read_bytes()),
                     "approved_corrections": approved}
+        if "fixture" in parent:
+            evidence["fixture"] = parent["fixture"]
         encoded = canonical({"state": state, "evidence": evidence})
         checksum = digest(encoded)
         (directory / f"{checksum}.json").write_bytes(encoded)

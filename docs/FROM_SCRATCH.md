@@ -394,10 +394,29 @@ browser shows the persistent learner, correct training-round metadata and
 its experimental limits. Evidence, exact approved inputs, source archive,
 initial/trained states and completed report persist under
 `.data/neural-training/rounds/57f452944e2c4767b5586c8320bfbad7/`.
-No indefinite training job remains running; the production API stays
+At that milestone no indefinite training job remained running; the production API stayed
 available. Future approved rounds can resume using `--activate-after`
 without another review of the unchanged teaching file. New training content
 still requires the existing exact-content review gate.
+
+### Continuing the active authored model
+
+[neural_active_training.py](../neural_active_training.py) starts from the
+actual active, replay-validated authored-256 weights, not the older 64-example
+progress pointer. It carries forward explicitly approved feedback from that
+pointer and appends any missing feedback symbols without renumbering existing
+tokens. The prior pointer and active selection are preserved for provenance
+and rollback. Carrying examples forward does not mean the new parent had
+already learned them.
+
+Each round trains only the unchanged approved fixture and approved feedback,
+replays its weights and milestones, and checks hidden saturation, teaching
+accuracy, development pair accuracy, and previously correct feedback. A
+regression stops the continuous process without promoting that candidate.
+Development answers do not train, but their use as a gate makes them unsuitable
+as an independent final quality test. The lock serializes feedback and training;
+feedback submissions during a round report busy and must be retried. Continuous
+mode pauses between rounds and stops on an error or interruption.
 
 ### Immediate Feedback Training
 

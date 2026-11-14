@@ -7,6 +7,41 @@ order. Design topics need agreement before implementation.
 base is the preserved comparison control. Layer-related entries below are
 historical/retired, not a queue for further layer work unless explicitly reopened.
 
+**Latest chat selection:** Active-weight continuation round
+`7dbfe18aa27b4fdf9aac6dcdb3f98a6e` was replay-validated and activated.
+Its development pairs rose from 13/32 to 14/32 while individual exact
+answers fell from 33/64 to 31/64; approved-feedback accuracy stayed at 1/16.
+Its parent, authored 256 run `9d4a3b98e4c544e4aad653b77a11e4c8` at
+192 CPU-seconds, remains available for rollback. The live prompt "Mira has
+the cup. Who has the cup?" produced "Mira." Neither this probe nor the
+development-gated result establishes general conversation quality. A
+384-second comparison scored 13/32 pairs for seed 17; it has not been
+replay-validated or activated.
+The larger-meal row below records the earlier 96-second activation and
+comparison history; the latest selection above supersedes its activation status.
+
+Active-weight continuation now has a separate guarded training path for the
+approved authored fixture and previously approved feedback; each candidate
+must replay and pass non-regression checks before activation. Its continuous
+mode stops on an error or rejection, rather than silently promoting a failed
+round.
+
+Focused feedback trial: Starting from active round 22, three approved feedback
+pairs were trained sequentially with the existing target/rehearsal method in an
+isolated copy. After the first replay-verified step, feedback improved from
+1/16 to 4/16 and focused examples from 0/3 to 2/3; teaching slipped from
+221/272 to 220/272, development exact from 31/64 to 26/64, and development
+pairs from 14/32 to 10/32. The complete three-step trial ended at 2/16 feedback
+and 8/32 development pairs. A separate 400-update, 25%-focus, lower-rate
+trial ended at 1/16 feedback and 11/32 development pairs; its weights and
+assessments replayed exactly. None changed the live model. These development
+cases have been reused and are not an independent generalization test.
+Two replay-verified rehearsal rounds from the first focused checkpoint retained
+4/16 feedback answers and recovered development from 10/32 to 11/32 pairs.
+The second ended at 222/272 teaching and 28/64 development answers, compared
+with the live parent's 221/272 and 31/64. Both were isolated; neither changed
+the live selection.
+
 | Item | Status | Next step |
 |---|---|---|
 | Immediate user feedback learning | Relevant and submitted corrections train saved conversation weights; unmarked replies never train | Exact-pair approval hashes, bounded synchronous SGD plus approved rehearsal, exact replay and active promotion; failure is explicit and preserves prior weights. Latest same-prompt correction supersedes old target and participates in later rounds. Single-line answers up to95characters; no runtime lookup or guaranteed paraphrase/retention. |

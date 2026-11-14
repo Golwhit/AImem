@@ -7,7 +7,7 @@ from unittest.mock import patch
 from neural_base_comparison import WordBase, digest
 from neural_chat import CONVERSATION_MODEL, generate, load_active
 from neural_conversation_context import build
-from neural_conversation_meal import curriculum, FIXTURE
+from neural_conversation_meal import AUTHORED_FIXTURE, curriculum, FIXTURE
 from neural_conversation_trial import canonical, prompt_for
 from neural_plasticity import initialize
 from neural_correction import train_correction
@@ -115,6 +115,27 @@ class ImmediateCorrectionTests(unittest.TestCase):
         targets = [row["answer"] for row in rows if row["turns"] == data["train"][0]["turns"]]
         self.assertEqual(targets, ["Z."])
         self.assertEqual(load_progress(self.root)[0], pointer)
+
+    def test_correction_preserves_authored_fixture_lineage(self):
+        pointer, model = load_progress(self.root)
+        fixture = self.root / AUTHORED_FIXTURE
+        fixture.write_bytes((self.root / FIXTURE).read_bytes())
+        evidence = {key: value for key, value in pointer.items() if key != "checkpoint_sha256"}
+        evidence["fixture"] = AUTHORED_FIXTURE
+        encoded = canonical({"state": model.snapshot(), "evidence": evidence})
+        checksum = digest(encoded)
+        directory = self.root / ".data/neural-training"
+        chat = self.root / ".data/neural-chat"
+        (directory / f"{checksum}.json").write_bytes(encoded)
+        (chat / f"{checksum}.json").write_bytes(encoded)
+        atomic_json(directory / "progress.json", {**evidence, "checkpoint_sha256": checksum})
+        active = json.loads((chat / "active.json").read_text())
+        active["checkpoint_sha256"] = checksum
+        atomic_json(chat / "active.json", active)
+        train_correction(self.root, self.payload)
+        pointer, _ = load_progress(self.root)
+        self.assertEqual(pointer["fixture"], AUTHORED_FIXTURE)
+        self.assertEqual(len(pointer["approved_corrections"]), 1)
 
 
 if __name__ == "__main__":

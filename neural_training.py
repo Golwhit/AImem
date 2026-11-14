@@ -70,13 +70,15 @@ def activate(root: Path) -> dict:
         "parameters": sum(map(len, model.model.weights.values())),
         "context": model.model.context, "vocabulary": model.model.size,
         "label": "Conversation learning model (persistent weights; reviewed teaching and feedback)",
-        "source": {"training": "64 approved teaching exchanges plus explicitly Relevant answers and submitted corrections",
+        "source": {"training": ("256 approved teaching exchanges plus explicitly approved feedback"
+                                if pointer.get("fixture") else
+                                "64 approved teaching exchanges plus explicitly Relevant answers and submitted corrections"),
                    "training_sha256": report["review"]["train_sha256"]},
         "comparison_baseline": prior.get("comparison_baseline"),
         "rollback_selection_sha256": digest(previous),
         "retired_layers": [0, 1, 2],
-        "selection_policy": "User-authorized completed permanent round; first protocol seed17 parent, "
-                            "not best-score selection. Only explicitly Relevant answers and submitted corrections train from chat.",
+        "selection_policy": "User-authorized completed, replay-verified permanent round. "
+                            "Only explicitly Relevant answers and submitted corrections train from chat.",
         "note": "Experimental narrow-task model, not a grounded assistant. Raw user message receives the "
                 "training role format; first generated line only, at most96 characters. Single-turn input "
                 "only; retrieval/capture remain connected but are not injected into neural context. "

@@ -48,7 +48,30 @@ five-arm experiments requires `--include-retired-layers`.
 
 ### Permanent conversation training
 
-[neural_training.py](neural_training.py) continues saved weights rather than
+[neural_active_training.py](neural_active_training.py) continues the current
+active conversation weights on the exact approved authored 256-exchange
+fixture and explicitly approved feedback. Each round verifies an exact replay,
+checks saturation and non-regression on teaching, development pairs, and
+previously correct feedback, then activates the checkpoint with rollback.
+The development set is used as a gate, so its score is not independent proof
+of generalization. New vocabulary is added only for approved feedback; this can
+change output behavior. The first round carries forward approved feedback
+from the older permanent lineage, without claiming the active parent already
+learned it. Unmarked chats and evaluation answers never train.
+
+```sh
+# Continue the active authored model until interrupted or a guard rejects a round.
+python3 -u neural_active_training.py --continuous --cpu-seconds 60 --rate 0.02
+```
+
+Continuous mode waits 15 seconds between rounds for feedback. During a round
+the shared training lock makes an immediate feedback submission report busy;
+retry during the pause. A failed check stops training and leaves the previous
+active selection in place. Update-CPU budget does not include evaluation and
+replay. A background process must be explicitly stopped when no longer wanted;
+it is not restarted automatically.
+
+The earlier [neural_training.py](neural_training.py) path continues saved 64-example weights rather than
 restarting for each round. Initial parent: the full-64, fresh-scaled seed-17
 checkpoint from `ee7f3c1be14f477a82e2db03ae72ff71`, the first protocol seed,
 not the highest test score. The separately preserved original character
@@ -68,15 +91,14 @@ python3 neural_training.py --rollback
 `--activate-after` promotes only after a round finishes with status
 `completed` and replays exactly. Rejected rounds are never activated, and
 no approval flag is needed. Omit it to keep training progress separate from
-the active model. Rounds use plain SGD on the **existing approved 64
+the active model. These earlier rounds use plain SGD on the **existing approved 64
 exchanges only**. Default rate is .1; `--rate` lowers it. The recent
 passing rounds used .02 with a 60 CPU-second budget. Each round is
 guarded: hidden saturation above .6 or teaching exact below .9 rejects it.
 Weights, exact inputs, parent hashes, source copies, metrics and reports
 persist in `.data/neural-training/`; `progress.json` selects the most recent
 completed round. A new target-draw seed is recorded per round. There is no
-optimizer momentum to lose, no retraining from scratch and no indefinite
-background daemon. Concurrent rounds fail explicitly rather than overwriting
+optimizer momentum to lose and no retraining from scratch. Concurrent rounds fail explicitly rather than overwriting
 one another. The CPU allowance covers updates, not evaluation or an
 additional full exact replay.
 
@@ -100,7 +122,8 @@ User-approved pairs join future permanent training; a newer correction
 replaces conflicting targets for that same prompt. See
 [immediate feedback training](docs/FROM_SCRATCH.md#immediate-feedback-training).
 Other new material still needs explicit content-hashed approval.
-Evaluation answers never train weights or choose checkpoints. See
+Evaluation answers never train weights; the active-continuation path uses
+development scores as a non-regression gate. See
 [permanent training details](docs/FROM_SCRATCH.md#permanent-conversation-training).
 Initial permanent round: `57f452944e2c4767b5586c8320bfbad7`, 57,100 additional
 updates / 300.28 update-CPU seconds, **64/64 teaching and 22/32 development
