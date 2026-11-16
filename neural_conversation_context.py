@@ -16,12 +16,16 @@ from neural_conversation_trial import (
     answer_examples, assess, canonical, prepare, prompt_for, token_loss, train,
 )
 from neural_experiment import EMBEDDING, HIDDEN, NeuralModel
-from neural_word_context import WORD, gap_symbol
+from neural_word_context import WORD
 from original_generator import atomic_json
 
 
 ARMS = ("short_original", "short_identities", "long_identities")
 CONTEXT = 64
+SPACING_CONTEXT = 128
+WORD_POSITION_CONTEXT = 130
+SPACING_DIGITS = 64
+MAX_SPACING = SPACING_DIGITS ** 2 - 1
 
 
 class ConversationContext(WordBase):
@@ -30,32 +34,88 @@ class ConversationContext(WordBase):
     def context(self, prefix: str) -> list[int]:
         if self.model.context == 4:
             return super().context(prefix)
-        if self.model.context != CONTEXT:
-            raise ValueError("Conversation context must contain 4 or 64 feature slots")
+        if self.model.context not in (CONTEXT, SPACING_CONTEXT, WORD_POSITION_CONTEXT):
+            raise ValueError("Conversation context must contain 4, 64, 128 or 130 feature slots")
         words = list(WORD.finditer(prefix))
         partial = words[-1] if words and words[-1].end() == len(prefix) else None
         complete = words[:-1] if partial else words
         older = complete[:-1] if partial else complete[:-2]
-        features = []
+        features, older_gaps = [], []
         for position, word in enumerate(older):
             following = words[position + 1].start()
             identity = word.group().lower().replace("’", "'")
+            gap = prefix[word.end():following]
+            older_gaps.append(gap)
             features.extend([
                 self.model.tokens.get("identity:" + identity, self.model.tokens["identity:<other>"]),
-                self.model.tokens.get(gap_symbol(prefix[word.end():following]), 1),
+                self.model.tokens.get(self.context_gap(gap), 1),
             ])
         local = super().context(prefix)
-        return ([0] * (CONTEXT - 4) + features)[-(CONTEXT - 4):] + local
+        result = ([0] * (CONTEXT - 4) + features)[-(CONTEXT - 4):] + local
+        if self.model.context in (SPACING_CONTEXT, WORD_POSITION_CONTEXT):
+            gaps = []
+            if partial:
+                previous = complete[-1] if complete else None
+                gaps = [None, prefix[previous.end() if previous else 0:partial.start()]]
+            else:
+                for position in (-2, -1):
+                    if len(complete) < -position:
+                        gaps.append(None)
+                    else:
+                        word = complete[position]
+                        end = complete[position + 1].start() if position == -2 else len(prefix)
+                        gaps.append(prefix[word.end():end])
+            all_gaps = ([None] * 30 + older_gaps)[-30:] + gaps
+            for gap in all_gaps:
+                if gap is None:
+                    result.extend([0, 0])
+                    continue
+                spaces = gap.count(" ")
+                if spaces > MAX_SPACING:
+                    raise ValueError(f"A word gap cannot contain more than {MAX_SPACING} spaces")
+                result.extend([
+                    self.model.tokens[f"gap:space-low:{spaces % SPACING_DIGITS}"],
+                    self.model.tokens[f"gap:space-high:{spaces // SPACING_DIGITS}"],
+                ])
+        if self.model.context == WORD_POSITION_CONTEXT:
+            if partial is None:
+                result.extend([0, 0])
+            else:
+                length = len(partial.group())
+                if length > MAX_SPACING:
+                    raise ValueError(f"A partial word cannot contain more than {MAX_SPACING} characters")
+                result.extend([
+                    self.model.tokens[f"gap:space-low:{length % SPACING_DIGITS}"],
+                    self.model.tokens[f"gap:space-high:{length // SPACING_DIGITS}"],
+                ])
+        return result
 
     def snapshot(self) -> dict:
-        return {**super().snapshot(), "context": self.model.context,
-                "representation": "older-word-gap-pairs-plus-original-local-four-v1"}
+        state = {**super().snapshot(), "context": self.model.context,
+                 "representation": "older-word-gap-pairs-plus-original-local-four-v1"}
+        if self.model.context in (SPACING_CONTEXT, WORD_POSITION_CONTEXT):
+            state["spacing_features"] = "word-gap-space-counts-base64-v1"
+        if self.model.context == WORD_POSITION_CONTEXT:
+            state["partial_word_features"] = "word-length-base64-v1"
+        return state
 
     @classmethod
     def restore(cls, state: dict) -> "ConversationContext":
-        if state["context"] not in (4, CONTEXT):
+        if (state["context"] not in (4, CONTEXT, SPACING_CONTEXT, WORD_POSITION_CONTEXT)
+                or (state["context"] in (SPACING_CONTEXT, WORD_POSITION_CONTEXT) and (
+                    state.get("spacing_features") != "word-gap-space-counts-base64-v1"
+                    or any(f"gap:space-{part}:{digit}" not in state["symbols"]
+                           for part in ("low", "high") for digit in range(SPACING_DIGITS))))
+                or (state["context"] not in (SPACING_CONTEXT, WORD_POSITION_CONTEXT)
+                    and "spacing_features" in state)
+                or (state["context"] == WORD_POSITION_CONTEXT
+                    and state.get("partial_word_features") != "word-length-base64-v1")
+                or (state["context"] != WORD_POSITION_CONTEXT and "partial_word_features" in state)):
             raise ValueError("Invalid saved conversation context")
         model = cls("", 17, lexicon=state["lexicon"], symbols=state["symbols"])
+        model.gap_encoding = state.get("gap_encoding", "legacy")
+        if model.gap_encoding not in ("legacy", "trailing-spaces-v1"):
+            raise ValueError("Unsupported word-gap encoding")
         model.model = NeuralModel(state["symbols"], context=state["context"])
         if set(state["weights"]) != set(model.model.weights) or any(
             not isinstance(state["weights"][name], list)

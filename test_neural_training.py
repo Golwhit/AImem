@@ -8,7 +8,7 @@ from unittest.mock import patch
 from neural_base_comparison import WordBase, digest
 from neural_conversation_context import build
 from neural_conversation_meal import curriculum, FIXTURE
-from neural_conversation_trial import answer_examples, assess, prompt_for, token_loss
+from neural_conversation_trial import answer_examples, assess, lost_correct_ids, prompt_for, token_loss
 from neural_plasticity import diagnostics, initialize
 from neural_training import DIRECTORY, INITIAL_RUN, activate, health_problem, load_progress, rollback, run
 from neural_chat import CONVERSATION_MODEL, activate_base, generate, load_active
@@ -21,6 +21,17 @@ def checkpoint(updates, saturation, exact):
 
 
 class HealthGuardTests(unittest.TestCase):
+    def test_retention_rejects_answer_swaps_and_mismatched_assessments(self):
+        before = {"rows": [{"id": "a", "expected": "A", "exact": True},
+                           {"id": "b", "expected": "B", "exact": False}]}
+        after = {"rows": [{"id": "a", "expected": "A", "exact": False},
+                          {"id": "b", "expected": "B", "exact": True}]}
+        self.assertEqual(lost_correct_ids(before, after), ["a"])
+        with self.assertRaisesRegex(ValueError, "different numbers"):
+            lost_correct_ids(before, {"rows": after["rows"][:1]})
+        with self.assertRaisesRegex(ValueError, "different examples"):
+            lost_correct_ids(before, {"rows": list(reversed(after["rows"]))})
+
     def test_accepts_healthy_round_and_rejects_saturated_or_regressed_rounds(self):
         self.assertIsNone(health_problem([checkpoint(1, .1, 1.0), checkpoint(2, .43, 1.0)]))
         self.assertIn("saturation", health_problem([checkpoint(1, .2, 1.0), checkpoint(2, 1.0, 1.0)]))
@@ -56,12 +67,13 @@ class PermanentTrainingTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 run(root, cpu_seconds=float("nan"))
 
-            def brief_fit(model, rows, *, seed, rate, cpu_checkpoints):
+            def brief_fit(model, rows, *, seed, rate, cpu_checkpoints, no_triple_repeat=False):
                 examples = answer_examples(model, rows)
                 context, target, prior = examples[random.Random(seed).randrange(len(examples))]
                 model.model.update(context, target, output_prior=prior, learning_rate=rate)
                 return [{"updates": 1, "teacher_forced_loss": token_loss(model, examples),
-                         "training": assess(model, rows), "diagnostics": diagnostics(model, examples),
+                         "training": assess(model, rows, no_triple_repeat=no_triple_repeat),
+                         "diagnostics": diagnostics(model, examples),
                          "training_cpu_seconds": 0.0}]
 
             with patch("neural_training.fit", side_effect=brief_fit), \
@@ -89,7 +101,7 @@ class PermanentTrainingTests(unittest.TestCase):
                 self.assertEqual(reply["text"], "Red.")
                 self.assertTrue(reply["terminated"])
                 self.assertEqual(generated.call_args.args[1], "user: What color?\nassistant: ")
-                self.assertEqual(generated.call_args.kwargs["length"], 96)
+                self.assertEqual(generated.call_args.kwargs["length"], 320)
                 with patch("neural_chat.generate_base", return_value={"text": "\nnoise"}):
                     with self.assertRaisesRegex(ArithmeticError, "empty first answer"):
                         generate(root, {"prompt": "What color?"})
@@ -106,6 +118,32 @@ class PermanentTrainingTests(unittest.TestCase):
             self.assertEqual(rollback(root)["checkpoint_sha256"], original_chat["checkpoint_sha256"])
             self.assertNotEqual(pointer["checkpoint_sha256"], first_hash)
             self.assertTrue((root / DIRECTORY / f"{first_hash}.json").exists())
+            progress_before = (root / DIRECTORY / "progress.json").read_bytes()
+
+            def baseline(_model, rows, **kwargs):
+                measured = [{"id": row["id"], "skill": row["skill"], "pair": row.get("pair"),
+                             "expected": row["answer"], "prediction": row["answer"],
+                             "exact": True, "normalized_exact": True, "terminated": True} for row in rows]
+                if len(rows) == len(data["train"]):
+                    measured[1]["exact"] = False
+                return {"rows": measured, "exact": sum(row["exact"] for row in measured) / len(measured)}
+
+            def swapped_fit(model, rows, **kwargs):
+                after = baseline(model, rows)
+                after["rows"][0]["exact"] = False
+                after["rows"][1]["exact"] = True
+                return [{"updates": 0, "training": after,
+                         "diagnostics": {"hidden_abs_over_099_fraction": .1}}]
+
+            with patch("neural_training.assess", side_effect=baseline), \
+                    patch("neural_training.fit", side_effect=swapped_fit), \
+                    patch("neural_training.replay", side_effect=lambda state, *a, **k:
+                          type(trained).restore(state)), \
+                    patch("neural_training.health_problem", return_value=None):
+                rejected = run(root, cpu_seconds=1)
+            self.assertEqual(rejected["status"], "rejected")
+            self.assertIn("previously correct approved teaching regressed", rejected["rejection"])
+            self.assertEqual((root / DIRECTORY / "progress.json").read_bytes(), progress_before)
             checkpoint = root / DIRECTORY / f"{pointer['checkpoint_sha256']}.json"
             checkpoint.write_bytes(checkpoint.read_bytes() + b" ")
             with self.assertRaisesRegex(ValueError, "hash mismatch"):

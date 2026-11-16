@@ -9,7 +9,7 @@ import sys
 
 from neural_candidate_layers import CandidateIndex, AtomicCandidateIndex
 from neural_experiment import NeuralModel
-from neural_base_comparison import WordBase, generate as generate_base
+from neural_base_comparison import WordBase, generate as generate_base, introduces_triple_repeat
 from original_generator import atomic_json
 
 
@@ -43,6 +43,9 @@ def restore_base(checkpoint: dict) -> WordBase:
     validate_base_vocabulary(state)
     symbols, lexicon = state["symbols"], state["lexicon"]
     model = WordBase("", 17, lexicon=lexicon, symbols=symbols)
+    model.gap_encoding = state.get("gap_encoding", "legacy")
+    if model.gap_encoding not in ("legacy", "trailing-spaces-v1"):
+        raise ValueError("Unsupported word-gap encoding")
     weights = state["weights"]
     if set(weights) != set(model.model.weights) or any(
         not isinstance(weights[name], list) or len(weights[name]) != len(expected)
@@ -246,6 +249,20 @@ def status(root: Path) -> dict:
     return {"ready": True, **record}
 
 
+def conversation_turns(prompt: str, history: object = None) -> list[dict[str, str]]:
+    if history is None:
+        history = []
+    if not isinstance(history, list) or len(history) not in (0, 2):
+        raise ValueError("Conversation history must contain one complete prior exchange")
+    for turn, role in zip(history, ("user", "assistant")):
+        if (not isinstance(turn, dict) or set(turn) != {"role", "content"}
+                or turn["role"] != role or not isinstance(turn["content"], str)
+                or not turn["content"].strip() or len(turn["content"]) > 2000
+                or "\x00" in turn["content"]):
+            raise ValueError("Invalid conversation history turn")
+    return [*history, {"role": "user", "content": prompt}]
+
+
 def generate(root: Path, payload: dict, *, original: bool = False) -> dict:
     if not isinstance(payload, dict):
         raise ValueError("Chat generation request must be an object")
@@ -272,21 +289,28 @@ def generate(root: Path, payload: dict, *, original: bool = False) -> dict:
     if not original and record["model"] == CONVERSATION_MODEL:
         from neural_conversation_trial import prompt_for
 
-        formatted = prompt_for({"turns": [{"role": "user", "content": prompt}]})
-        result = generate_base(model, formatted, length=min(length, 96))
+        turns = conversation_turns(prompt, payload.get("history"))
+        formatted = prompt_for({"turns": turns})
+        result = generate_base(model, formatted, length=min(length, 320), no_triple_repeat=True)
         continuation = result["text"]
         result = {**result, "text": continuation.split("\n", 1)[0],
                   "terminated": "\n" in continuation}
+        if len(turns) > 1:
+            result["input_turns"] = turns
         if not result["text"].strip():
             raise ArithmeticError("Conversation model generated an empty first answer")
+    elif "history" in payload:
+        raise ValueError("Conversation history requires the conversation model")
     elif isinstance(model, WordBase):
-        result = generate_base(model, prompt, length=length)
+        result = generate_base(model, prompt, length=length, no_triple_repeat=True)
     elif original:
         result = generate_base(model, prompt, length=length)
     elif index is not None:
         result = index.sample(model, prompt, length=length)
     else:
         raise ValueError("Layered checkpoint is missing its placement index")
+    if not original and introduces_triple_repeat("", result["text"]):
+        raise ArithmeticError("The selected chat model generated three identical consecutive characters")
     return {**result, "model": record["model"], "generation": record["passes"],
             "chat_model": record,
             "training_sources": [{"title": record["source"]["training"],

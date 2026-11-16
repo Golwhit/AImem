@@ -21,6 +21,18 @@ def canonical(value) -> bytes:
     return json.dumps(value, sort_keys=True, ensure_ascii=True, separators=(",", ":")).encode()
 
 
+def feedback_hash(turns: list[dict], answer: str) -> str:
+    if (not isinstance(turns, list) or not isinstance(answer, str)
+            or any(not isinstance(turn, dict) or not isinstance(turn.get("content"), str)
+                   or not turn["content"].strip() for turn in turns)):
+        raise ValueError("Invalid approved feedback conversation")
+    if len(turns) == 1 and turns[0].get("role") == "user":
+        return digest(canonical({"prompt": turns[0]["content"], "answer": answer}))
+    if len(turns) == 3 and [turn.get("role") for turn in turns] == ["user", "assistant", "user"]:
+        return digest(canonical({"turns": turns, "answer": answer}))
+    raise ValueError("Invalid approved feedback conversation")
+
+
 def prompt_for(row: dict) -> str:
     if not row["turns"]:
         raise ValueError("Conversation needs at least one turn")
@@ -55,10 +67,12 @@ def prepare(model: WordBase, rows: list[dict]) -> tuple[WordBase, list[str]]:
     return WordBase.restore(state), added
 
 
-def assess(model: WordBase, rows: list[dict], *, max_chars: int = 96) -> dict:
+def assess(model: WordBase, rows: list[dict], *, max_chars: int = 96,
+           no_triple_repeat: bool = False) -> dict:
     measured = []
     for row in rows:
-        continuation = generate(model, prompt_for(row), length=max_chars)["text"]
+        continuation = generate(model, prompt_for(row), length=max(max_chars, len(row["answer"]) + 1),
+                                no_triple_repeat=no_triple_repeat)["text"]
         terminated = "\n" in continuation
         answer = continuation.split("\n", 1)[0]
         measured.append({
@@ -77,6 +91,19 @@ def assess(model: WordBase, rows: list[dict], *, max_chars: int = 96) -> dict:
         "termination": statistics.fmean(row["terminated"] for row in measured),
         "rows": measured,
     }
+
+
+def lost_correct_ids(before: dict, after: dict) -> list[str]:
+    previous, current = before["rows"], after["rows"]
+    if len(previous) != len(current):
+        raise ValueError("Retention assessments have different numbers of examples")
+    lost = []
+    for old, new in zip(previous, current):
+        if (old["id"], old["expected"]) != (new["id"], new["expected"]):
+            raise ValueError("Retention assessments contain different examples")
+        if old["exact"] and not new["exact"]:
+            lost.append(old["id"])
+    return lost
 
 
 def token_loss(model: WordBase, examples: list) -> float:

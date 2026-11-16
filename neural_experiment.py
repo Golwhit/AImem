@@ -23,8 +23,8 @@ SYNTHETIC_HELD = "ab " * 20
 
 class NeuralModel:
     def __init__(self, characters: list[str], seed: int = 17, *, context: int = CONTEXT):
-        if type(context) is not int or not 1 <= context <= 128:
-            raise ValueError("Context must be an integer from 1 to 128 characters")
+        if type(context) is not int or not 1 <= context <= 130:
+            raise ValueError("Context must be an integer from 1 to 130 features")
         self.context = context
         self.characters = characters
         self.tokens = {char: index + 2 for index, char in enumerate(characters)}

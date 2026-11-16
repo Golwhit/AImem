@@ -8,3 +8,5 @@ npm-debug.log*
 .data/
 .venv/
 __pycache__/
+universe-lab/*.lock
+universe-lab/experiments/

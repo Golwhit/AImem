@@ -156,6 +156,8 @@ HTML = r"""<!doctype html>
     .edge.transition.created { opacity: .9; }
     .edge.parent { stroke: #6ee7b7; stroke-dasharray: none; opacity: .8; }
     .edge.related { stroke: #facc15; stroke-dasharray: 4 3; opacity: .6; }
+    .edge.within-galaxy:not(.created):not(.recalled) { opacity: .66; }
+    .edge.within-galaxy.sequence:not(.cross-domain):not(.created):not(.recalled) { stroke: var(--galaxy-edge-color, #8b9bc4); }
     .learner-values { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; margin: 12px 0; font-size: 12px; }
     .learner-values dt { color: var(--muted); overflow-wrap: anywhere; }
     .learner-values dd { margin: 0; font-variant-numeric: tabular-nums; }
@@ -198,7 +200,7 @@ HTML = r"""<!doctype html>
     .region-shadow { fill: #000; opacity: .28; }
     .region-depth { pointer-events: none; }
     .node circle.core { filter: drop-shadow(1px 2px 1px rgba(0,0,0,.65)); }
-    .node-shine { fill: #fff; opacity: .48; pointer-events: none; }
+    .node-shine { fill: url(#memory-lighting); pointer-events: none; }
     .cluster-subtitle { fill: var(--muted); font-size: 10px; text-anchor: middle; }
     .baby-hover .baby-panel { display: none; }
     .baby-hover.open .baby-panel { display: inline; }
@@ -551,6 +553,7 @@ const BABY_INTERACTIONS = 5;
 const SUN_BALANCE = 0.4;
 const CROSS_SUN_MIN = 0.3;
 const EVAL_SUNS = ["evaluation", "evaluation-2"];
+const GALAXY_EDGE_COLORS = {memory: "#67e8f9", scripture: "#f9a8d4", food: "#86efac", finance: "#fcd34d", evaluation: "#c4b5fd", entertainment: "#93c5fd", other: "#fcd34d"};
 function isBaby(domain) {
   const cluster = initialGraph.clusters?.[domain];
   return Boolean(cluster?.promoted) && (cluster.interactions || 0) < BABY_INTERACTIONS;
@@ -680,9 +683,28 @@ function planEvaluationSplit() {
   });
   return {keyFor, relative};
 }
+function candidatePreviewLayouts(nodes, clusters) {
+  const result = new Map();
+  let current = null;
+  nodes.filter(node => node.kind === "message").forEach(node => {
+    if (node.role === "You") {
+      const cluster = clusters[node.candidate_cluster];
+      current = node.domain === "memory" && cluster && !cluster.promoted && cluster.parent_domain === "memory"
+        ? node.candidate_cluster : null;
+    }
+    if (current && node.domain === "memory") result.set(node.id, current);
+  });
+  nodes.filter(node => node.kind === "message" && node.domain === "memory").forEach(node => {
+    const cluster = clusters[node.border_cluster];
+    if (cluster && !cluster.promoted && cluster.parent_domain === "memory") result.set(node.id, node.border_cluster);
+  });
+  return result;
+}
+const candidatePreviews = candidatePreviewLayouts(state.nodes, initialGraph.clusters || {});
 const evaluationSplit = planEvaluationSplit();
 state.nodes.forEach(node => {
-  node.layoutKey = evaluationSplit.keyFor.get(node.id) || node.domain || "memory";
+  node.previewParent = candidatePreviews.has(node.id) ? node.domain : null;
+  node.layoutKey = candidatePreviews.get(node.id) || evaluationSplit.keyFor.get(node.id) || node.domain || "memory";
 });
 const preferredSun = new Map();
 (() => {
@@ -715,17 +737,68 @@ const domainGroups = Object.entries(
 function styleDomainFor(domain) {
   return initialGraph.clusters?.[domain]?.parent_domain || domain;
 }
+function isCandidatePreview(domain) {
+  const cluster = initialGraph.clusters?.[domain];
+  return Boolean(cluster && !cluster.promoted && cluster.parent_domain === "memory");
+}
+function connectionPresentation(sourceKey, targetKey, kind, strength, created, active) {
+  const withinGalaxy = Boolean(sourceKey && sourceKey === targetKey && kind !== "parent");
+  return {
+    withinGalaxy,
+    drawAbove: Boolean(created || active || withinGalaxy),
+    width: kind === "parent" ? 2 : withinGalaxy ? 0.4 + strength * 1.1 : 0.25 + strength,
+    opacity: withinGalaxy && !created && !active ? 0.66 * Math.min(1, Math.max(0, strength)) : null
+  };
+}
+function memoryBrightness(layoutKey, score, highlighted) {
+  if (layoutKey !== "memory" || highlighted) return 1;
+  return 0.8 + 0.2 * Math.min(1, Math.max(0, score));
+}
 function domainLayoutFor(domain, nodes) {
   const cluster = initialGraph.clusters?.[domain];
   const labels = {memory: "AI memory", scripture: "Scripture", food: "Food", finance: "Finance", evaluation: "Under evaluation", "evaluation-2": "Under evaluation II", entertainment: "Entertainment", other: "Other"};
   const {messages, salience, raw} = layoutStats(nodes);
   const overflow = layoutStats(state.nodes.filter(node => node.domain === "evaluation")).raw >= SPLIT_RADIUS;
-  const radius = domain.startsWith("evaluation") && overflow ? SUN_RADIUS : isBaby(domain) ? BABY_RADIUS : Math.min(SPLIT_RADIUS, raw);
+  const radius = domain.startsWith("evaluation") && overflow ? SUN_RADIUS : isBaby(domain) || isCandidatePreview(domain) ? BABY_RADIUS : Math.min(SPLIT_RADIUS, raw);
   return {center: {x: 0, y: 0}, radius, label: cluster?.label || labels[domain] || domain, subtitle: `${messages.length} memories`, messages: messages.length, salience, styleDomain: styleDomainFor(domain) === "evaluation-2" ? "evaluation" : styleDomainFor(domain)};
 }
 const domainLayouts = new Map();
-function memoryRadius(node) {
-  return 2.5 + 3.5 * Math.sqrt(Math.min(1, learnedScore(node))) + (node.consolidated ? 0.75 : 0);
+function relativeRanks(nodes, valueFor) {
+  const sorted = nodes.map(node => ({id: node.id, value: valueFor(node)})).sort((a, b) => a.value - b.value);
+  const ranks = new Map();
+  for (let start = 0; start < sorted.length;) {
+    let end = start + 1;
+    while (end < sorted.length && sorted[end].value === sorted[start].value) end++;
+    const rank = sorted.length === 1 ? 0.5 : (start + end - 1) / (2 * (sorted.length - 1));
+    for (let index = start; index < end; index++) ranks.set(sorted[index].id, rank);
+    start = end;
+  }
+  return ranks;
+}
+function memoryRadii(nodes, links) {
+  const groups = new Map();
+  const connections = new Map(nodes.map(node => [node.id, 0]));
+  nodes.forEach(node => {
+    const key = node.previewParent || node.layoutKey || "memory";
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(node);
+  });
+  links.forEach(link => {
+    if (link.kind === "parent" || link.source === link.target) return;
+    const strength = Math.max(0, link.strength);
+    if (connections.has(link.source)) connections.set(link.source, connections.get(link.source) + strength);
+    if (connections.has(link.target)) connections.set(link.target, connections.get(link.target) + strength);
+  });
+  const radii = new Map();
+  groups.forEach(members => {
+    const strengthRanks = relativeRanks(members, node => learnedScore(node));
+    const connectionRanks = relativeRanks(members, node => connections.get(node.id));
+    members.forEach(node => {
+      const relativeSize = 0.65 * strengthRanks.get(node.id) + 0.35 * connectionRanks.get(node.id);
+      radii.set(node.id, 2.8 + 4.7 * relativeSize + (node.consolidated ? 0.75 : 0));
+    });
+  });
+  return radii;
 }
 function linkWeightsFor(domain) {
   const keyById = new Map(state.nodes.map(node => [node.id, node.layoutKey || node.domain || "memory"]));
@@ -744,6 +817,29 @@ function nearestSunFor(domain) {
   const totals = linkWeightsFor(domain);
   return [...totals.entries()].filter(([key]) => suns.includes(key)).sort((x, y) => y[1] - x[1])[0]?.[0] || null;
 }
+function placeCandidatePreviews(candidates, layouts, offsets, centerRadius) {
+  candidates.forEach((domain, index) => {
+    const radius = layouts.get(domain).radius;
+    const preferred = -Math.PI / 2 + index * 2 * Math.PI / candidates.length;
+    let placed = false;
+    for (let ring = 0; !placed; ring++) {
+      const reach = centerRadius + radius + 5 + ring * (2 * radius + 12);
+      for (let step = 0; step < 72; step++) {
+        const shift = step === 0 ? 0 : (step % 2 ? 1 : -1) * Math.ceil(step / 2);
+        const angle = preferred + shift * 2 * Math.PI / 72;
+        const point = {x: reach * Math.cos(angle), y: reach * Math.sin(angle)};
+        const clear = [...offsets].every(([key, other]) =>
+          Math.hypot(point.x - other.x, point.y - other.y) >= radius + layouts.get(key).radius + (key === "memory" ? 5 : 8)
+        );
+        if (clear) {
+          offsets.set(domain, point);
+          placed = true;
+          break;
+        }
+      }
+    }
+  });
+}
 function updateLayout() {
   domainGroups.forEach(([domain, nodes]) => domainLayouts.set(domain, domainLayoutFor(domain, nodes)));
   const babySuns = new Map();
@@ -752,7 +848,8 @@ function updateLayout() {
     const sun = nearestSunFor(domain);
     if (sun && domainLayouts.has(sun)) babySuns.set(domain, sun);
   });
-  const satellites = [...domainLayouts.keys()].filter(domain => domain !== "memory" && !babySuns.has(domain)).sort();
+  const candidates = [...domainLayouts.keys()].filter(isCandidatePreview).sort();
+  const satellites = [...domainLayouts.keys()].filter(domain => domain !== "memory" && !babySuns.has(domain) && !isCandidatePreview(domain)).sort();
   const split = domainLayouts.has("evaluation-2");
   const centerRadius = domainLayouts.get("memory")?.radius || 48;
   const satelliteRadius = Math.max(48, ...satellites.map(domain => domainLayouts.get(domain).radius));
@@ -765,6 +862,7 @@ function updateLayout() {
     const reach = isSun ? orbit + BLAST_DISTANCE : orbit;
     offsets.set(domain, {x: reach * Math.cos(angle + (isSun ? spread : 0)), y: reach * Math.sin(angle + (isSun ? spread : 0))});
   });
+  placeCandidatePreviews(candidates, domainLayouts, offsets, centerRadius);
   babySuns.forEach((sun, domain) => {
     const sunOffset = offsets.get(sun);
     const toward = {x: 0, y: 0};
@@ -796,6 +894,12 @@ function updateLayout() {
   domainGroups.forEach(([domain, nodes]) => {
     const layout = domainLayouts.get(domain);
     nodes.forEach((node, index) => {
+      if (node.border_cluster === domain) {
+        const angle = index * Math.PI * (3 - Math.sqrt(5));
+        const distance = Math.max(0, layout.radius - 3);
+        positions[node.id] = {x: layout.center.x + distance * Math.cos(angle), y: layout.center.y + distance * Math.sin(angle), depth: 0.1};
+        return;
+      }
       const relaxed = evaluationSplit.relative.get(node.id);
       if (relaxed) {
         positions[node.id] = {x: layout.center.x + relaxed.x, y: layout.center.y + relaxed.y, depth: (relaxed.y / Math.max(1, layout.radius) + 1) / 2};
@@ -904,7 +1008,7 @@ async function refreshRemoteSnapshot() {
     const knownNodes = new Map(state.nodes.map(node => [node.id, node]));
     const changedMembership = (payload.snapshot.nodes || []).some(node => {
       const current = knownNodes.get(node.id);
-      return current && typeof node.domain === "string" && (current.domain !== node.domain || current.parent_domain !== node.parent_domain || current.candidate_cluster !== node.candidate_cluster);
+      return current && typeof node.domain === "string" && (current.domain !== node.domain || current.parent_domain !== node.parent_domain || current.candidate_cluster !== node.candidate_cluster || current.border_cluster !== node.border_cluster);
     });
     if ((payload.snapshot.nodes || []).some(node => !knownIds.has(node.id)) || changedMembership) {
       location.reload();
@@ -1020,11 +1124,21 @@ function syncSelectedMemoryPanel() {
 function render() {
   syncSidebarVisibility();
   updateLayout();
+  const radii = memoryRadii(state.nodes, state.links);
   svg.replaceChildren();
   const definitions = el("defs");
-  const shading = el("radialGradient", {id: "region-shading", cx: "32%", cy: "25%", r: "75%"});
-  shading.append(el("stop", {offset: "0%", "stop-color": "#ffffff", "stop-opacity": ".10"}), el("stop", {offset: "50%", "stop-color": "#ffffff", "stop-opacity": ".01"}), el("stop", {offset: "100%", "stop-color": "#000000", "stop-opacity": ".18"}));
+  const shading = el("radialGradient", {id: "region-shading", cx: "28%", cy: "22%", r: "80%"});
+  shading.append(el("stop", {offset: "0%", "stop-color": "#ffffff", "stop-opacity": ".32"}), el("stop", {offset: "35%", "stop-color": "#ffffff", "stop-opacity": ".10"}), el("stop", {offset: "65%", "stop-color": "#ffffff", "stop-opacity": "0"}), el("stop", {offset: "100%", "stop-color": "#000000", "stop-opacity": ".5"}));
   definitions.append(shading);
+  const glint = el("radialGradient", {id: "region-glint"});
+  glint.append(el("stop", {offset: "0%", "stop-color": "#ffffff", "stop-opacity": ".22"}), el("stop", {offset: "100%", "stop-color": "#ffffff", "stop-opacity": "0"}));
+  definitions.append(glint);
+  const rim = el("linearGradient", {id: "region-rim", x1: "0%", y1: "0%", x2: "100%", y2: "100%"});
+  rim.append(el("stop", {offset: "0%", "stop-color": "#e4f6ff", "stop-opacity": ".5"}), el("stop", {offset: "45%", "stop-color": "#b6d6ef", "stop-opacity": ".08"}), el("stop", {offset: "100%", "stop-color": "#000000", "stop-opacity": ".45"}));
+  definitions.append(rim);
+  const memoryLighting = el("radialGradient", {id: "memory-lighting", cx: "30%", cy: "25%", r: "75%"});
+  memoryLighting.append(el("stop", {offset: "0%", "stop-color": "#ffffff", "stop-opacity": ".55"}), el("stop", {offset: "40%", "stop-color": "#ffffff", "stop-opacity": ".08"}), el("stop", {offset: "100%", "stop-color": "#000000", "stop-opacity": ".38"}));
+  definitions.append(memoryLighting);
   svg.append(definitions);
   const createdIds = newestMessageIds();
   const edgesBehind = el("g");
@@ -1035,7 +1149,7 @@ function render() {
     if (!nodes.length) return;
     const style = layout.styleDomain || domain;
     const y = layout.center.y - layout.radius;
-    if (isBaby(domain)) return;
+    if (isBaby(domain) || isCandidatePreview(domain)) return;
     backdropLayer.append(el("ellipse", {cx: layout.center.x + 5, cy: layout.center.y + 12, rx: layout.radius, ry: layout.radius, class: "region-shadow"}));
     const boundary = el("circle", {
       cx: layout.center.x, cy: layout.center.y, r: layout.radius,
@@ -1044,6 +1158,8 @@ function render() {
     boundary.append(el("title", {}, `${layout.label}: radius ${layout.radius.toFixed(1)}; ${layout.messages} messages; mean capped salience ${layout.salience.toFixed(2)}. Size is visual salience, not intelligence or training approval.`));
     backdropLayer.append(boundary);
     backdropLayer.append(el("circle", {cx: layout.center.x, cy: layout.center.y, r: layout.radius, fill: "url(#region-shading)", class: "region-depth"}));
+    backdropLayer.append(el("ellipse", {cx: layout.center.x - layout.radius * 0.27, cy: layout.center.y - layout.radius * 0.46, rx: layout.radius * 0.45, ry: layout.radius * 0.18, fill: "url(#region-glint)", class: "region-depth"}));
+    backdropLayer.append(el("circle", {cx: layout.center.x, cy: layout.center.y, r: layout.radius, fill: "none", stroke: "url(#region-rim)", "stroke-width": "1.8", class: "region-depth"}));
     backdropLayer.append(el("text", {x: layout.center.x, y: y + 22, class: `cluster-title ${style}`, "text-anchor": "middle"}, layout.label));
     if (layout.subtitle) {
       backdropLayer.append(el("text", {x: layout.center.x, y: y + 38, class: `cluster-subtitle ${style}`, "text-anchor": "middle"}, layout.subtitle));
@@ -1086,13 +1202,19 @@ function render() {
     }
     const crossDomain = sourceDomain !== targetDomain;
     const created = createdIds.has(link.source) || createdIds.has(link.target) || link.created_cycle === state.cycles;
-    const layer = created || active ? edgesAbove : edges;
+    const presentation = connectionPresentation(sourceKey, targetKey, link.kind, link.strength, created, active);
+    const layer = presentation.drawAbove ? edgesAbove : edges;
     layer.append(el("line", {
       x1: a.x, y1: a.y, x2: b.x, y2: b.y,
-      class: `edge ${link.kind || "sequence"}${created ? " created" : ""}${active ? " recalled" : ""}${dimmed ? " dimmed" : ""}${crossDomain ? " cross-domain" : ""}`,
-      "stroke-width": link.kind === "parent" ? 2 : 0.25 + link.strength * 1,
+      class: `edge ${link.kind || "sequence"}${created ? " created" : ""}${active ? " recalled" : ""}${dimmed ? " dimmed" : ""}${crossDomain ? " cross-domain" : ""}${presentation.withinGalaxy ? " within-galaxy" : ""}`,
+      "stroke-width": presentation.width,
       "data-link": `${link.source}-${link.target}`
     }));
+    if (presentation.withinGalaxy) {
+      const style = domainLayouts.get(sourceKey)?.styleDomain || "other";
+      layer.lastChild.style.setProperty("--galaxy-edge-color", GALAXY_EDGE_COLORS[style] || GALAXY_EDGE_COLORS.other);
+    }
+    if (presentation.opacity !== null) layer.lastChild.style.opacity = presentation.opacity;
     const relation = link.kind === "similarity" ? "Related wording"
       : link.kind === "parent" ? `${domainLayouts.get(sourceDomain).label} grew from ${domainLayouts.get(targetDomain).label} (separate membership; visual relationship only)`
       : link.kind === "transition" ? "Subject transition (not core membership)"
@@ -1122,12 +1244,19 @@ function render() {
       "aria-label": `${node.id}, score ${value.toFixed(2)}. Click to activate.`
     });
     group.append(el("circle", {class: `pulse-ring${(state.active[node.id] || 0) > 0.05 || isCreated ? " animate" : ""}`, r: 2.75}));
-    const radius = memoryRadius(node) * (0.8 + 0.4 * p.depth);
+    const radius = radii.get(node.id) * (0.72 + 0.6 * p.depth);
     const circle = el("circle", {class: "core", r: radius});
     circle.style.opacity = (0.9 + 0.1 * p.depth).toFixed(2);
-    if (!isBaby(node.layoutKey || "memory")) circle.append(el("title", {}, memoryDetails(node)));
+    const shine = el("circle", {class: "node-shine", r: radius});
+    const highlighted = isMatch || node.userImportant || state.selected === node.id || (state.active[node.id] || 0) > 0.05;
+    const brightness = memoryBrightness(node.previewParent || node.layoutKey || "memory", value, highlighted);
+    if (brightness < 1) {
+      circle.style.opacity = (Number(circle.style.opacity) * brightness).toFixed(3);
+      shine.style.opacity = brightness.toFixed(3);
+    }
+    if (!isBaby(node.layoutKey || "memory") && !isCandidatePreview(node.layoutKey || "memory")) circle.append(el("title", {}, memoryDetails(node)));
     group.append(circle);
-    group.append(el("circle", {class: "node-shine", cx: -radius * .3, cy: -radius * .35, r: radius * .24}));
+    group.append(shine);
     group.addEventListener("click", () => activate(node.id));
     group.addEventListener("keydown", event => {
       if (event.key === "Enter" || event.key === " ") { event.preventDefault(); activate(node.id); }
@@ -1136,7 +1265,7 @@ function render() {
   });
   domainLayouts.forEach((layout, domain) => {
     const members = state.nodes.filter(node => (node.layoutKey || "memory") === domain);
-    if (!isBaby(domain) || !members.length) return;
+    if ((!isBaby(domain) && !isCandidatePreview(domain)) || !members.length) return;
     const group = el("g", {class: "baby-hover"});
     group.append(el("circle", {cx: layout.center.x, cy: layout.center.y, r: layout.radius + 4, fill: "rgba(0,0,0,0)"}));
     const shown = members.slice(0, 10);
@@ -1145,8 +1274,8 @@ function render() {
     const left = layout.center.x + layout.radius + 12, top = layout.center.y - height / 2;
     const panel = el("g", {class: "baby-panel"});
     panel.append(el("rect", {x: left, y: top, width: 260, height, rx: 8, class: "baby-panel-bg"}));
-    panel.append(el("text", {x: left + 12, y: top + 20, class: "baby-panel-title"}, layout.label));
-    panel.append(el("text", {x: left + 12, y: top + 34, class: "baby-panel-sub"}, `${layout.messages} messages`));
+    panel.append(el("text", {x: left + 12, y: top + 20, class: "baby-panel-title"}, isCandidatePreview(domain) ? `Candidate: ${layout.label}` : layout.label));
+    panel.append(el("text", {x: left + 12, y: top + 34, class: "baby-panel-sub"}, `${layout.messages} messages${isCandidatePreview(domain) ? " · AI Memory preview" : ""}`));
     shown.forEach((node, index) => {
       const rowY = top + 44 + index * 16;
       const hit = el("rect", {x: left + 6, y: rowY, width: 248, height: 16, fill: "rgba(0,0,0,0)"});
@@ -1200,14 +1329,13 @@ function updateDetails() {
     const members = state.nodes.filter(item => item.kind === "message" && item.role === "You" && item.candidate_cluster === clusterId);
     const marked = members.filter(item => item.userImportant).length;
     const helpful = members.reduce((sum, item) => sum + (item.feedback?.helpful || 0), 0);
-    const repetition = Math.min(1, (cluster.distinct_interactions || members.length) / 8);
-    const sessionEvidence = Math.min(1, (cluster.sessions || 0) / 3);
+    const repetition = Math.min(1, (cluster.distinct_interactions || members.length) / 5);
     const cohesion = Math.max(0, Math.min(1, cluster.cohesion || 0));
     const helpfulEvidence = Math.min(1, helpful / 3);
     const explicitEvidence = Math.min(1, marked / 3);
-    const estimate = 0.25 * repetition + 0.20 * sessionEvidence + 0.25 * cohesion + 0.15 * helpfulEvidence + 0.15 * explicitEvidence;
+    const estimate = 0.45 * repetition + 0.25 * cohesion + 0.15 * helpfulEvidence + 0.15 * explicitEvidence;
     clusterEvidence.hidden = false;
-    clusterEvidence.textContent = `Candidate cluster: ${cluster.label} · Importance estimate ${estimate.toFixed(2)}/1 (heuristic) · ${cluster.interactions} interactions · ${cluster.sessions} sessions · cohesion ${cohesion.toFixed(2)} · ${helpful} helpful marks · ${marked} important marks. This estimate does not promote the cluster.`;
+    clusterEvidence.textContent = `Candidate cluster: ${cluster.label} · Importance estimate ${estimate.toFixed(2)}/1 (heuristic) · ${cluster.distinct_interactions} distinct interactions · cohesion ${cohesion.toFixed(2)} · ${helpful} helpful marks · ${marked} important marks. This estimate does not promote the cluster.`;
   } else {
     clusterEvidence.hidden = true;
     clusterEvidence.textContent = "";
@@ -1560,7 +1688,8 @@ def main() -> None:
     memory_path = Path(__file__).with_name("chat_memory.json")
     state_path = Path(__file__).with_name("memory_graph_state.json")
     transcript = json.loads(memory_path.read_text(encoding="utf-8"))
-    clusters = update_clusters(transcript)
+    current_state = json.loads(state_path.read_text(encoding="utf-8")) if state_path.exists() else None
+    clusters = update_clusters(transcript, current_state.get("links", []) if current_state else None)
     memory_path.write_text(json.dumps(transcript, indent=2) + "\n", encoding="utf-8")
     graph, seed_id = build_chat_graph(memory_path)
     data = graph.to_dict()
@@ -1582,6 +1711,7 @@ def main() -> None:
                 node["domain"] = source["domain"]
                 node["parent_domain"] = source["parent_domain"]
                 node["candidate_cluster"] = source.get("candidate_cluster")
+                node["border_cluster"] = source.get("border_cluster")
                 if message_created_cycles.get(node["id"]) is not None:
                     node["created_cycle"] = message_created_cycles[node["id"]]
     for link in data["links"]:
@@ -1594,13 +1724,6 @@ def main() -> None:
     data["seed_id"] = seed_id
     data["clusters"] = clusters
     data["cycles"] = transcript.get("cycles", 0)
-    current_state = None
-    if state_path.exists():
-        try:
-            current_state = json.loads(state_path.read_text(encoding="utf-8"))
-        except json.JSONDecodeError:
-            current_state = None
-
     if current_state:
         nodes_by_id = {node["id"]: node for node in current_state.get("nodes", []) if "id" in node}
         links_by_key = {
@@ -1612,11 +1735,14 @@ def main() -> None:
             preserved = nodes_by_id.get(node["id"])
             if not preserved:
                 continue
-            for key in ("rawImportance", "history", "consolidated", "feedback"):
+            for key in ("rawImportance", "history", "consolidated", "feedback", "userImportant", "timestamp"):
                 if key in preserved:
                     node[key] = preserved[key]
         for link in data["links"]:
             preserved = links_by_key.get((link.get("source"), link.get("target"), link.get("kind")))
+            if not preserved and link.get("kind") in {"sequence", "transition"}:
+                previous_kind = "transition" if link["kind"] == "sequence" else "sequence"
+                preserved = links_by_key.get((link.get("source"), link.get("target"), previous_kind))
             if not preserved:
                 continue
             for key in ("strength", "created_cycle"):

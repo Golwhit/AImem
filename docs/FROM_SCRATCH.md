@@ -20,6 +20,59 @@ Unmarked chat is memory capture only; clicking Relevant or submitting a
 correction explicitly approves immediate conversation-weight training.
 See [immediate feedback training](#immediate-feedback-training).
 
+The separate [Universe Lab](../universe-lab/) is a new experiment, not a
+replacement for that active model. Its initial state contains no universe;
+an explicit spark creates `1`, and a supplied seeder generates growing
+batches of `01` pairs. A two-weight predictor observes the previous bit,
+then predicts, sees the seeder's bit, measures error, and updates using
+standard-library Python. Fuel is finite and adjustable, and actual phases,
+events, weights, and source annotations are visible in the lab. Its saved
+state is local to that folder. This is a designed toy environment, not
+evidence of emergence from literal nothing or a language model; letter and
+later generation stages are not implemented yet.
+
+In the lab, saving keeps a named copy of the complete state, including the
+weights and any unfinished prediction. Continuing or adding fuel uses the
+same weights. Reset or loading a different run requires saving the current
+one or explicitly discarding it; deletion of a saved copy needs confirmation.
+Saves stay in the local, Git-ignored `universe-lab/experiments/` directory,
+so make separate backups if needed. A fingerprint prevents a stale page from
+changing a newer state; refresh the page's state before trying again. Saved
+checksums catch accidental changes, not malicious tampering.
+
+The unified quark graph shows every created bit as a separate numbered
+quark, with the original seeder shown separately. New runs start in the
+three-quark mode: unfrozen pop-outs select eligible partners, never the seeder
+or themselves, and group joins cannot exceed three. Four outcomes are equally
+likely: outgoing at 0.5, incoming at 0.5, both directions at 0.25 each, or
+no bond; existing bonds are retained. The new pop-out tries first on reveal;
+older eligible pop-outs try in creation order. Once three connect, each tries
+once inside the group and the candidate freezes. Choices and random seed are
+saved, so loading a snapshot reproduces later choices under that run's rules.
+Old snapshots continue under their earlier unrestricted bonding rules. The
+previous timeline lines were chronological, not historical bonds.
+Same-bit bonds are possible. Strengths do not change or break yet, and
+neither these bonds nor the earlier transition counts drive the predictor.
+Attraction, repulsion, and learning from bonds remain future experiments.
+The graph shows complete three-quark candidates and incomplete groups. It
+does not identify letters, calculate letter probabilities, or bias later
+connections from those observations.
+Recording every attempt makes the history grow with both the number of quarks
+and steps, so long experiments can become slow and consume substantial storage.
+Running processes up to 50 phase steps per request and targets 50 per second,
+without overlapping requests. Every phase is recorded, while the graph updates
+between batches and Pause stops after the current batch. The actual rate can
+be lower when the backend or graph takes longer.
+The graph uses decorative separated group positions, not positions in its
+calculations. Solid line width reflects strength in one direction: 0.5 is
+one pixel wide, 0.25 is half a pixel. Colors show the bit types and direction for
+mixed-bit bonds; same-bit direction is available in the tooltip and activity
+log. No arrowheads or bond motion are simulated.
+
+Candidates do not yet simulate physical repulsion, assign letters, connect
+letters, or train word prediction. The earlier isolated fixed-seed prototype
+remains in the source as a comparison, not as a second live graph.
+
 **Memory stays connected:** development conversations, internal app-chat
 exchanges and important findings continue updating the transcript and graph
 through their existing capture paths. Isolating a model experiment means
@@ -304,9 +357,10 @@ available through its separate selection. Missing/corrupt states and empty
 first-line generation fail explicitly, never falling back to canned answers.
 
 Runtime prompt formatting matches teaching: `user: CONTENT\nassistant: `.
-Only the current message is supplied to neural generation, not prior app
-turns or search results. The reply is the first newline-delimited line of
-the unchanged greedy decoder, with a 96-character ceiling. A missing newline
+By default only the current message is supplied; the experimental option
+adds the previous visible exchange, not search results. The reply is the
+first newline-delimited line of the greedy decoder, with a 320-character
+ceiling. A missing newline
 is reported in generation metadata, not silently counted as a terminated
 answer in evaluation. Backend/UI/graph identify this as
 `local-conversation-neural`, with training-round provenance, rather than
@@ -336,6 +390,27 @@ The HTTP integration test checks the conversation-mode label, saved model
 provenance and no neural weight updates even when legacy prompt-training
 flags are supplied. Production viewer build succeeds.
 
+### Experimental follow-up context
+
+Chat defaults to the existing single-turn input. Its opt-in experimental
+checkbox supplies the previous visible user/assistant exchange and the current
+message in the same role format as the conversation curriculum. It does not
+retrieve older memories. The model's 64 feature slots limit how much it can
+actually use, and context does not guarantee a relevant or correct answer.
+Switching away from Chat or reloading clears the visible exchanges and resets
+the checkbox.
+
+The saved response's model provenance records the exact supplied turns when
+context was used. Relevant or a submitted correction explicitly approves the
+full input and answer; its hash, rehearsal row, and exact replay include that
+context. Single-turn records keep their existing hash and behavior. Generation
+itself never trains; prior context is not silently added as training data.
+On the current checkpoint, the previously inspected 16 multi-turn development
+cases scored 10/16 with their full context versus 12/16 with the final turn
+alone. Four additional paired, deliberately context-dependent examples scored
+5/8 with context versus 0/8 without it. These small, non-independent checks
+demonstrate a tradeoff, not general conversation ability.
+
 ### Health guard and lower-rate rounds
 
 Round 10 (`2cbf7c04…`) ran at rate .1 with the 300 CPU-second budget and
@@ -357,10 +432,16 @@ round 13, also passed: saturation .49–.50, teaching 1.000, development test
 checkpoints, so the 0.688 and 0.594 scores do not rank the rounds.
 
 Click-triggered corrections (`neural_correction.py`) previously promoted
-without the health check. They now reject a candidate whose hidden
-saturation over the rehearsal set exceeds `MAX_SATURATION`, and the chain
-pointer stays unchanged. Only one run at rate .02 has been checked; the
-lower rate is not yet proven stable over repeated rounds.
+without a health check. Their current separate saturation limit is 0.65
+over correction and rehearsal examples; candidates above it are rejected
+without changing the active pointer. Ordinary training retains its 0.6
+limit and may assess a different example set, so the scores are not directly
+comparable. The higher correction tolerance does not guarantee retention.
+After the `Name?` → `Mira` correction, shared-case comparisons with the
+previous live checkpoint showed teaching and feedback regressions despite
+the corrected answer. A subsequent isolated 0.01-rate corpus trial improved
+aggregate scores but was rejected for saturation and an exact feedback
+change from `Mira` to `Mira.`. It did not change live weights.
 
 ### First permanent round and chat promotion
 
@@ -430,9 +511,19 @@ not the entire transcript. A Relevant click uses the saved model answer,
 never a replacement answer supplied by the request. This approval is a
 user declaration, not independent factual or legal clearance.
 
+Immediate feedback now compares the parent and candidate on every approved
+rehearsal answer, rejecting the candidate if any previously exact answer is
+lost. The newly corrected input supersedes its older target and is excluded
+from that retention comparison. Authored, corpus, and permanent continuation
+rounds apply the same per-answer guard, in addition to their existing checks.
+This does not test all possible paraphrases, nor does it guarantee that each
+teacher-forced corpus position is retained. The approved alphabet, corpus,
+and spacing representation are unchanged.
+
 [neural_correction.py](../neural_correction.py) loads the active permanent
 checkpoint, validates saved prompt/response provenance, and trains actual
-weights at rate .03: 75% target draws from the approved pair, 25% from
+weights at rate .03 for answers up to 95 characters and .06 for longer
+answers: 75% target draws from the approved pair, 25% from
 previously approved teaching/feedback for rehearsal. Only explicit approved
 pairs join that rehearsal. For the same exact prompt, the latest submitted
 answer supersedes conflicting older targets, including the base curriculum
@@ -444,14 +535,123 @@ approved prompt/answer. Existing IDs and weights remain intact; new rows
 reuse the existing unknown-row expansion helper. Architecture and fixed
 normalization identity survive expansion. This can change output
 normalization and model behavior; no universal retention claim is made.
-The tiny decoder accepts single-line feedback answers of 1-95 characters
+The decoder accepts single-line feedback answers of 1-319 characters
 to leave space for the newline terminator. A longer answer or a multiline
 correction is rejected explicitly instead of truncated or silently stored
-as trained. The UI displays this limit.
+as trained. The UI displays this limit. Evaluation extends the greedy
+generation budget for longer approved answers; the original 96-character
+budget remains unchanged for shorter evaluation examples.
+
+The original word-gap representation cannot distinguish different counts
+of trailing spaces. When a correction contains conflicting target positions,
+training tries a versioned spacing representation with new gap embeddings
+initialized from the corresponding old ones. Old checkpoints retain their
+original encoding and unseen gap variants fall back to their original feature.
+Existing token IDs and learned weights are preserved at migration; subsequent
+updates can still change model behavior. If target conflicts remain, training
+stops explicitly rather than promising a fit. The version is saved in the
+checkpoint and used again for inference and replay.
+
+In an isolated copy of the active checkpoint, this removed the conflicting
+positions in a submitted 35-character correction, which trained and replayed
+exactly in 1,750 updates. Previously approved feedback exact matches remained
+2/18 and development exact matches changed from 25/64 to 26/64. A separate
+synthetic 108-character correction trained, replayed and generated exactly.
+These examples demonstrate the fix, not guaranteed fitting or retention.
+
+The separate reviewed structural migration in
+[neural_model_migration.py](../neural_model_migration.py) was activated as
+round 26. A 108-character correction exceeded the original 30-second
+update-CPU budget on the migrated architecture, although it fit with a
+60-second budget. The migration retains the prior
+64 features and appends two base-64 space-count features for each of the 32
+represented word gaps. Counts 0–4095 are distinct; larger counts fail
+explicitly. This addresses space-count collisions across punctuation without
+requiring a separate output symbol for every punctuation/count combination.
+It counts ASCII spaces, not their exact positions among punctuation or tabs;
+equal-count layouts may still collide and correction training rejects
+unresolved conflicting targets. Existing checkpoint encodings still restore.
+New count embeddings have distinct bounded initial values but their new hidden
+connections start at zero, preserving old hidden activations initially. The
+32 user-approved word identities copy the old unknown-word embedding, and
+the `Q` and `X` character output rows copy the unknown-token row. They do
+not learn meaning or new spacing behavior without subsequent approved
+training. Added output rows change the probability normalization and can
+change greedy output, so the migration tests retained correct answers,
+replays the structural transformation, and archives the prior selection.
+It records no optimizer updates and does not treat the migration as a
+training replay. It uses reused development cases as a safety gate, not
+as independent generalization evidence.
+
+The word-position migration appends two more feature slots to the 128-slot
+spacing model. They encode the length of the current unfinished word in
+base 64 using the existing digit embeddings; their new hidden connections
+start at zero, preserving the old predictions before training. Partial-word
+lengths 1–4095 are distinct and larger ones fail explicitly. For the
+user-approved fox/wizards exchange, the old features mapped positions in
+`coinc` and `coincidenc` to the same input but required different next
+characters; the new features distinguish them. Old checkpoints retain their
+original representation. The migration replays, checks retained answers,
+and preserves rollback; other collisions and generalization remain possible.
+Resolving this input conflict alone does not teach the answer.
+
+The [user-supplied corpus](../fixtures/neural-user-corpus-2026-11-14.json)
+contains three pangrams, alphabet and digit strings, additional user-supplied
+text, three fragments, and the seven historical Layer 0 seeds. The
+separate [corpus continuation](../neural_corpus_training.py) requires
+approval of the exact file hash. It predicts each original item after an
+input-only `text: ` boundary; that boundary is not a fabricated conversation
+or a training target. Historical source-start seeds use an empty prefix and
+interior seeds use `text:` before their exact leading space; `</>` is stored
+as boundary metadata rather than emitted. `Prompt:` and `Model:` examples
+are standalone corpus text, not approved app-feedback pairs. Character,
+word-identity and gap symbols are expanded only from approved text. Gap
+prefixes make the positions in the digit string
+distinct for this boundary, but different items still share a beginning and
+can require different next characters there. A quarter of updates draw from
+corpus positions; the rest rehearse approved conversation targets. The
+usual saturation, teaching, paired-development, feedback-retention and
+replay gates decide whether to activate. Corpus accuracy is measured on the
+training items, not held-out text; ordinary continuation does not automatically
+rehearse this corpus. User approval does not establish legal clearance.
+
+After a user-authorized override of the rejected repeat as round 36, the
+next guarded continuation activated as round 37 after 6,500 updates and
+exact replay. Teacher-forced corpus accuracy rose 194/536 to 227/536;
+teaching rose 219/279 to 227/279 and feedback 10/23 to 11/23. Reused
+development remained 29/64, with 11/32 complete pairs. The fox/wizards
+prediction remained incorrect (`Sere.`). These are narrow, reused
+measurements, not proof of generalization. Round 36 remains the rollback
+selection, and the overridden candidate's rejection remains recorded.
+The following 6,500-update candidate replayed exactly and improved training
+measurements, but its final hidden saturation of 0.6025 exceeded the 0.6
+limit, so it was rejected and round 37 stayed active. Reused development
+remained 29/64 while complete pairs improved 11/32 to 12/32; feedback
+remained 11/23, and the fox/wizards prediction stayed incorrect.
+The user subsequently authorized that specific candidate as round 38
+despite the saturation result. Independent replay and isolated rollback
+passed; round 37 is retained as rollback, and later runs keep the normal
+saturation limit.
+The next candidate replayed exactly but was rejected: saturation reached
+0.6157, teaching fell 232/279 to 228/279, and three previously correct
+feedback answers were lost. Corpus training-position accuracy rose 245/536
+to 266/536, which does not establish free-running improvement. Round 38
+remains live.
+
+For live conversation and layer-free base chat, decoding masks any character
+or whole-word output that would create three identical consecutive characters
+within the response, including whitespace. This is case-sensitive and does
+not inspect the user's prompt. If no allowed output remains, an explicit
+error is returned. The original comparison control is unchanged; a retired
+layered model reports an error if its generated response contains a triple.
+Live continuation and correction assessments use the same filter; an
+immediate correction that itself contains a triple is rejected explicitly.
+This limits output, not proof the model learned repetition or grammar.
 
 Training starts within the feedback request. After each 50 updates, it
 checks the exact prompt's free-running, newline-terminated answer.
-The budget is 30 update-CPU seconds or 6,000 updates; generation,
+The budget is 30 update-CPU seconds for older checkpoints, or 60 for the
+new spacing architecture, with a limit of 6,000 updates in both cases; generation,
 independent replay and disk writes add latency. Earlier 10-second and
 2,000-update limits stopped corrections that needed 450–700 updates, so they
 were raised. This is immediate initiation,
@@ -4272,7 +4472,30 @@ connections close and drags weaker ones toward the second sun. The suns are then
 pushed apart by `BLAST_DISTANCE` so they sit well apart. A promoted galaxy with
 fewer than `BABY_INTERACTIONS` interactions is drawn as a small baby beside the
 sun it links to most, on the side facing the galaxies it links to most. It stays promoted. Only the display changes; memberships
-and weights are untouched. Connections are drawn beneath the galaxy fills, and the baby is shown small with its name and member list on hover, and hovering or clicking a row in that list shows or selects the memory. Its member memories have no separate hover. Simple `related` memory links join the Git / Aimem and Commit / Push galaxies, and join the Git / Aimem memories to AI Memory messages that mention "AImem"; they are rebuilt each render and do not change membership. Membership is then refined so each memory sits with
+and weights are untouched. Ordinary links between galaxies remain beneath
+their fills, while links within a galaxy are drawn above its fill. Ordinary
+internal-link opacity follows link strength consistently across galaxies,
+fading to zero as strength reaches zero. Newly created and recalled links
+retain their highlight; no links are removed by this display rule. Radial
+lighting and stronger per-galaxy depth scaling make the memories appear more rounded without changing
+their stored values. Each memory's base radius compares its learned score and
+its total non-parent, non-self connection strength against memories in the
+same galaxy, weighted 65% and 35% respectively. Cross-galaxy connections
+count. Equal values share a rank, and a galaxy with one memory uses the middle
+rank; consolidated memories retain their existing bonus. These are relative
+display rankings and can exaggerate small differences, not absolute measures
+across galaxies. The separate depth effect scales the result. Stronger shell
+shading and a soft highlight make the galaxies look spherical without covering
+their internal links. In AI Memory,
+weaker unhighlighted memories receive an additional dimming based on their
+current score, not age or display depth; the separate depth lighting remains.
+Other galaxies and highlighted memories keep their existing emphasis. The baby
+is shown small with its name and member list on
+hover, and hovering or clicking a row in that list shows or selects the memory.
+Its member memories have no separate hover. Simple `related` memory links join
+the Git / Aimem and Commit / Push galaxies, and join the Git / Aimem memories
+to AI Memory messages that mention "AImem"; they are rebuilt each render and do
+not change membership. Membership is then refined so each memory sits with
 the sun holding more of its tie weight, keeping each sun between `SUN_BALANCE`
 and 1 − `SUN_BALANCE` of the members (exact ties go to the smaller sun). Cross-sun
 links weaker than `CROSS_SUN_MIN` are hidden, and the rest are drawn with
@@ -4285,12 +4508,30 @@ that comparison, so saying "memory model" repeatedly does not itself create an
 AI-development topic. The learner's training approval gate is unrelated to this
 graph-organization step; discovery does not approve data or train the learner.
 
-A candidate needs cohesive wording and either evidence from multiple sessions
-or sustained, distinct discussion in one recorded session. The initial
-single-session rule requires eight meaningful contributions and a span of seven
-transcript positions; the common cohesion gate is 0.30. See the README for the
-complete thresholds. Assistant repetition and generic acknowledgments are not
-votes. These are heuristics to test, not a human-level measure of topic meaning.
+A candidate needs at least five distinct meaningful user contributions and
+cohesion of 0.30, without a session-count or provenance requirement. The
+pairwise heuristic combines topic similarity with the current stored
+memory-link strength when available; some shared wording is still required.
+Session metadata is preserved for provenance but does not affect promotion.
+Assistant repetition and generic acknowledgments are not votes. These are
+heuristics to test, not a human-level measure of topic meaning.
+
+Pending candidates within AI Memory are drawn close to it without a border,
+with their replies. Hovering a candidate opens the baby-galaxy member panel.
+Their actual domain remains AI Memory until promotion. Preview layout does not
+change membership, stored links, or training approval. Other domains retain
+their existing candidate presentation.
+
+An unclaimed AI Memory message directly linked to a candidate can sit on its
+edge if none of its positive-strength message links reaches an established
+other galaxy. When several candidates connect to it, the strongest individual
+link wins; exact ties stay with the parent. Border messages do not become
+promotion votes. While pending, they remain in AI Memory; on promotion they
+join the child, retain AI Memory parent provenance and their original links,
+and stay in the promoted child on subsequent recomputations. The existing
+child-parent link is 0.5, not a newly inferred stronger weight. The border
+layout is visual only, and the decision is based on available stored and
+graph message links, not topic hubs or galaxy-parent links.
 
 When promoted, a child topic receives its own hub and a link to its parent. A
 parent link means "subtopic of"; it does not mean that every connected memory

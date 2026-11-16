@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import BaseModelLab from './BaseModelLab';
+import UniverseLab from '../universe-lab/UniverseLab';
 
 export default function App() {
+  const [showOldLab, setShowOldLab] = useState(false);
   const [activeTab, setActiveTab] = useState(() => {
     const view = new URLSearchParams(window.location.search).get('view');
     return ['generation', 'base-lab'].includes(view) ? view : 'chat';
@@ -28,7 +30,10 @@ export default function App() {
       </nav>
 
       <main style={{       maxWidth: activeTab === 'base-lab' ? 1200 : activeTab === 'graph' ? 960 : 800, margin: '0 auto', padding: '0 16px' }}>
-        {activeTab === 'base-lab' && <BaseModelLab />}
+        {activeTab === 'base-lab' && <><UniverseLab /><details className="hero-card"
+          onToggle={(event) => setShowOldLab(event.currentTarget.open)}>
+          <summary>Open the earlier base-model teaching trace</summary>{showOldLab && <BaseModelLab />}
+        </details></>}
         {activeTab === 'chat' && <ChatPanel sessionId={sessionId} />}
         {activeTab === 'generation' && <><NeuralPanel /><GeneratorPanel /></>}
         {activeTab === 'graph' && (
@@ -45,6 +50,7 @@ function ChatPanel({ sessionId }) {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [useContext, setUseContext] = useState(false);
   const bottomRef = useRef(null);
 
   const refreshProgress = async () => {
@@ -75,10 +81,14 @@ function ChatPanel({ sessionId }) {
     setError('');
 
     try {
+      const previous = messages.slice(-2);
+      const history = useContext && chatModel?.arm === 'conversation' && chatModel?.supports_followup_context
+        && previous.length === 2 && previous[0].role === 'user' && previous[1].role === 'assistant'
+        ? previous.map(({ role, text: content }) => ({ role, content })) : undefined;
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text, sessionId, include_in_generator: true })
+        body: JSON.stringify({ message: text, sessionId, include_in_generator: true, ...(history ? { history } : {}) })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
@@ -91,6 +101,7 @@ function ChatPanel({ sessionId }) {
         trainingSources: data.training_sources,
         generatorLearning: data.generator_learning,
         responseId: data.response_memory_id,
+        contextUsed: data.context_used,
         selection: data.selection,
         lab: data.lab,
         labError: data.lab_error,
@@ -136,6 +147,16 @@ function ChatPanel({ sessionId }) {
           </small>
         </div>
       )}
+      {chatModel?.arm === 'conversation' && chatModel.supports_followup_context && (
+        <label className="message-meta">
+          <input type="checkbox" checked={useContext} disabled={loading} onChange={(event) => setUseContext(event.target.checked)} />
+          {' '}Experimental follow-up context: include the previous visible exchange.
+          Answers may still be incorrect; approved feedback includes that context.
+        </label>
+      )}
+      {chatModel?.arm === 'conversation' && !chatModel.supports_followup_context && (
+        <small className="message-meta">Restart the chat backend to enable experimental follow-up context.</small>
+      )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 360, overflowY: 'auto', margin: '12px 0' }}>
         {messages.length === 0 && (
@@ -164,6 +185,9 @@ function ChatPanel({ sessionId }) {
             {m.generatorLearning?.reason === 'fixed_neural_checkpoint' && <small className="message-meta">
               Generating this reply did not train weights; the prompt was saved to memory.
             </small>}
+            {m.contextUsed && <small className="message-meta">
+              This reply used the previous exchange. Approving feedback trains on that exchange too.
+            </small>}
             {m.generatorLearning?.added && <small className="message-meta">Your prompt was added for future generation {m.generatorLearning.generation}.</small>}
             {m.generatorLearning?.reason === 'already_present' && <small className="message-meta">Your prompt is already in the generator corpus.</small>}
             {m.generatorLearning?.reason === 'too_short' && <small className="message-meta">Prompt skipped: at least four characters are needed for generator training.</small>}
@@ -182,7 +206,7 @@ function ChatPanel({ sessionId }) {
             {m.rating === 'needs_correction' && (
               <div style={{ marginTop: 8 }}>
                 <label style={{ display: 'block', fontSize: 12 }}>Your corrected response
-                  <textarea rows={3} maxLength={m.mode === 'local-conversation-neural' ? 95 : 2000} value={m.correction || ''} style={{ width: '100%', marginTop: 6, resize: 'vertical' }} onChange={(event) => {
+                  <textarea rows={3} maxLength={m.mode === 'local-conversation-neural' ? 319 : 2000} value={m.correction || ''} style={{ width: '100%', marginTop: 6, resize: 'vertical' }} onChange={(event) => {
                     const correction = event.target.value;
                     setMessages((previous) => previous.map((message) => message.responseId === m.responseId ? { ...message, correction, correctionSaved: false } : message));
                   }} />
@@ -192,7 +216,7 @@ function ChatPanel({ sessionId }) {
                     m.mode === 'local-conversation-neural');
                 }}>{m.ratingPending ? 'Training correction…' : m.mode === 'local-conversation-neural' ? 'Train correction now'
                   : m.mode === 'local-character-ngram' ? 'Approve correction and train' : 'Save correction for review'}</button>
-                {m.mode === 'local-conversation-neural' && <small className="message-meta">Submitting approves this exact prompt and correction for immediate weight training. One line, up to 95 characters.</small>}
+                {m.mode === 'local-conversation-neural' && <small className="message-meta">Submitting approves this exact prompt{m.contextUsed ? ' and previous exchange' : ''} and correction for immediate weight training. One line, up to 319 characters; fitting is not guaranteed.</small>}
                 {m.correctionSaved && <small className="message-meta" role="status">{m.neuralCorrectionTrained
                   ? 'Correction learned, verified and active in chat. Included in future training rounds.'
                   : m.correctionTrained ? 'Your correction trained the generator and positive response selection.' : 'Correction saved for review; not added to generator training text.'}</small>}

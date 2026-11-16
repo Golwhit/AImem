@@ -64,6 +64,7 @@ class PlasticityContext(ConversationContext):
             raise ValueError("Unsupported normalization epsilon")
         checked = ConversationContext.restore(state)
         result = cls("", 17, lexicon=state["lexicon"], symbols=state["symbols"])
+        result.gap_encoding = checked.gap_encoding
         if state["plasticity_arm"] == "inherited_normalized":
             result.model = NormalizedModel(state["symbols"], context=checked.model.context)
             result.model.weights = checked.model.weights
@@ -111,7 +112,8 @@ def diagnostics(model: WordBase, examples: list) -> dict:
 
 
 def fit(model: WordBase, rows: list[dict], *, seed: int, rate: float,
-        cpu_checkpoints: tuple[float, ...], decay: float = 1.0) -> list[dict]:
+        cpu_checkpoints: tuple[float, ...], decay: float = 1.0,
+        no_triple_repeat: bool = False) -> list[dict]:
     if (not cpu_checkpoints or list(cpu_checkpoints) != sorted(set(cpu_checkpoints))
             or any(not math.isfinite(n) or n <= 0 for n in cpu_checkpoints)
             or not math.isfinite(rate) or rate <= 0
@@ -132,14 +134,16 @@ def fit(model: WordBase, rows: list[dict], *, seed: int, rate: float,
         start = time.process_time()
         point = {"updates": updates, "training_cpu_seconds": cpu,
                  "teacher_forced_loss": token_loss(model, examples),
-                 "training": assess(model, rows), "diagnostics": diagnostics(model, examples)}
+                 "training": assess(model, rows, no_triple_repeat=no_triple_repeat),
+                 "diagnostics": diagnostics(model, examples)}
         point["measurement_cpu_seconds"] = time.process_time() - start
         points.append(point)
     return points
 
 
 def replay(initial: dict, rows: list[dict], *, rate: float, seed: int,
-           checkpoints: list[dict], decay: float = 1.0) -> PlasticityContext:
+           checkpoints: list[dict], decay: float = 1.0,
+           no_triple_repeat: bool = False) -> PlasticityContext:
     model = PlasticityContext.restore(json.loads(json.dumps(initial)))
     examples = answer_examples(model, rows)
     rng = random.Random(seed)
@@ -151,7 +155,7 @@ def replay(initial: dict, rows: list[dict], *, rate: float, seed: int,
             model.model.update(context, target, output_prior=prior, learning_rate=segment_rate)
             updates += 1
         if (token_loss(model, examples) != point["teacher_forced_loss"]
-                or assess(model, rows) != point["training"]
+                or assess(model, rows, no_triple_repeat=no_triple_repeat) != point["training"]
                 or diagnostics(model, examples) != point["diagnostics"]):
             raise AssertionError("Replayed plasticity milestone differs")
     return model

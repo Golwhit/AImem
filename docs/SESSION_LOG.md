@@ -4,6 +4,620 @@ Newest application checkpoint first. Entries map delivered versions to the
 session that produced them; historical conversation memory remains separate.
 See [versioning policy](VERSIONING.md) for bump and release rules.
 
+## 0.22.0 - 2026-11-15
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: minor
+
+### Changes
+
+- Automatic runs now process up to 50 recorded phases per batch, targeting
+  50 phases per second. The graph refreshes and Pause takes effect between
+  batches; each batch is saved atomically and stops at the end of the last
+  available prediction cycle. Individual stepping and old runs remain supported.
+- On a copy of the user's run, a browser test with real Python subprocesses
+  measured batch-start intervals of 1.321, 1.000, and 1.000 seconds, with no
+  overlapping requests. It reached zero energy in the predict phase; a separate
+  in-flight Pause test completed one batch and started no more. These are not
+  guarantees for larger histories or slower systems. Twenty-four universe
+  tests, three pattern tests, version tests, Python diagnostics, and the
+  production build passed.
+  The live universe was not advanced for the tests.
+
+## 0.21.1 - 2026-11-15
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: patch
+
+### Changes
+
+- Automatic runs now target four phase steps per second without overlapping
+  requests. Slow responses and larger histories can reduce the actual rate.
+- A simulated browser run with 80 ms responses measured 250 ms between
+  eight step requests, finished at zero energy in the predict phase, and
+  confirmed that pausing an in-flight request starts no further steps.
+  The 22 Python universe tests, three pattern tests, version tests, and
+  production build passed. The user's live universe was not used for the
+  browser test.
+
+## 0.21.0 - 2026-11-15
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: minor
+
+### Changes
+
+- Moved the three-quark experiment into the main universe graph and its
+  persisted step history. New runs cap groups at three, perform one internal
+  round, and freeze candidates; older saved runs retain their unrestricted
+  rules. Positions separate groups visually, not through simulated physics.
+- Twenty-two universe tests, three isolated comparison tests, version checks,
+  and the production build passed,
+  including candidate separation, frozen quarks, save/replay, and corrupt
+  history. Python diagnostics were clear. A simulated browser verified the
+  spark-only main graph and a later candidate with both bond widths.
+- Saved and verified the previous live run as "Before three-quark main reset
+  - 2026-11-15", then reset to the spark with 24 starting energy (23 after
+  the spark). A live read confirmed one seeder and no bonds. Candidates are
+  not letters, do not bond to each other, and do not affect prediction or
+  training.
+
+## 0.20.0 - 2026-11-15
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: minor
+
+### Changes
+
+- Added a separate, fixed-seed three-quark experiment. Eligible groups can
+  join only up to size three; each complete group gets one internal round
+  and then freezes. Its graph displays separate candidates and incomplete
+  groups, with chain and triangle shapes and existing bond colors.
+- Three focused JavaScript tests, 20 original universe tests, version checks,
+  and the production build passed. A
+  read-only live-browser check found seven candidates, one incomplete group,
+  no overlapping group boxes, and correctly weighted bond lines. The main
+  universe state was unchanged. This is a fixed sample with decorative
+  spacing, not physical repulsion, assigned letters, letter-to-letter bonds,
+  or training; it uses a separate random stream from the main universe.
+
+## 0.19.1 - 2026-11-15
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: patch
+
+### Changes
+
+- Made one-way bond lines 1 px and two-way lines 0.5 px, retaining both
+  visibility and the strength distinction. A read-only live browser check
+  confirmed both widths across the existing bond colors; build and version
+  tests passed. The saved universe and bond calculations were not changed.
+
+## 0.19.0 - 2026-11-15
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: minor
+
+### Changes
+
+- Every pop-out tries to connect on each phase, excluding itself and the
+  seeder. Attempts and their outcomes are saved, existing bonds stay intact,
+  and older snapshots continue under the new rules. The graph displays all
+  recorded bonds and counts current two-quark bond types as observations,
+  not letters or learned probabilities.
+- Twenty universe tests, version checks, and the production build passed,
+  including repeated attempts, existing bonds, old history, and save/replay;
+  Pylance reported no syntax errors or Python diagnostics. Simulated browser checks covered updated graph/counts and
+  expandable attempts; a read-only live check kept the state hash unchanged.
+  An in-memory 100-reveal run recorded 20,000 attempts and about 2.2 MB of
+  JSON: larger runs can become slow and storage-heavy. This does not yet
+  model letter formation, letter probabilities, or bond evolution.
+
+## 0.18.1 - 2026-11-15
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: patch
+
+### Changes
+
+- Made quarks smaller and scattered their positions deterministically for
+  display only. Replaced arrowheads with solid lines whose widths show the
+  recorded strength in one direction; exact direction remains in the tooltip
+  and activity log. No partner choices or learning calculations changed.
+- Sixteen universe tests, version checks, and the production build passed. A simulated browser
+  checked 1,001 quarks, all bond colors and widths, absent arrowheads, stable
+  positions after adding a quark and reloading, and follow/manual scrolling.
+  The live state hash remained unchanged. This does not implement physical
+  movement, bond evolution, or arrow-based accessibility.
+
+## 0.18.0 - 2026-11-15
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: minor
+
+### Changes
+
+- Unified the Universe Lab graph around individual quarks and recorded
+  directional bonds. The first pop-out floats; each later one selects an
+  earlier pop-out uniformly, never the seeder, and selects between the four
+  approved equally likely starting outcomes. Same-bit bonds are supported.
+- Choices and the random seed persist and replay with saved experiments.
+  Earlier quarks remain present without fabricated historical bonds. Bond
+  evolution, attraction, repulsion, and bond-based prediction are not yet
+  implemented; the existing seeder and predictor remain separate.
+- Sixteen isolated universe tests passed, including first-floater behavior,
+  all four outcomes, same-bit bonds, corrupt bonds, and save/replay; four
+  earlier-lab tests, Pylance checks, build, and version tests passed. A
+  simulated browser checked 90 distinct quarks, colors and directions,
+  adding a quark, and following the newest one. A read-only live check
+  showed the 24 existing quarks without invented bonds; the real run was
+  not advanced.
+
+## 0.17.2 - 2026-11-15
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: patch
+
+### Changes
+
+- Made connection updates easier to see with counts on the arrows and a
+  description of the latest revealed connection and next phase. Counts
+  still change only when the seeder reveals a bit; no learning rules changed.
+- A copy of the user's run verified that the next reveal advances `0 -> 1`
+  from 11 to 12. A simulated browser verified the displayed connection and
+  arrow counts change on reveal, not measurement; a read-only live check
+  verified the new display. Build, version tests, and ten universe tests
+  passed. The live universe was not stepped by these checks.
+
+## 0.17.1 - 2026-11-15
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: patch
+
+### Changes
+
+- Placed shared step, run, and pause controls beside both Universe Lab
+  visualizations while retaining the existing controls at the top. All
+  copies operate the same current run.
+- The build, version test, and ten isolated universe tests passed. A
+  simulated browser API verified stepping, cross-panel pause, and
+  zero-energy controls; a read-only live check confirmed both new button
+  groups were enabled. The live universe was not advanced by testing.
+
+## 0.17.0 - 2026-11-15
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: minor
+
+### Changes
+
+- Added a directional connection view for observed bit transitions. Each
+  reveal increases the appropriate direction's count; predictions do not
+  count. Observations are reconstructed from event history, preserving old
+  saves and the existing state and predictor. Arrow thickness has a visual
+  cap; the displayed counts do not.
+- The connections describe the supplied seeder's history, not learned
+  weights; the predictor does not use them. Letter and later stages remain
+  unimplemented.
+- Ten isolated universe tests and four earlier-lab tests passed; the build,
+  version tests, and Pylance syntax/diagnostic checks passed. A simulated
+  browser API showed all four connection states and repeated counts.
+  A read-only live check showed seven transitions in each direction and the
+  same original state-file fingerprint; no live run was reset or advanced.
+
+## 0.16.0 - 2026-11-15
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: minor
+
+### Changes
+
+- Added local named Universe Lab saves, safe reset and restore choices, and
+  confirmed deletion. Complete mid-cycle state is saved; stale browser
+  revisions are rejected. Saved copies are Git-ignored, not backed up.
+- Eight isolated universe tests and four earlier-lab tests passed, including
+  protected replacement, stale requests, archive integrity, and mid-cycle
+  restoration. A browser test with a simulated API checked the controls and
+  confirmation cancellation. Pylance reported no syntax errors or
+  diagnostics for the universe code and tests; build and version tests passed.
+- After the user-approved restart, both services responded and the updated
+  API reported the original live universe unchanged: 58 events, zero energy,
+  and `predict` next. No destructive tests used that universe. The browser
+  interaction test used a simulated API, not the live experiment.
+
+## 0.15.0 - 2026-11-15
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: minor
+
+### Changes
+
+- Added an isolated Universe Lab in the Base Model Lab view. A spark creates
+  the first `1`; a user-designed seeder supplies growing batches of `01`
+  pairs. A small from-scratch predictor shows its prediction before each
+  reveal, then its error and weight update as separate steps. Energy is
+  finite, adjustable, and persisted along with the event history.
+- The new page shows connected bit events, plain-language source
+  annotations, and the actual activity log. The earlier base teaching trace
+  remains accessible; the active chat model and memory are not used by the
+  experiment. The supplied seeder is a toy environment, not evidence of
+  spontaneous emergence or language generation.
+- Four universe tests and four earlier-lab tests passed; the build, version
+  test, and Pylance syntax/diagnostic checks passed. An isolated browser
+  test verified spark, each learning phase, graph, pause, and saved-state
+  reload. After the approved app restart, both services responded, the
+  experiment remained empty, and chat remained on round 39.
+
+## 0.14.0 - 2026-11-15
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: minor
+
+### Changes
+
+- Added per-answer retention gates to immediate corrections and permanent,
+  active-authored, and corpus continuation. An improved overall score no
+  longer hides a previously correct approved answer becoming incorrect.
+  An explicitly corrected input supersedes its old target; unrelated
+  approved examples remain protected. The correction report records
+  before/after retention and rejected attempts retain their evidence.
+- The feedback API timeout is ten minutes because retention evaluation
+  adds generation work. No alphabet, corpus item, or spacing encoding was
+  changed. The safeguard protects exact approved answers, not arbitrary
+  paraphrases or every teacher-forced corpus position.
+- In an isolated replay from round 38, the earlier `Name?` → `Mira`
+  correction was rejected because it lost 30 previously correct approved
+  answers; the isolated parent remained unchanged. This check is not
+  retroactive: the live correction checkpoint remains active.
+- All 29 training and correction tests and 12 chat/context tests passed;
+  the production build and version test passed. The corpus hash remained
+  unchanged. After the user approved a restart, both local services were
+  responsive and the chat API still selected round 39.
+
+## 0.13.1 - 2026-11-15
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: patch
+
+### Changes
+
+- With user approval, raised only the immediate chat-feedback saturation
+  limit from 0.6 to 0.65; ordinary corpus-training limits remain unchanged.
+  Successful correction reports record the measured saturation and limit.
+- Three focused tests passed, including acceptance at 0.65 and rejection
+  immediately above it. The submitted `Name?` → `Mira` correction replayed,
+  activated in a separate round 39, and returned `Mira` from live weights;
+  its correction-set saturation was 0.6424. The previously rejected corpus
+  candidate remains rejected, and round 38 is the rollback selection.
+- All 14 immediate-correction tests passed, as did the production build and
+  version check/test. The chat API reported the correction checkpoint active.
+- The higher limit does not guarantee retention of other answers, nor does
+  an exact response establish generalization. Correction and corpus
+  saturation are measured over different sets.
+- A later baseline compared round 39's active correction checkpoint with
+  round 38 on the same recorded cases: teaching fell 232/279 to 203/279,
+  development 29/64 to 26/64, and prior feedback 11/23 to 5/23. Five
+  exploratory name prompts returned `Mira` or `Mira.`; these prompts were
+  evaluation only, not added to training.
+- An isolated 0.01-rate corpus continuation from round 39 made 6,100
+  updates in 60.75 update-CPU seconds and replayed exactly. Teaching rose
+  204/280 to 236/280, development 26/64 to 29/64, complete pairs 10/32 to
+  12/32, feedback 6/24 to 10/24, and teacher-forced corpus positions
+  214/536 to 286/536. It was rejected because saturation reached 0.6091
+  and the previously correct `Name?` answer changed from `Mira` to `Mira.`.
+  The isolated trial did not change live weights; these reused cases and
+  training positions are not independent generalization evidence.
+
+## 0.13.0 - 2026-11-15
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: minor
+
+### Changes
+
+- Expanded the approved corpus with the user's new text, the approved
+  correction from “runds” to “runs,” three fragments, and seven historical
+  Layer 0 seeds with source-boundary metadata. Layer 0 itself remains
+  unchanged; the marker `</>` is not taught as ordinary output text.
+- Added a case-sensitive three-identical-character output constraint for
+  live neural chat, including whitespace and whole-word emissions.
+  Continuation and correction evaluations use the same rule; corrections
+  containing such runs fail explicitly. The original comparison control is
+  unchanged.
+- The chat, active training, permanent training, and conversation context
+  suites passed 24 tests; two focused correction tests passed. Real live-model
+  generations for three prompts had no triple repeats. Pylance reported no
+  diagnostics for the changed core modules checked. The production build
+  and version test passed.
+- This constrains output rather than proving learned grammar. The 30 corpus
+  records have 12 conflicting teacher-forced input groups across records;
+  no individual record had a conflict. The training data is not an
+  independent generalization test.
+- The expanded-corpus continuation made 6,200 updates in 60.28 update-CPU
+  seconds and replayed exactly, but was rejected: the 1,200-update hidden
+  saturation was 0.607 (limit 0.6), teaching fell 227/279 to 222/279, and
+  a previously correct feedback answer was lost. Feedback fell 10/23 to
+  9/23; development rose 29/64 to 32/64 and paired development 13 to 14.
+  Teacher-forced corpus accuracy rose 75/536 to 147/536 after vocabulary
+  expansion, not a free-running answer test. The fox/wizards answer remained
+  incorrect, and round 34 stayed live.
+- After those losses were disclosed, the user requested training the
+  rejected candidate in. Both milestones, complete weights, development,
+  and feedback outputs independently replayed; isolated promotion and
+  rollback passed. The specific candidate was then activated as round 35
+  under a separate user-authorization record, preserving the original
+  rejected report and round 34 as rollback. This does not relax later
+  continuation safeguards.
+- A guarded repeat made 5,800 updates in 60.99 update-CPU seconds and
+  replayed exactly, but was rejected for saturation, teaching and paired
+  development regressions, and losing a previously correct feedback answer.
+  Teaching fell 222/279 to 219/279, development 32/64 to 29/64, and
+  development pairs 14 to 11; feedback increased 9/23 to 10/23 overall.
+  Teacher-forced corpus accuracy improved 147/536 to 194/536, but the
+  fox/wizards response remained wrong. Round 35 stayed live.
+- After these regressions were disclosed, the user authorized promoting
+  that specific rejected repeat. Both milestones, complete weights,
+  development, and feedback replayed independently; isolated promotion and
+  rollback passed. It became round 36, retaining the original rejection
+  and round 35 rollback.
+- The next guarded corpus continuation made 6,500 updates in 60.64
+  update-CPU seconds, replayed exactly, passed the normal safeguards, and
+  activated as round 37 with round 36 as rollback. Teaching improved
+  219/279 to 227/279, approved feedback 10/23 to 11/23, and teacher-forced
+  corpus positions 194/536 to 227/536. Reused development remained 29/64
+  with 11/32 fully correct pairs. The fox/wizards answer changed from
+  `Orare.` to `Sere.`, still incorrect. The corpus score measures training
+  positions, not free-running generalization; evaluation and replay take
+  additional elapsed time.
+- The next guarded candidate made 6,500 updates in 60.17 update-CPU
+  seconds and replayed exactly, but was rejected because final hidden
+  saturation reached 0.6025 (limit 0.6). Teaching rose 227/279 to 232/279
+  and teacher-forced corpus positions 227/536 to 245/536; development
+  remained 29/64, fully correct pairs improved 11/32 to 12/32, and feedback
+  remained 11/23. The fox/wizards prediction remained `Sere.`. Round 37
+  stayed active with round 36 as rollback.
+- The user then explicitly authorized activation despite the disclosed
+  saturation. Both milestones, complete weights, development, and feedback
+  independently replayed; isolated promotion and rollback passed. The
+  candidate was activated as round 38, preserving its original rejection,
+  all 23 approved records, and round 37 as rollback. Future training keeps
+  the normal safeguards.
+- A further guarded run made 6,200 updates in 60.82 update-CPU seconds
+  and replayed exactly, but was rejected for saturation (0.6157), teaching
+  regression, and loss of previously correct feedback. Teaching fell
+  232/279 to 228/279, development 29/64 to 28/64, and feedback 11/23 to
+  10/23, with three previously correct feedback answers lost. Complete
+  development pairs remained 12/32 and teacher-forced corpus positions
+  rose 245/536 to 266/536. The fox/wizards prediction changed from `Sere.`
+  to `Sure.`, still incorrect. Round 38 stays active, with round 37 rollback.
+
+## 0.12.0 - 2026-11-14
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: minor
+
+### Changes
+
+- Added the six user-supplied pangram, alphabet, and digit items as a
+  provenance-recorded, review-gated corpus. The separate corpus trainer
+  uses a fixed input-only text boundary, expands approved character,
+  identity, and gap symbols, and mixes corpus positions with approved
+  conversation rehearsal. Ordinary continuation does not automatically
+  rehearse the corpus.
+- A focused test verified review-hash enforcement, distinguishable digit
+  positions, deterministic updates, activation, rejection, and rollback.
+  Pylance reported no diagnostics for the corpus training module. Corpus
+  measurements are training-set results, not independent generalization
+  evidence; user approval is not legal clearance.
+- The active-training and conversation-context suites passed 16 tests, and
+  the production build and version test passed.
+- The 60-second corpus continuation made 6,000 updates and replayed exactly,
+  but was rejected: teaching fell 227/279 to 223/279, development pairs
+  fell 13 to 12, and a previously correct feedback answer was lost.
+  Individual development exact answers rose 29/64 to 30/64; feedback stayed
+  10/23 overall. Teacher-forced corpus token accuracy rose 15/181 to 85/181
+  after alphabet expansion, which measures training examples rather than
+  free-running recall. Round 34 remained live and the rejected report was
+  retained.
+
+## 0.11.1 - 2026-11-14
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: patch
+
+### Changes
+
+- Fixed a measured same-input/different-target collision in the explicitly
+  reviewed fox/wizards pair by adding two partial-word-length context slots.
+  The new connections begin at zero; previous checkpoints still restore.
+  Lengths through 4095 are represented; longer partial words fail explicitly.
+- In isolated and live migration checks, the pair's conflicting inputs
+  decreased from one to zero. Teaching remained 212/256, development 32/64,
+  and approved feedback 8/23, with no changed predictions. Migration replay
+  and isolated rollback passed; the live previous checkpoint was preserved.
+  The migration itself performed no training updates.
+- The context, active training, permanent training, and chat suites passed
+  22 tests; the correction suite passed 12 tests. Pylance reported no
+  diagnostics for the changed migration, context, training, and correction
+  modules. A focused correction test also passed on the new 130-slot
+  checkpoint. The production build and version test passed; the running chat
+  API reported the migrated checkpoint.
+- A guarded continuation from round 33 activated as round 34 after 6,300
+  updates and 60.07 update-CPU seconds, with exact weight and milestone
+  replay. Teaching improved 220/279 to 227/279 and feedback 8/23 to 10/23;
+  individual development exact answers fell 32/64 to 29/64, while fully
+  correct development pairs rose 12 to 13. The fox/wizards answer remained
+  incorrect. The gate checks paired development accuracy, not the individual
+  exact count, and protects previously correct approved feedback.
+- This fixes the measured representation conflict, not every possible
+  collision or a guarantee of producing the requested answer. Development
+  examples are reused and are not an independent generalization test.
+
+## 0.11.0 - 2026-11-14
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: minor
+
+### Changes
+
+- Added a reviewed, replayable structural migration for the 32 approved
+  word identities, uppercase `Q` and `X`, and learnable space-count features
+  for the represented word gaps. No new examples are approved or trained by
+  this migration. Previous weights and token IDs are retained and rollback
+  is preserved.
+- Space counts are distinct through 4095 and larger gaps fail explicitly.
+  The feature does not distinguish all arrangements of spaces, tabs, and
+  punctuation and does not guarantee learned spacing or word meaning.
+- A synthetic correction containing two spaces after a question mark trained
+  and replayed on the migrated architecture. The initial 50-call timing
+  probe showed about 1.7 times the parent inference CPU. Four focused
+  migration, correction, and activation/rollback tests passed. In an isolated
+  copy of round 25, exact answers stayed 179/256 teaching, 26/64 development,
+  and 3/19 feedback, with no changed predictions. Migration activation and
+  rollback both worked in that copy. The development cases are reused.
+- The production build and version tests passed, as did focused chat,
+  continuation, correction, and context tests. Pylance reported no
+  diagnostics for the changed core files.
+- A later 108-character correction regression failed on the migrated
+  architecture within the existing 30-second update-CPU budget; the
+  original architecture learned the same synthetic answer in 5,250 updates.
+  The first live migration attempt was stopped before promotion, leaving
+  active chat and progress matched at round 25 during investigation.
+  With the update-CPU budget raised to 60 seconds in an isolated test, the
+  migrated model learned the same answer in 4,900 updates and replayed it.
+  A masked-output calculation optimization alone did not resolve the
+  30-second failure and was removed.
+- With user approval, the new spacing architecture now has a 60-second
+  update-CPU budget (older checkpoints retain 30), and the feedback API
+  timeout is four minutes. The local app was restarted and both backend
+  and frontend responded. Longer correction fitting remains unguaranteed.
+- After 32 targeted regression tests and the isolated HTTP route test passed,
+  the migration's live checks again preserved 179/256 teaching, 26/64
+  development, and 3/19 feedback answers, with no changed predictions.
+  It activated as round 26 without optimizer updates. Active and permanent
+  checkpoint hashes match; the round-25 rollback selection and progress
+  checkpoint verified, and the latest approved correction reproduced exactly.
+  The restarted backend reports round 26 and the frontend responds.
+
+## 0.10.0 - 2026-11-14
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: minor
+
+### Changes
+
+- Raised the conversation correction limit to 319 characters and generation
+  limit to 320; evaluation leaves room for the newline on longer answers.
+  Longer corrections use learning rate .06 rather than .03.
+- Added a backward-compatible, checkpointed spacing representation when a
+  correction has conflicting training inputs, preserving the old embeddings
+  at migration and rejecting unresolved conflicts explicitly.
+- Preserved full contextual feedback hashes in later authored continuation.
+- The user's 35-character correction was successfully trained and replayed
+  in an isolated checkpoint copy, after its whitespace collision was removed.
+  In that copy, previously approved feedback stayed 2/18 exact and the
+  existing development examples changed from 25/64 to 26/64. A synthetic
+  108-character correction also trained, replayed and generated exactly.
+  These checks do not prove general fitting, retention, or chat accuracy.
+- Validation: 27 targeted neural, continuation, and isolated HTTP tests
+  passed, along with the production build, version check, graph-template
+  check, and Pylance diagnostics for the changed core files. After the app
+  service stopped, it was restored and the previously submitted correction
+  was retried through the local API. It trained in 1,750 updates, replayed
+  exactly, and activated as round 25; the active and progress checkpoints
+  match and inference with the original context reproduces the exact answer.
+
+## 0.9.0 - 2026-11-14
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: minor
+
+### Changes
+
+- Added opt-in experimental follow-up context for the active conversation
+  model. It supplies the preceding visible exchange, not retrieved memories;
+  single-turn chat remains the default.
+- Saved the exact model input turns as response provenance and included them
+  in explicitly approved feedback training, review hashes, and replay.
+  Existing single-turn feedback retains its original hash and behavior.
+- The current model is not a grounded assistant and context is not guaranteed
+  to improve its replies. On 16 previously inspected multi-turn development
+  cases, the active checkpoint scored 10/16 with full context and 12/16 with
+  only the final turn. Four additional context-dependent paired examples scored
+  5/8 with context and 0/8 without; neither set establishes general ability.
+- Validation: 14 focused neural-chat, correction, and isolated HTTP tests
+  passed, as did six training-continuation tests and the production build.
+  An isolated browser mock displayed the option off by default and showed
+  the contextual-reply notice after a follow-up; it did not use live memory.
+  With the user's approval, restarted the development app and verified that
+  the live backend advertises the capability and the checkbox appears. No live
+  weights or training inputs were changed by these checks.
+
+## 0.8.0 - 2026-11-14
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: minor
+
+### Changes
+
+- Made within-galaxy connectors more visible and colorful without moving
+  ordinary cross-galaxy links in front of fills. Strengthened the simulated
+  per-galaxy depth of memories with radial lighting and size scaling.
+  Graph membership, saved search, and learned weights are unchanged.
+- Made the additional AI Memory strength gradient slightly darker and
+  independent of age and display depth; the existing depth lighting remains.
+  Selected, recalled, important, and search-matched
+  memories retain their existing emphasis. Strength comes from the existing
+  learned score, which reflects decay and feedback.
+- Strengthened the main galaxy shells' highlights, rim, and shading without
+  covering internal memories or connections.
+- Made base memory sizes relative to each galaxy using learned-score rank
+  and total connection-strength rank, while retaining the depth and
+  consolidation effects. This changes presentation only.
+- Made ordinary links within all galaxies fade with their connection
+  strength, while preserving created and recalled highlights and existing
+  cross-galaxy behavior. This does not remove or change stored links.
+- Added AI Memory candidate previews without changing their membership, and
+  replaced session-based promotion gates with five distinct user contributions
+  plus cohesion. Candidate evidence combines topic similarity and current
+  stored connection strengths. Session provenance remains recorded.
+- Removed candidate preview borders and moved them closer to AI Memory, with
+  the same hover panel as baby galaxies. Reduced the Chat heading by 20px and
+  navigation-button height by 15px at the measured desktop size.
+- Added candidate-edge placement for unclaimed AI Memory messages connected
+  only within the parent. The strongest candidate link chooses their placement;
+  ties remain in the parent. They do not vote toward promotion, retain their
+  links and parent provenance, and become sticky child members on promotion.
+- Preserved a saved message-link strength when promotion changes its rendered
+  kind between sequence and transition.
+- Validation of candidate-edge behavior: 28 memory-cluster tests, the version
+  check, JavaScript syntax check, and production build passed. A regeneration
+  in a temporary copy retained transcript content, provenance, source links,
+  saved node values and link strengths, query, and sidebar state. In the live
+  graph two eligible messages appeared on candidate edges and retained AI
+  Memory as their parent. No AI Memory child was promoted in this live check;
+  promotion and sticky retention were exercised by tests instead. The existing
+  child-parent link remains at strength 0.5, not a newly increased weight.
+- Validation: 24 memory-cluster tests, the version check, JavaScript syntax
+  check, and production build passed. The live graph rendered seven AI Memory
+  candidate previews containing 22 memories, all retaining their parent
+  domain; preview circles did not overlap other galaxy circles. Regeneration
+  preserved transcript text, provenance, links, saved node values, link
+  strengths, query, and sidebar state. After the latest appearance changes,
+  all seven candidates have no dashed boundary, sit five graph units from the
+  AI Memory boundary, and provide the shared hover panel; hovering a candidate
+  opens its member list and leaving closes it. At the observed desktop width,
+  the title changed from 57.5px to 37.5px and navigation buttons from 34px to
+  19px. These checks do not confirm the user's visual preference. Previously, in the live graph,
+  AI Memory's 10th-to-90th percentile base-radius spread changed from
+  4.49-5.82 to 3.40-6.44 graph units; 367 AI Memory nodes and nine galaxy
+  layout groups were rendered in that check. A later live check showed
+  5,184 ordinary internal links with strength-based opacity (median 0.33),
+  and the created/recalled highlight was unaffected. AI Memory's radius was
+  171.13 out of 180 graph units. The rendered graph matched its template
+  while retaining its embedded graph data. These checks confirm rendering
+  behavior, not the user's visual preference.
+
 ## 0.7.0 - 2026-11-13
 
 Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`

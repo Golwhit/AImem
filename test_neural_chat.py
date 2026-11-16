@@ -3,10 +3,12 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from neural_candidate_layers import CandidateIndex
-from neural_chat import activate, activate_base, generate, status, DIRECTORY, BASE_MODEL
-from neural_base_comparison import WordBase, generate as generate_base
+from neural_chat import activate, activate_base, generate, status, DIRECTORY, BASE_MODEL, CONVERSATION_MODEL
+from neural_base_comparison import WordBase, generate as generate_base, introduces_triple_repeat
+from neural_conversation_trial import prompt_for
 from neural_experiment import NeuralModel
 
 
@@ -99,6 +101,43 @@ class NeuralChatTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 generate(self.root, payload)
 
+    def test_conversation_history_is_optional_bounded_and_sent_to_the_model(self):
+        record = {"model": CONVERSATION_MODEL, "passes": 1,
+                  "source": {"training": "fixture", "training_sha256": "a" * 64}}
+        history = [{"role": "user", "content": "The box is blue."},
+                   {"role": "assistant", "content": "Okay."}]
+        with patch("neural_chat.load_active", return_value=(record, object(), None)), \
+                patch("neural_chat.generate_base", return_value={"text": "Blue.\n"}) as sample:
+            result = generate(self.root, {"prompt": "What color?", "history": history})
+            turns = history + [{"role": "user", "content": "What color?"}]
+            self.assertEqual(sample.call_args.args[1], prompt_for({"turns": turns}))
+            self.assertTrue(sample.call_args.kwargs["no_triple_repeat"])
+            self.assertEqual(result["input_turns"], turns)
+            self.assertEqual(result["text"], "Blue.")
+            self.assertNotIn("input_turns", generate(self.root, {"prompt": "What color?"}))
+            for invalid in ([history[0]], history * 2,
+                            [{"role": "assistant", "content": "Wrong order"}, history[1]],
+                            [history[0], {"role": "assistant", "content": "\x00"}]):
+                with self.assertRaises(ValueError):
+                    generate(self.root, {"prompt": "What color?", "history": invalid})
+
+        activate(self.root, chat_fixture(self.root))
+        with self.assertRaisesRegex(ValueError, "requires the conversation model"):
+            generate(self.root, {"prompt": "What color?", "history": history})
+
+    def test_triple_filter_masks_character_and_whole_word_outputs(self):
+        model = WordBase("aaa b \n", 17)
+        for values in model.model.weights.values():
+            values[:] = [0.0] * len(values)
+        model.model.weights["output_bias"][model.model.tokens["emit:aaa"]] = 20.0
+        model.model.weights["output_bias"][model.model.tokens["char:a"]] = 10.0
+        self.assertIn("aaa", generate_base(model, "", length=12)["text"])
+        filtered = generate_base(model, "", length=30, no_triple_repeat=True)["text"]
+        self.assertFalse(introduces_triple_repeat("", filtered))
+        self.assertTrue(introduces_triple_repeat("xx", "xy"))
+        self.assertTrue(introduces_triple_repeat("", "   "))
+        self.assertFalse(introduces_triple_repeat("", "aAa"))
+
     def test_new_base_retires_layers_and_pins_original_without_training(self):
         activate(self.root, chat_fixture(self.root))
         old_selection = (self.root / DIRECTORY / "active.json").read_bytes()
@@ -111,7 +150,7 @@ class NeuralChatTests(unittest.TestCase):
             "retired-selection-" + hashlib.sha256(old_selection).hexdigest() + ".json")).read_bytes(), old_selection)
         source = self.root / ".data/neural-base-comparison" / run_id
         checkpoint = json.loads((source / "17-new-passes-4.json").read_text())
-        expected = generate_base(WordBase.restore(checkpoint["state"]), "A ", length=32)
+        expected = generate_base(WordBase.restore(checkpoint["state"]), "A ", length=32, no_triple_repeat=True)
         result = generate(self.root, {"prompt": "A ", "max_chars": 32})
         for key in expected:
             self.assertEqual(result[key], expected[key])

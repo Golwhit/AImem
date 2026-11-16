@@ -49,11 +49,22 @@ class WordBase:
                        + ["identity:<other>"]
                        + sorted(set(gaps)))
         self.model = NeuralModel(symbols, seed=seed)
+        self.gap_encoding = "legacy"
         self.payloads = {token: symbol[5:]
                          for symbol, token in self.model.tokens.items()
                          if symbol.startswith(("char:", "emit:"))}
         self.word_tokens = {token for symbol, token in self.model.tokens.items() if symbol.startswith("emit:")}
         self.character_tokens = set(self.payloads) - self.word_tokens
+
+    def context_gap(self, gap: str) -> str:
+        original = gap_symbol(gap)
+        if self.gap_encoding == "trailing-spaces-v1":
+            spaces = len(gap) - len(gap.rstrip(" "))
+            if spaces:
+                specific = f"{original}:trailing-spaces:{spaces}"
+                if specific in self.model.tokens:
+                    return specific
+        return original
 
     @staticmethod
     def gaps(text: str) -> list[str]:
@@ -115,7 +126,7 @@ class WordBase:
             gap = prefix[previous.end() if previous else 0:partial.start()]
             tail = partial.group()[-2:]
             return [identity(previous) if previous else 0,
-                    self.model.tokens.get(gap_symbol(gap), 1),
+                    self.model.tokens.get(self.context_gap(gap), 1),
                     *([0] * (2 - len(tail))), *(self.model.tokens.get("char:" + c, 1) for c in tail)]
         context = []
         for i in (-2, -1):
@@ -125,7 +136,7 @@ class WordBase:
                 match = completed[i]
                 following_start = completed[i + 1].start() if i == -2 else len(prefix)
                 gap = prefix[match.end():following_start]
-                context.extend([identity(match), self.model.tokens.get(gap_symbol(gap), 1)])
+                context.extend([identity(match), self.model.tokens.get(self.context_gap(gap), 1)])
         return context
 
     def prior(self, prefix: str, remaining: int | None = None) -> list[float]:
@@ -148,27 +159,38 @@ class WordBase:
         return result
 
     def snapshot(self) -> dict:
-        return {"lexicon": self.lexicon, "symbols": self.model.characters, "weights": self.model.weights}
+        result = {"lexicon": self.lexicon, "symbols": self.model.characters, "weights": self.model.weights}
+        if self.gap_encoding != "legacy":
+            result["gap_encoding"] = self.gap_encoding
+        return result
 
     @classmethod
     def restore(cls, state: dict) -> "WordBase":
         model = cls("", 17, lexicon=state["lexicon"], symbols=state["symbols"])
+        model.gap_encoding = state.get("gap_encoding", "legacy")
+        if model.gap_encoding not in ("legacy", "trailing-spaces-v1"):
+            raise ValueError("Unsupported word-gap encoding")
         model.model.weights = state["weights"]
         return model
 
 
 def generate(model: NeuralModel | WordBase, prompt: str, index: CandidateIndex | None = None,
-             *, length: int = 64) -> dict:
+             *, length: int = 64, no_triple_repeat: bool = False) -> dict:
     if type(length) is not int or not 1 <= length <= 500:
         raise ValueError("Generation length must be an integer from 1 to 500 characters")
     if "\x00" in prompt:
         raise ValueError("Prompt contains the reserved layer namespace")
+    if type(no_triple_repeat) is not bool or (no_triple_repeat and index is not None):
+        raise ValueError("Three-repeat filtering requires a layer-free model and a boolean setting")
     extracted = index.extract(prompt, open_tail=True) if index else None
     history = extracted["pieces"] if extracted else list(prompt)
     remainder = extracted["remainder"] if extracted else prompt
     output = ""
     pending = ""
     calls = lookups = emissions = 0
+    invalid_payloads = ({token for token, payload in model.payloads.items()
+                         if introduces_triple_repeat("", payload)}
+                        if no_triple_repeat and isinstance(model, WordBase) else set())
     while len(output) < length:
         if index:
             choices = index.choices(history, length - len(output))
@@ -184,8 +206,12 @@ def generate(model: NeuralModel | WordBase, prompt: str, index: CandidateIndex |
             payload = pending[0]
             pending = pending[1:]
         elif isinstance(model, WordBase):
-            probabilities = model.model.forward(model.context(remainder),
-                output_prior=model.prior(remainder, length - len(output)))[2]
+            prior = model.prior(remainder, length - len(output))
+            if no_triple_repeat:
+                for token, candidate in model.payloads.items():
+                    if token in invalid_payloads or introduces_triple_repeat(output, candidate[:2]):
+                        prior[token] = 0.0
+            probabilities = model.model.forward(model.context(remainder), output_prior=prior)[2]
             if (not all(math.isfinite(value) and value >= 0 for value in probabilities)
                     or not any(probabilities[token] > 0 for token in model.payloads)):
                 raise ArithmeticError("Hybrid generation has no finite payload probability mass")
@@ -196,7 +222,11 @@ def generate(model: NeuralModel | WordBase, prompt: str, index: CandidateIndex |
         else:
             context = ([0] * model.context +
                        [model.tokens.get(c, 1) for c in remainder[-model.context:]])[-model.context:]
-            probabilities = model.forward(context)[2]
+            prior = None
+            if no_triple_repeat:
+                prior = [0.0, 0.0] + [
+                    float(not introduces_triple_repeat(output, char)) for char in model.characters]
+            probabilities = model.forward(context, output_prior=prior)[2]
             if (not all(math.isfinite(value) and value >= 0 for value in probabilities)
                     or not any(probabilities[2:])):
                 raise ArithmeticError("Character generation has no finite output probability mass")
@@ -207,6 +237,15 @@ def generate(model: NeuralModel | WordBase, prompt: str, index: CandidateIndex |
         remainder += payload
         history.extend(payload)
     return {"text": output, "neural_calls": calls, "index_lookups": lookups, "indexed_emissions": emissions}
+
+
+def introduces_triple_repeat(output: str, payload: str) -> bool:
+    tail = output[-2:]
+    for char in payload:
+        if len(tail) == 2 and tail[0] == tail[1] == char:
+            return True
+        tail = (tail + char)[-2:]
+    return False
 
 
 def evaluate(model, items: list[dict], index=None) -> dict:

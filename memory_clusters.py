@@ -15,10 +15,7 @@ DOMAIN_TERMS = {
     "entertainment": {"television", "series", "entertainment", "mcgyver", "macgyver", "trek"},
 }
 MIN_INTERACTIONS = 5
-MIN_SESSIONS = 3
 MIN_COHESION = 0.30
-MIN_SUSTAINED_INTERACTIONS = 8
-MIN_SUSTAINED_SPAN = 7
 DISCOVERY_NOISE = STOP_WORDS | {
     "alright", "hello", "test", "yes", "okay", "sounds", "good", "need",
     "want", "let", "step", "next", "correct", "still", "enough",
@@ -132,13 +129,21 @@ def is_contextual_followup(text: str) -> bool:
     }
 
 
-def update_clusters(transcript: dict) -> dict[str, dict]:
+def update_clusters(transcript: dict, graph_links: list[dict] | None = None) -> dict[str, dict]:
     messages = transcript["messages"]
+    previous = transcript.get("clusters", {})
+    preserved_borders = {
+        member_id: key
+        for key, cluster in previous.items()
+        if cluster.get("promoted") and cluster.get("parent_domain") == "memory"
+        for member_id in cluster.get("border_members", [])
+    }
     users = []
     current_subject = "evaluation"
     session_subjects = {}
     for position, message in enumerate(messages):
         message.pop("candidate_cluster", None)
+        message.pop("border_cluster", None)
         if message["role"] == "You":
             current_subject = subject_for_message(message)
             session_id = message.get("session_id")
@@ -148,20 +153,39 @@ def update_clusters(transcript: dict) -> dict[str, dict]:
                 session_subjects[session_id] = current_subject
             message["parent_domain"] = current_subject
             text = discovery_text(message)
-            if len(set(text.split())) >= 2:
+            if len(set(text.split())) >= 2 and message["id"] not in preserved_borders:
                 users.append({**message, "text": text, "position": position})
         message["domain"] = current_subject
         message["parent_domain"] = current_subject
 
-    links = infer_similarity_links(users, max_neighbors=len(users), min_similarity=MIN_COHESION)
+    weights = {}
+    for link in transcript.get("links", []):
+        if link.get("kind") == "parent" or link["source"] == link["target"]:
+            continue
+        pair = frozenset((link["source"], link["target"]))
+        weights[pair] = max(weights.get(pair, 0), link["strength"])
+    if graph_links is not None:
+        graph_weights = {}
+        for link in graph_links:
+            if link.get("kind") == "parent" or link["source"] == link["target"]:
+                continue
+            pair = frozenset((link["source"], link["target"]))
+            graph_weights[pair] = max(graph_weights.get(pair, 0), link["strength"])
+        weights.update(graph_weights)
+    links = infer_similarity_links(users, max_neighbors=len(users), min_similarity=MIN_COHESION * 0.5)
     adjacency = {message["id"]: set() for message in users}
     scores = {}
     for link in links:
+        pair = frozenset((link["source"], link["target"]))
+        similarity = link["similarity"]
+        strength = min(1.0, max(0.0, weights.get(pair, similarity)))
+        score = 0.75 * similarity + 0.25 * strength
+        if score < MIN_COHESION:
+            continue
         adjacency[link["source"]].add(link["target"])
         adjacency[link["target"]].add(link["source"])
-        scores[frozenset((link["source"], link["target"]))] = link["similarity"]
+        scores[pair] = score
 
-    previous = transcript.get("clusters", {})
     # Promotion is permanent: members of a promoted galaxy stay with it, and the
     # galaxy can only be absorbed or split, never returned to evaluation.
     sticky = {
@@ -211,21 +235,18 @@ def update_clusters(transcript: dict) -> dict[str, dict]:
         sessions = {message["session_id"] for message in members if message.get("session_id")}
         distinct = len({message["text"] for message in members})
         span = max(message["position"] for message in members) - min(message["position"] for message in members)
-        sustained = False
-        for session_id in sessions:
-            session_members = [message for message in members if message.get("session_id") == session_id]
-            session_distinct = len({message["text"] for message in session_members})
-            session_span = max(message["position"] for message in session_members) - min(message["position"] for message in session_members)
-            if session_distinct >= MIN_SUSTAINED_INTERACTIONS and session_span >= MIN_SUSTAINED_SPAN:
-                sustained = True
         parent_counts = Counter(message["parent_domain"] for message in members)
         parent = sorted(parent_counts, key=lambda domain: (-parent_counts[domain], domain == "evaluation", domain))[0]
         pairs = len(members) * (len(members) - 1) / 2
         cohesion = sum(value for pair, value in scores.items() if pair <= component) / pairs
         promoted = bool(carried) or (
             len(members) >= MIN_INTERACTIONS
-            and (len(sessions) >= MIN_SESSIONS or sustained)
+            and distinct >= MIN_INTERACTIONS
             and cohesion >= MIN_COHESION
+        )
+        promotion_path = (
+            previous[matching].get("promotion_path", "previously-promoted")
+            if carried else "distinct-discussion" if promoted else "pending"
         )
         clusters[cluster_id] = {
             "anchor": anchor,
@@ -236,10 +257,10 @@ def update_clusters(transcript: dict) -> dict[str, dict]:
             "parent_domain": parent,
             "distinct_interactions": distinct,
             "interaction_span": span,
-            "promotion_path": "sustained-discussion" if sustained else "multiple-sessions",
+            "promotion_path": promotion_path,
             "cohesion": round(cohesion, 4),
             "promoted": promoted,
-            "reason": f"{len(members)} user interactions ({distinct} distinct), {len(sessions)} sessions, span {span}, cohesion {cohesion:.2f}",
+            "reason": f"{len(members)} user interactions ({distinct} distinct), cohesion {cohesion:.2f}",
         }
         for message in messages:
             if message["id"] in component:
@@ -272,5 +293,61 @@ def update_clusters(transcript: dict) -> dict[str, dict]:
             message["cluster_id"] = active_cluster
             if message["parent_domain"] == "evaluation" and clusters[active_cluster]["parent_domain"] == "evaluation":
                 message["parent_domain"] = active_cluster
+
+    nodes = {message["id"]: message for message in messages}
+    core = {}
+    claimed = set()
+    active_candidate = None
+    for message in messages:
+        if message["role"] == "You":
+            candidate = message.get("candidate_cluster")
+            active_candidate = candidate if candidate in clusters else None
+        if active_candidate:
+            claimed.add(message["id"])
+            if clusters[active_candidate]["parent_domain"] == "memory" and message["parent_domain"] == "memory":
+                core[message["id"]] = active_candidate
+    connected = {node_id: [] for node_id in nodes}
+    for pair, strength in weights.items():
+        if strength <= 0 or len(pair) != 2:
+            continue
+        first, second = tuple(pair)
+        if first not in nodes or second not in nodes:
+            continue
+        connected[first].append((second, strength))
+        connected[second].append((first, strength))
+
+    for cluster in clusters.values():
+        if cluster["parent_domain"] == "memory":
+            cluster["border_members"] = []
+    for node_id, message in nodes.items():
+        owner = preserved_borders.get(node_id)
+        if owner not in clusters or not clusters[owner]["promoted"]:
+            owner = None
+        if owner is None and node_id not in claimed and message["domain"] == "memory":
+            neighbors = connected[node_id]
+            if any(
+                nodes[other]["domain"] != "memory"
+                and (other not in core or previous.get(core[other], {}).get("promoted"))
+                for other, _ in neighbors
+            ):
+                continue
+            influences = {}
+            for other, strength in neighbors:
+                candidate = core.get(other)
+                if candidate:
+                    influences[candidate] = max(influences.get(candidate, 0), strength)
+            if influences:
+                strongest = max(influences.values())
+                winners = [candidate for candidate, value in influences.items() if value == strongest]
+                if len(winners) == 1:
+                    owner = winners[0]
+        if owner is None:
+            continue
+        clusters[owner].setdefault("border_members", []).append(node_id)
+        message["border_cluster"] = owner
+        if clusters[owner]["promoted"]:
+            message["domain"] = owner
+            message["cluster_id"] = owner
+            message["parent_domain"] = "memory"
     transcript["clusters"] = clusters
     return clusters

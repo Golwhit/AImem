@@ -1,0 +1,38 @@
+{
+  "title": "User-supplied text and foundational-seed corpus",
+  "provenance": "Text supplied by the user on 2026-11-14 and 2026-11-15; historical Layer 0 seed forms come from seed_life.py. The user approved changing 'runds' to 'runs'.",
+  "rights_note": "User approval and historical code provenance are declarations for this experiment, not legal clearance or a guarantee of exclusive rights.",
+  "limitations": "Small, repetitive training corpus; no independently held-out text. Standalone text is not conversation feedback.",
+  "training": [
+    "The quick brown fox jumps over the lazy dog.",
+    "Pack my box with five dozen liquor jugs.",
+    "Sphinx of black quartz, judge my vow.",
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+    "abcdefghijklmnopqrstuvwxyz",
+    "0123456789",
+    "Hello, world!",
+    "Don't do that.",
+    "It's 3:45 p.m",
+    "Email: user@example.com",
+    "The cat sleeps.",
+    "The dog runs.",
+    "Alice sees Bob.",
+    "Bob sees Alice.",
+    "Is the cat sleeping?",
+    "Yes, the cat is sleeping.",
+    "No, the cat is not sleeping.",
+    "Prompt: Hello Model: Hello! How can I help?",
+    "Prompt: What is your name? Model: My name is Myra.",
+    "Prompt: How are you? Model: I'm doing well."
+  ],
+  "layer_zero_seeds": [
+    {"text": "A", "boundary": "source_start", "source_seed": "</>A"},
+    {"text": "I", "boundary": "source_start", "source_seed": "</>I"},
+    {"text": "I ", "boundary": "source_start", "source_seed": "</>I "},
+    {"text": "A ", "boundary": "source_start", "source_seed": "</>A "},
+    {"text": " a ", "boundary": "interior", "source_seed": " a "},
+    {"text": " A ", "boundary": "interior", "source_seed": " A "},
+    {"text": " I ", "boundary": "interior", "source_seed": " I "}
+  ],
+  "additional_fragments": ["abs", "sch", "bl"]
+}

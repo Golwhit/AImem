@@ -12,7 +12,7 @@ from neural_base_comparison import digest
 from neural_chat import CONVERSATION_MODEL, DIRECTORY as CHAT_DIRECTORY, load_active
 from neural_continuation import extend_alphabet
 from neural_conversation_meal import AUTHORED_FIXTURE, paired_scores, validate_curriculum
-from neural_conversation_trial import assess, canonical, prompt_for
+from neural_conversation_trial import assess, canonical, feedback_hash, lost_correct_ids, prompt_for
 from neural_plasticity import PlasticityContext, fit, replay
 from neural_training import DIRECTORY, MAX_SATURATION, activate, load_progress
 from neural_word_context import WORD
@@ -78,18 +78,16 @@ def round_once(root: Path, *, cpu_seconds: float = 60.0, rate: float = .02) -> d
         corrections = previous_pointer.get("approved_corrections", []) if previous_pointer else []
         for item in corrections:
             row = item["row"]
-            if (len(row["turns"]) != 1 or row["turns"][0]["role"] != "user"
-                    or item["sha256"] != digest(canonical(
-                        {"prompt": row["turns"][0]["content"], "answer": row["answer"]}))):
+            if item["sha256"] != feedback_hash(row["turns"], row["answer"]):
                 raise ValueError("Approved feedback evidence is invalid")
         corrected = {canonical(item["row"]["turns"]) for item in corrections}
         teaching = [row for row in data["train"] if canonical(row["turns"]) not in corrected]
         feedback = [item["row"] for item in corrections]
         teaching += feedback
         parent_state = json.loads(json.dumps(model.snapshot(), allow_nan=False))
-        before_train = assess(model, teaching)
-        before_test = assess(model, data["test"])
-        before_feedback = assess(model, feedback) if feedback else None
+        before_train = assess(model, teaching, no_triple_repeat=True)
+        before_test = assess(model, data["test"], no_triple_repeat=True)
+        before_feedback = assess(model, feedback, no_triple_repeat=True) if feedback else None
         symbols = set()
         for row in feedback:
             text = prompt_for(row) + row["answer"] + "\n"
@@ -118,7 +116,8 @@ def round_once(root: Path, *, cpu_seconds: float = 60.0, rate: float = .02) -> d
             "before": {"training": before_train, "test": before_test, "feedback": before_feedback},
             "policy": "Continue active weights; approved feedback supersedes matching curriculum prompts. "
                       "Expand vocabulary only for approved feedback. Evaluation is development-only and used "
-                      "as a non-regression gate, not independent evidence. Stop on any rejected round.",
+                      "as a non-regression gate, not independent evidence. Evaluation uses the live "
+                      "three-identical-character output filter. Stop on any rejected round.",
         }
         atomic_json(target / "protocol.json", report)
         atomic_json(target / "inputs.json", {"curriculum": data, "teaching": teaching})
@@ -133,13 +132,14 @@ def round_once(root: Path, *, cpu_seconds: float = 60.0, rate: float = .02) -> d
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes((source_root / name).read_bytes())
         print(f"Active continuation round {round_number}: {run_id}, {cpu_seconds} update-CPU seconds", flush=True)
-        points = fit(model, teaching, seed=seed, rate=rate, cpu_checkpoints=(cpu_seconds / 5, cpu_seconds))
+        points = fit(model, teaching, seed=seed, rate=rate, cpu_checkpoints=(cpu_seconds / 5, cpu_seconds),
+                     no_triple_repeat=True)
         state = json.loads(json.dumps(model.snapshot(), allow_nan=False))
         atomic_json(target / "trained.json", {"state": state, "checkpoints": points})
-        after_test = assess(model, data["test"])
-        after_feedback = assess(model, feedback) if feedback else None
-        replayed = replay(initial, teaching, seed=seed, rate=rate, checkpoints=points)
-        if replayed.snapshot() != state or assess(replayed, data["test"]) != after_test:
+        after_test = assess(model, data["test"], no_triple_repeat=True)
+        after_feedback = assess(model, feedback, no_triple_repeat=True) if feedback else None
+        replayed = replay(initial, teaching, seed=seed, rate=rate, checkpoints=points, no_triple_repeat=True)
+        if replayed.snapshot() != state or assess(replayed, data["test"], no_triple_repeat=True) != after_test:
             raise AssertionError("Continuation weights or evaluation differ on replay")
         before_pairs, after_pairs = paired_scores(before_test), paired_scores(after_test)
         failures = []
@@ -147,13 +147,17 @@ def round_once(root: Path, *, cpu_seconds: float = 60.0, rate: float = .02) -> d
             failures.append("hidden saturation exceeds limit")
         if points[-1]["training"]["exact"] < before_train["exact"]:
             failures.append("teaching accuracy regressed")
+        lost_teaching = lost_correct_ids(before_train, points[-1]["training"])
+        if lost_teaching:
+            failures.append("previously correct approved teaching regressed")
         if after_pairs["both_exact"] < before_pairs["both_exact"]:
             failures.append("development paired accuracy regressed")
-        if before_feedback and after_feedback:
-            if any(before["exact"] and not after["exact"]
-                   for before, after in zip(before_feedback["rows"], after_feedback["rows"])):
-                failures.append("previously correct approved feedback regressed")
+        lost_feedback = lost_correct_ids(before_feedback, after_feedback) if before_feedback else []
+        if lost_feedback:
+            failures.append("previously correct approved feedback regressed")
         report.update(checkpoints=points, test=after_test, test_pairs=after_pairs,
+                      lost_correct_teaching_ids=lost_teaching,
+                      lost_correct_feedback_ids=lost_feedback,
                       feedback=after_feedback,
                       validation={"full_weights_and_milestones_replay_exact": True, "test_replay_exact": True})
         if failures:

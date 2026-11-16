@@ -78,8 +78,8 @@ function runLearner(command, payload = {}) {
   return result;
 }
 
-function runGenerator(command, payload = {}, scriptPath = generatorScriptPath, timeoutMs = 30000) {
-  const result = generatorQueue.then(() => new Promise((resolve, reject) => {
+function runGenerator(command, payload = {}, scriptPath = generatorScriptPath, timeoutMs = 30000, serialized = true) {
+  const invoke = () => new Promise((resolve, reject) => {
     const child = spawn(learnerPython, [scriptPath, command], { cwd: rootDir });
     let output = '';
     let errors = '';
@@ -94,8 +94,9 @@ function runGenerator(command, payload = {}, scriptPath = generatorScriptPath, t
     });
     child.stdin.on('error', () => {});
     child.stdin.end(JSON.stringify(payload));
-  }));
-  generatorQueue = result.catch(() => {});
+  });
+  const result = serialized ? generatorQueue.then(invoke) : invoke();
+  if (serialized) generatorQueue = result.catch(() => {});
   return result;
 }
 
@@ -275,7 +276,7 @@ app.post('/api/send-push', async (req, res) => {
 
 app.get('/api/chat-model', async (req, res) => {
   try {
-    res.json(await runGenerator('status', {}, neuralChatScriptPath));
+    res.json({ ...await runGenerator('status', {}, neuralChatScriptPath), supports_followup_context: true });
   } catch (error) {
     console.error('Chat model status error:', error);
     res.status(500).json({ error: error.message });
@@ -287,13 +288,26 @@ app.post('/api/chat', async (req, res) => {
   const userMessage = rawUserMessage.trim();
   const includeInGenerator = req.body?.include_in_generator === true;
   const includeLab = req.body?.include_lab === true;
+  const history = req.body?.history;
   if (!userMessage || rawUserMessage.length > 2000) {
     res.status(400).json({ error: 'Missing message' });
+    return;
+  }
+  if (history !== undefined && (!Array.isArray(history) || history.length !== 2
+      || history.some((turn, index) => !turn || typeof turn !== 'object'
+        || Object.keys(turn).sort().join(',') !== 'content,role'
+        || turn.role !== ['user', 'assistant'][index] || typeof turn.content !== 'string'
+        || !turn.content.trim() || turn.content.length > 2000 || turn.content.includes('\0')))) {
+    res.status(400).json({ error: 'History must contain one valid user and assistant exchange.' });
     return;
   }
   try {
     const retrieval = await runLearner('search', { query: userMessage, limit: 3 });
     const chatModel = await runGenerator('status', {}, neuralChatScriptPath);
+    if (history !== undefined && (!chatModel.ready || chatModel.arm !== 'conversation')) {
+      res.status(400).json({ error: 'Conversation context requires the active conversation model.' });
+      return;
+    }
     const generatorStatus = chatModel.ready ? null : await runGenerator('status');
     const best = retrieval.results.find(memory => memory.role === 'Assistant');
     let aiResponse = best
@@ -313,7 +327,9 @@ app.post('/api/chat', async (req, res) => {
       }
     }
     if (chatModel.ready) {
-      generated = await runGenerator('generate', { prompt: rawUserMessage, max_chars: 320 }, neuralChatScriptPath);
+      generated = await runGenerator('generate', {
+        prompt: rawUserMessage, max_chars: 320, ...(history !== undefined ? { history } : {})
+      }, neuralChatScriptPath);
       if (!generated.text?.trim()) throw new Error('Active neural chat model returned empty output');
       aiResponse = generated.text;
       mode = generated.chat_model.arm === 'conversation' ? 'local-conversation-neural'
@@ -336,12 +352,15 @@ app.post('/api/chat', async (req, res) => {
       }
     }
     const assistantTopics = inferMemoryTopics(aiResponse);
+    const modelProvenance = generated?.chat_model && {
+      ...generated.chat_model, ...(generated.input_turns ? { input_turns: generated.input_turns } : {})
+    };
     const saved = await appendMemoryExchange({ user: userMessage, assistant: aiResponse, userTopics: [], assistantTopics, sessionId: req.body?.sessionId, source: responseSource,
-      modelProvenance: generated?.chat_model });
+      modelProvenance });
     const recent = saved.snapshot.nodes.filter(node => node.kind === 'message' && node.created_cycle === saved.snapshot.cycles);
 
     res.json({ reply: aiResponse, model: generated?.model || retrieval.model, chat_model: generated?.chat_model || null, generation: generated?.generation ?? retrieval.generation, mode, selection: generated?.selection || null, training_sources: generated?.training_sources || [], generator_learning: generatorLearning, lab, lab_error: labError, response_source_id: mode === 'memory-excerpts' ? best?.id || null : null, memories: retrieval.results,
-      prompt_memory_id: recent.find(node => node.role === 'You')?.id,
+      context_used: Boolean(generated?.input_turns), prompt_memory_id: recent.find(node => node.role === 'You')?.id,
       response_memory_id: recent.find(node => node.role === 'Assistant')?.id });
   } catch (err) {
     console.error('Chat error:', err);
@@ -431,6 +450,21 @@ app.post('/api/base-model-lab/trace', async (req, res) => {
     res.json(await runGenerator('trace', req.body, path.join(rootDir, 'neural_base_lab.py')));
   } catch (error) {
     console.error('Base model lab trace error:', error);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.post('/api/universe-lab', async (req, res) => {
+  const { action, ...payload } = req.body || {};
+  if (!['read', 'spark', 'step', 'fuel', 'save', 'reset', 'reload', 'delete'].includes(action)) {
+    res.status(400).json({ error: 'Choose a valid universe action.' });
+    return;
+  }
+  try {
+    const result = await runGenerator(action, payload, path.join(rootDir, 'universe-lab', 'universe.py'), 30000, false);
+    res.json({ ...result, api_version: 2 });
+  } catch (error) {
+    console.error('Universe lab error:', error);
     res.status(400).json({ error: error.message });
   }
 });
@@ -559,7 +593,7 @@ app.post('/api/response-feedback', async (req, res) => {
       && (await runGenerator('status', {}, neuralChatScriptPath)).arm === 'conversation';
     const neuralTraining = (neuralCorrection || markedRelevant) ? await runGenerator('train', {
       response_id, rating, correction, acknowledge_review: true
-    }, path.join(rootDir, 'neural_correction.py'), 120000) : null;
+    }, path.join(rootDir, 'neural_correction.py'), 600000) : null;
     const scorer = approve_for_scoring ? await runGenerator('scorer-feedback', { response_id, rating, correction, approve_correction, acknowledge_review: true }) : null;
     const feedback = await runLearner('response-feedback', { response_id, rating, correction,
       neural_training: neuralTraining });

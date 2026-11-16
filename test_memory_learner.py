@@ -523,13 +523,24 @@ class LearnerTests(unittest.TestCase):
             selection = {**working, "model": CONVERSATION_MODEL, "arm": "conversation",
                          "checkpoint_sha256": checksum, "passes": 1, "training_round": 1}
             (self.root / DIRECTORY / "active.json").write_text(json.dumps(selection))
-            learned = request("/api/chat", {"message": "A cat?", "include_in_generator": True})
+            self.assertTrue(request("/api/chat-model")["supports_followup_context"])
+            history = [{"role": "user", "content": "The cat is blue."},
+                       {"role": "assistant", "content": "Okay."}]
+            learned = request("/api/chat", {"message": "A cat?", "include_in_generator": True,
+                                            "history": history})
             self.assertEqual(learned["mode"], "local-conversation-neural")
-            self.assertEqual(learned["reply"], "a" * 96)
+            self.assertEqual(learned["reply"], "a" * 320)
+            self.assertTrue(learned["context_used"])
             self.assertEqual(learned["generator_learning"]["reason"], "fixed_neural_checkpoint")
             self.assertEqual((self.root / DIRECTORY / f"{checksum}.json").read_bytes(), raw)
             saved_message = json.loads((self.root / "chat_memory.json").read_text())["messages"][-1]
             self.assertEqual(saved_message["model_provenance"]["model"], CONVERSATION_MODEL)
+            turns = history + [{"role": "user", "content": "A cat?"}]
+            self.assertEqual(saved_message["model_provenance"]["input_turns"], turns)
+            with self.assertRaises(HTTPError) as invalid_history:
+                request("/api/chat", {"message": "A cat?", "history": [history[0]]})
+            self.assertEqual(invalid_history.exception.code, 400)
+            invalid_history.exception.close()
             # Unmarked chat and a needs-correction rating do not change weights.
             untrained = request("/api/response-feedback", {
                 "response_id": learned["response_memory_id"], "rating": "needs_correction"})
@@ -561,7 +572,9 @@ class LearnerTests(unittest.TestCase):
             self.assertTrue(corrected["neural_training"]["trained"])
             correction_hash = corrected["neural_training"]["checkpoint_sha256"]
             self.assertNotEqual(correction_hash, train_hash)
-            new_reply = request("/api/chat", {"message": "A cat?"})
+            approved = json.loads((training / "progress.json").read_text())["approved_corrections"][-1]
+            self.assertEqual(approved["row"]["turns"], turns)
+            new_reply = request("/api/chat", {"message": "A cat?", "history": history})
             self.assertEqual(new_reply["reply"], "Z.")
             relevant = request("/api/response-feedback", {
                 "response_id": new_reply["response_memory_id"], "rating": "useful"})

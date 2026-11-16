@@ -10,6 +10,8 @@ from neural_conversation_context import ARMS, CONTEXT, ConversationContext, buil
 from neural_base_comparison import digest
 from neural_conversation_trial import answer_examples, assess, prompt_for, train
 from neural_experiment import EMBEDDING, HIDDEN
+from neural_model_migration import CHARACTERS, WORDS, migrate, migrate_word_position, pair_ambiguity
+from neural_plasticity import PlasticityContext, initialize
 
 
 class ConversationContextTests(unittest.TestCase):
@@ -64,6 +66,56 @@ class ConversationContextTests(unittest.TestCase):
             self.assertEqual(generate(model, prompt_for(self.rows[0]), length=32),
                              generate(restored, prompt_for(self.rows[0]), length=32))
 
+    def test_reviewed_structural_migration_retains_weights_and_learns_spacing(self):
+        long, _ = build(self.parent, self.rows, "long_identities")
+        parent = initialize(long, "fresh_scaled", 17)
+        old = json.loads(json.dumps(parent.snapshot()))
+        migrated = migrate(parent)
+        self.assertEqual(parent.snapshot(), old)
+        self.assertEqual(migrated.model.characters[:len(old["symbols"])], old["symbols"])
+        self.assertEqual(migrated.model.weights["hidden"][:len(old["weights"]["hidden"])],
+                         old["weights"]["hidden"])
+        self.assertEqual(migrated.model.weights["hidden"][len(old["weights"]["hidden"]):],
+                         [0.0] * (64 * EMBEDDING * HIDDEN))
+        for word in WORDS:
+            token = migrated.model.tokens["identity:" + word]
+            if "identity:" + word not in parent.model.tokens:
+                other = parent.model.tokens["identity:<other>"]
+                self.assertEqual(migrated.model.weights["embedding"][token * EMBEDDING:(token + 1) * EMBEDDING],
+                                 parent.model.weights["embedding"][other * EMBEDDING:(other + 1) * EMBEDDING])
+        for char in CHARACTERS:
+            token = migrated.model.tokens["char:" + char]
+            self.assertGreater(migrated.prior("test ")[token], 0)
+            self.assertEqual(migrated.encode(char), [token])
+            probe = ConversationContext.restore(json.loads(json.dumps(migrated.snapshot())))
+            probe.model.weights["output_bias"][token] += 1000
+            self.assertEqual(generate(probe, "red ", length=1)["text"], char)
+        for mark in ".?!,":
+            for suffix in ("", "b", "b c d "):
+                contexts = [migrated.context("red" + mark + " " * n + suffix)
+                            for n in range(3)]
+                self.assertEqual(len({tuple(context) for context in contexts}), 3)
+        self.assertNotEqual(migrated.context("red?" + " " * 318),
+                            migrated.context("red?" + " " * 319))
+        self.assertNotEqual(migrated.context("red?" + " " * 4094),
+                            migrated.context("red?" + " " * 4095))
+        with self.assertRaisesRegex(ValueError, "4095"):
+            migrated.context("red?" + " " * 4096)
+        self.assertEqual(migrated.snapshot(), migrate(parent).snapshot())
+        self.assertEqual(ConversationContext.restore(migrated.snapshot()).snapshot()["weights"],
+                         migrated.snapshot()["weights"])
+        bad = json.loads(json.dumps(migrated.snapshot()))
+        bad["symbols"].remove("gap:space-high:63")
+        with self.assertRaisesRegex(ValueError, "Invalid saved conversation context"):
+            ConversationContext.restore(bad)
+        one, two = (migrated.context("red? "), migrated.context("red?  "))
+        prior = migrated.prior("red? ")
+        target = migrated.model.tokens["char:b"]
+        for _ in range(5):
+            migrated.model.update(one, target, output_prior=prior, learning_rate=.1)
+        self.assertNotEqual(migrated.model.forward(one, output_prior=prior)[2],
+                            migrated.model.forward(two, output_prior=prior)[2])
+
     def test_local_features_padding_and_review_gate(self):
         long, _ = build(self.parent, self.rows, "long_identities")
         for prefix in ("", "red", "red ", "red blue ", "red blue cup", "red blue cup "):
@@ -84,6 +136,37 @@ class ConversationContextTests(unittest.TestCase):
             (root / "fixtures/neural-conversation-draft.json").write_text("{}")
             with self.assertRaises(ValueError):
                 run(root, acknowledge_review=True, reviewed_sha256="0" * 64)
+
+    def test_word_position_migration_resolves_reviewed_collision_without_changing_predictions(self):
+        question = "Can you quickly grab the brown fox that's jumping over the lazy dog by the fence?"
+        answer = ("Sure, but before I do, I was just reading about five boxing wizards who jump quickly. "
+                  "Weird coincidence, right?")
+        row = {"id": "focus", "skill": "conversation",
+               "turns": [{"role": "user", "content": question}], "answer": answer}
+        text = prompt_for(row) + answer + "\n"
+        base, _ = build(WordBase(text, 17, lexicon=["user", "assistant"]), [row], "long_identities")
+        parent = migrate(initialize(base, "fresh_scaled", 17))
+        old_state = json.loads(json.dumps(parent.snapshot()))
+        upgraded = migrate_word_position(parent)
+        self.assertEqual(parent.snapshot(), old_state)
+        self.assertEqual(pair_ambiguity(parent, row)["conflicting_inputs"], 1)
+        self.assertEqual(pair_ambiguity(upgraded, row)["conflicting_inputs"], 0)
+        for prefix in (prompt_for(row), prompt_for(row) + "Sure, but before I do",
+                       "Weird coinc", "Weird coincidenc", "red?  "):
+            self.assertEqual(upgraded.context(prefix)[:128], parent.context(prefix))
+            self.assertEqual(upgraded.model.forward(upgraded.context(prefix), output_prior=upgraded.prior(prefix))[2],
+                             parent.model.forward(parent.context(prefix), output_prior=parent.prior(prefix))[2])
+        self.assertNotEqual(upgraded.context("Weird coinc"), upgraded.context("Weird coincidenc"))
+        self.assertNotEqual(upgraded.context("a" * 4094), upgraded.context("a" * 4095))
+        with self.assertRaisesRegex(ValueError, "4095"):
+            upgraded.context("a" * 4096)
+        restored = PlasticityContext.restore(json.loads(json.dumps(upgraded.snapshot())))
+        self.assertEqual(restored.snapshot(), upgraded.snapshot())
+        self.assertEqual(restored.context("Weird coinc"), upgraded.context("Weird coinc"))
+        malformed = json.loads(json.dumps(upgraded.snapshot()))
+        del malformed["partial_word_features"]
+        with self.assertRaisesRegex(ValueError, "Invalid saved conversation context"):
+            PlasticityContext.restore(malformed)
 
     def test_lower_rate_selection_uses_teaching_loss_before_one_test(self):
         long, _ = build(self.parent, self.rows, "long_identities")

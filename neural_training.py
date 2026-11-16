@@ -10,7 +10,8 @@ from uuid import uuid4
 
 from neural_base_comparison import digest
 from neural_conversation_meal import FIXTURE, paired_scores, validate_curriculum
-from neural_conversation_trial import assess, canonical
+from neural_conversation_context import SPACING_CONTEXT, WORD_POSITION_CONTEXT
+from neural_conversation_trial import assess, canonical, lost_correct_ids
 from neural_plasticity import PlasticityContext, fit, replay
 from original_generator import atomic_json
 
@@ -52,9 +53,52 @@ def activate(root: Path) -> dict:
         raise ValueError("Permanent round report hash mismatch")
     report = json.loads(report_bytes)
     verified = report["validation"]
-    if (report["status"] != "completed"
-            or not verified.get("full_weights_and_milestones_replay_exact")
-            or not (verified.get("test_replay_exact") or verified.get("correction_replay_exact"))):
+    if report.get("kind") == "reviewed_structural_migration":
+        review = report.get("review", {})
+        results = report.get("results", {})
+        if not isinstance(review, dict) or not isinstance(results, dict):
+            raise ValueError("Invalid structural migration review or evaluation")
+        vocabulary = review.get("vocabulary")
+        replayed = (verified.get("structural_migration_replay_exact") is True
+                    and verified.get("existing_correct_answers_preserved") is True
+                    and report.get("run_id") == pointer["run_id"]
+                    and report.get("round") == pointer["round"]
+                    and report.get("parent_checkpoint_sha256") == pointer.get("parent_checkpoint_sha256")
+                    and isinstance(vocabulary, dict)
+                    and digest(canonical(vocabulary)) == review.get("vocabulary_sha256")
+                    and isinstance(vocabulary.get("words"), list)
+                    and isinstance(vocabulary.get("characters"), list)
+                    and bool(vocabulary["words"]) and bool(vocabulary["characters"])
+                    and model.model.context == SPACING_CONTEXT
+                    and all(isinstance(word, str) and "identity:" + word in model.model.tokens
+                            for word in vocabulary["words"])
+                    and all(isinstance(char, str) and len(char) == 1
+                            and "char:" + char in model.model.tokens for char in vocabulary["characters"])
+                    and all(isinstance(results.get(name), dict) and results[name].get("lost_correct_ids") == []
+                            for name in ("teaching", "development"))
+                    and all(isinstance(result, dict) and result.get("lost_correct_ids") == []
+                            for result in results.values()))
+    elif report.get("kind") == "reviewed_word_position_migration":
+        review = report.get("review", {})
+        results = report.get("results", {})
+        feature = review.get("feature") if isinstance(review, dict) else None
+        replayed = (verified.get("structural_migration_replay_exact") is True
+                    and verified.get("existing_correct_answers_preserved") is True
+                    and verified.get("target_pair_collision_free") is True
+                    and report.get("run_id") == pointer["run_id"]
+                    and report.get("round") == pointer["round"]
+                    and report.get("parent_checkpoint_sha256") == pointer.get("parent_checkpoint_sha256")
+                    and feature == {"encoding": "word-length-base64-v1", "maximum": 4095}
+                    and digest(canonical(feature)) == review.get("feature_sha256")
+                    and model.model.context == WORD_POSITION_CONTEXT
+                    and isinstance(results, dict)
+                    and all(isinstance(results.get(name), dict)
+                            and results[name].get("lost_correct_ids") == []
+                            for name in ("teaching", "development", "feedback")))
+    else:
+        replayed = (verified.get("full_weights_and_milestones_replay_exact")
+                    and (verified.get("test_replay_exact") or verified.get("correction_replay_exact")))
+    if report["status"] != "completed" or not replayed:
         raise ValueError("Only completed replay-verified permanent rounds may activate")
     chat = root / CHAT_DIRECTORY
     previous_path = chat / "active.json"
@@ -77,11 +121,15 @@ def activate(root: Path) -> dict:
         "comparison_baseline": prior.get("comparison_baseline"),
         "rollback_selection_sha256": digest(previous),
         "retired_layers": [0, 1, 2],
-        "selection_policy": "User-authorized completed, replay-verified permanent round. "
-                            "Only explicitly Relevant answers and submitted corrections train from chat.",
+        "selection_policy": (
+            "User-authorized, replay-verified structural migration; no training was performed. "
+            if report.get("kind") in ("reviewed_structural_migration", "reviewed_word_position_migration") else
+            "User-authorized completed, replay-verified permanent training round. "
+        ) + "Only explicitly Relevant answers and submitted corrections train from chat.",
         "note": "Experimental narrow-task model, not a grounded assistant. Raw user message receives the "
-                "training role format; first generated line only, at most96 characters. Single-turn input "
-                "only; retrieval/capture remain connected but are not injected into neural context. "
+                "training role format; first generated line only, at most 320 characters. Single-turn input "
+                "by default; an experimental option includes the previous visible exchange. Retrieval is "
+                "not injected into neural context. "
                 "Saved weights resume without retraining from scratch. No claim retained Acts knowledge.",
     }
     (chat / f"retired-selection-{digest(previous)}.json").write_bytes(previous)
@@ -170,6 +218,7 @@ def run(root: Path, *, cpu_seconds: float = 300.0, rate: float = .1) -> dict:
         corrected_prompts = {canonical(item["row"]["turns"]) for item in corrections}
         teaching = [row for row in data["train"] if canonical(row["turns"]) not in corrected_prompts]
         teaching += [item["row"] for item in corrections]
+        before_training = assess(model, teaching, no_triple_repeat=True)
         initial = json.loads(json.dumps(model.snapshot(), allow_nan=False))
         run_id = uuid4().hex
         target = directory / "rounds" / run_id
@@ -206,7 +255,7 @@ def run(root: Path, *, cpu_seconds: float = 300.0, rate: float = .1) -> dict:
             path.write_bytes((root / name).read_bytes())
         print(f"Permanent round {round_number}: {run_id}, {cpu_seconds} update-CPU seconds, rate {rate}", flush=True)
         points = fit(model, teaching, seed=seed, rate=rate,
-                     cpu_checkpoints=(cpu_seconds / 5, cpu_seconds))
+                     cpu_checkpoints=(cpu_seconds / 5, cpu_seconds), no_triple_repeat=True)
         state = json.loads(json.dumps(model.snapshot(), allow_nan=False))
         atomic_json(target / "trained.json", {"state": state, "checkpoints": points})
         restored = PlasticityContext.restore(json.loads(json.dumps(state)))
@@ -214,15 +263,19 @@ def run(root: Path, *, cpu_seconds: float = 300.0, rate: float = .1) -> dict:
         report["status"] = "trained"
         atomic_json(target / "report.json", report)
         start = time.process_time()
-        report["test"] = assess(restored, data["test"])
+        report["test"] = assess(restored, data["test"], no_triple_repeat=True)
         report["test_pairs"] = paired_scores(report["test"])
         report["evaluation_cpu_seconds"] = time.process_time() - start
-        replayed = replay(initial, teaching, seed=seed, rate=rate, checkpoints=points)
-        if replayed.snapshot() != state or assess(replayed, data["test"]) != report["test"]:
+        replayed = replay(initial, teaching, seed=seed, rate=rate, checkpoints=points, no_triple_repeat=True)
+        if replayed.snapshot() != state or assess(replayed, data["test"], no_triple_repeat=True) != report["test"]:
             raise AssertionError("Permanent round full weights or test outputs differ on replay")
         report["validation"] = {"full_weights_and_milestones_replay_exact": True,
                                 "test_replay_exact": True}
         problem = health_problem(points)
+        lost_teaching = lost_correct_ids(before_training, points[-1]["training"]) if points else []
+        report["retention"] = {"before": before_training, "lost_correct_ids": lost_teaching}
+        if lost_teaching:
+            problem = (problem + "; " if problem else "") + "previously correct approved teaching regressed"
         if problem:
             # Rejected rounds keep their evidence but never become the parent or the active model.
             report["status"] = "rejected"
