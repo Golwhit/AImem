@@ -71,7 +71,7 @@ class CharacterContextTrialTests(unittest.TestCase):
         corpus = [([0], 2, [1])]
         first, replay, mixed = Model(), Model(), Model()
         args = {"updates": 100, "seed": 3, "rate": 0.01}
-        draws = train_characters(first, conversation, corpus, conversation_only=True, **args)s)
+        draws = train_characters(first, conversation, corpus, conversation_only=True, **args)
         replay_draws = train_characters(replay, conversation, corpus, conversation_only=True, **args)
         mixed_draws = train_characters(mixed, conversation, corpus, conversation_only=False, **args)
         self.assertEqual(draws, {"conversation": 100, "corpus": 0})
