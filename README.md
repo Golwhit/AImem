@@ -471,6 +471,633 @@ as letters, do not bond to each other, and do not train or predict words.
 The earlier fixed-seed isolated sample remains in the source as a comparison,
 but is no longer displayed as a second graph.
 
+#### Private word-start comparison
+
+The separate `universe-lab/word_start_experiment.py` tests a simple
+from-scratch, one-word-context frequency predictor against the most frequent
+training initial. It predicts case-sensitive word starts, encodes each
+prediction using one of its assigned four-quark patterns, and decodes that
+pattern. Pattern selection is deterministic, not quark formation or learned
+bonding; round-tripping alone cannot show that patterns improve prediction.
+It does not change the live universe, chat weights, or memories.
+
+The user approved private use of staged World English Bible learning books
+and the downloaded OANC on 2026-11-15. OANC's package license and underlying
+rights still require review before release; the user's decision is not legal
+clearance. Neither the OANC archive nor its derived mapping is bundled.
+The existing mapping was fitted using initial frequencies across the OANC and
+Bible learning books, including test material. Predictor training and testing
+are separated by OANC document content and Bible book, but this is **not** an
+independent evaluation of mapping construction; near-duplicate documents may
+also cross the split. Earlier Bible development and locked books are excluded.
+
+To reproduce with the privately retained inputs, supply their local paths and
+a new report path (the command refuses to overwrite an existing report):
+
+```sh
+python3 universe-lab/word_start_experiment.py \
+  --bible-dir .data/bible-web-staged --oanc /path/to/OANC-1.0.1-UTF8.zip \
+  --mapping /path/to/many-to-one-letter-results.json --report /path/to/report.json
+```
+
+In the first run, the combined test had 2,906,608 word starts: the contextual
+predictor reached 21.10% versus 13.73% for always guessing `t`. Pattern
+decoding produced the same answers by construction. This is a count-based
+baseline for one particular corpus split, not a trained quark model, proof of
+generalization, or evidence that patterns improve accuracy.
+
+#### Short pattern-sidecar meal
+
+`universe-lab/pattern_meal.py` compares the frozen active conversation model
+with a temporary frequency sidecar. It checks the hash of the previously
+approved user corpus and takes ten specified training sentences (41 word-start
+pairs). The sidecar uses the preceding word's initial, represented by an
+assigned four-quark pattern, to reweight the model's next-initial probabilities.
+Unseen preceding initials leave the model's probabilities unchanged. Both arms
+score the same 44 word starts in 12 new diagnostic sentences, aggregating
+whole-word and character output probabilities by first character; a
+non-letter winner counts as wrong.
+
+The control got 3/44 (6.8%), the sidecar 6/44 (13.6%), and always guessing
+the meal's most frequent next initial (`s`) got 3/44. The pattern labels are
+reversible and the calculation is equivalent to counting ordinary preceding
+letters: this tests the sidecar feature, **not an advantage of quark
+patterns**. This tiny, developer-visible, teacher-forced diagnostic does not
+establish generalization or chat quality. The existing mapping was calibrated
+on broader Bible/OANC frequencies, not learned from this meal. Neither arm
+trains or activates neural weights, generates quark bonds, or advances the
+live universe.
+
+To repeat with the private mapping and a new report path:
+
+```sh
+python3 universe-lab/pattern_meal.py \
+  --mapping /path/to/many-to-one-letter-results.json --report /path/to/report.json
+```
+
+#### From first to second letter
+
+The separate `universe-lab/second_letter_experiment.py` ranks the second
+letter of a word given its case-sensitive first letter. It counts occurrences
+in the previously approved, hash-pinned Bible and OANC inputs, using the
+same book/document split as the word-start comparison. The input and output
+letters use their assigned pattern families; all patterns in a family share
+one ranking. An unseen first family falls back to the training-wide second
+letter ranking. Zero-count letters remain listed but do not count as top-three
+predictions.
+
+On 2,781,847 held-out word occurrences, its top guess was correct 42.56% of
+the time and the correct letter was among its top three 73.62% of the time.
+Training-wide guesses, ignoring the first letter, scored 15.42% and 42.31%.
+These are frequency-weighted, teacher-forced scores; repeated words can occur
+in both splits. The mapping itself was previously calibrated using frequencies
+from the test sources, so only the second-letter counts are held out. The
+labels are equivalent to ordinary letter pairs, not learned quark bonding.
+The test excludes one-character words and non-ASCII/nonletter first-two
+characters; it does not yet predict word endings or build four-letter words.
+
+To reproduce using the private mapping and a new private report path:
+
+```sh
+python3 universe-lab/second_letter_experiment.py \
+  --bible-dir .data/bible-web-staged --oanc /path/to/OANC-1.0.1-UTF8.zip \
+  --mapping /path/to/many-to-one-letter-results.json --report /path/to/report.json
+python3 universe-lab/second_letter_experiment.py --from-report /path/to/report.json --first s
+```
+
+Inputs are pinned to the previously reviewed files, and neither command
+modifies the active model or live universe. The report is derived from the
+private sources and should remain private; user approval is not legal clearance.
+
+#### Prefixes and word endings
+
+`universe-lab/word_prefix_experiment.py` ranks the next letter **or a word
+ending** given a case-sensitive prefix of one to four letters. An unseen
+prefix falls back to counts for its last letter at the same position, then
+to position-wide counts. It uses the same hash-pinned private inputs and
+document/book split. Words containing apostrophes, accented letters, or
+other non-ASCII-letter characters are excluded in this experiment.
+
+For held-out occurrences, given the correct prefix, the top choice was
+correct 54.86% after two letters and 70.95% after three; using only the
+last letter at the same position scored 33.30% and 35.94%. Both figures
+include correct word endings. After `str`, the training ranking starts with
+`a` (29.15%), `e` (22.13%), and `u` (20.48%).
+
+For a stricter generation check, the experiment supplies only the actual
+first letter, greedily predicts up to four letters, and requires a correct
+end decision. It generated the exact complete word for 64,325 of 473,497
+held-out four-letter occurrences (13.59%). Each first letter has only one
+greedy path, and common words can recur across the split; the result is not
+a generalization test on new vocabulary. The pattern mapping was calibrated
+on broader corpus frequencies. The experiment is isolated and does not
+modify the live universe or active model.
+
+The report contains derived private prefix counts and should remain private.
+To reproduce and query an existing report:
+
+```sh
+python3 universe-lab/word_prefix_experiment.py \
+  --bible-dir .data/bible-web-staged --oanc /path/to/OANC-1.0.1-UTF8.zip \
+  --mapping /path/to/many-to-one-letter-results.json --report /path/to/report.json
+python3 universe-lab/word_prefix_experiment.py --from-report /path/to/report.json --prefix str
+```
+
+#### Next word after a short word
+
+`universe-lab/next_word_after_generation.py` checks the next word's initial
+after a completed one- to four-letter word. It compares knowing the actual
+previous word with generating that word from its actual first letter. The
+generator must predict a stop before the next initial can be predicted.
+Both use the same held-out pairs and the same training-only short-word
+context counts.
+
+On 1,604,277 held-out pairs, knowing the previous word gave 20.42% correct,
+versus 14.51% for always guessing the most frequent next initial. The
+generator stopped within four characters on 87.40% of pairs; among those,
+the next initial was correct 14.76% of the time. This is 12.90% of all
+pairs, treating unavailable next-initial predictions as incorrect. The known
+word and simple baseline scored 20.14% and 15.14% on that same stopped subset.
+For pairs whose actual preceding word had exactly four letters, the scores
+were 22.28% known-word accuracy and 12.85% generated-word accuracy among
+the 77.99% where the generator stopped.
+
+The inputs and report stay private. The test excludes non-ASCII-letter
+words, including contractions, and never skips excluded words or crosses
+documents, though pairs can cross sentence punctuation. Common words can
+occur across the split, and mapping calibration included test sources.
+This tests the next initial only; the true previous initial is supplied to
+the generator. Neither the active model nor live universe changes.
+
+```sh
+python3 universe-lab/next_word_after_generation.py \
+  --bible-dir .data/bible-web-staged --oanc /path/to/OANC-1.0.1-UTF8.zip \
+  --mapping /path/to/many-to-one-letter-results.json --report /path/to/report.json
+```
+
+#### Context for short-word generation
+
+`universe-lab/contextual_word_experiment.py` tests whether a preceding word
+helps the generator finish the current short word and predict the following
+initial. It uses the 64 most frequent eligible preceding words from the
+training split. When that context and the current prefix have been observed,
+their next-letter counts are combined with ten observations of the existing
+prefix distribution; otherwise the existing generator is used.
+
+On 873,368 held-out three-word windows, each arm received the actual first
+letter of the current word. With the actual preceding word, complete short
+word accuracy was 43.21%, versus 30.85% without that context. The following
+initial was correct on 12.11% versus 11.61% of all windows, including
+no-stop cases as incorrect. For four-letter targets, complete-word accuracy
+was 22.50% versus 12.45%.
+
+The test also generated the preceding word from its actual first letter.
+It stopped in 85.83% of windows. On that same subset, contextual generation
+completed the current word correctly 29.69% of the time versus 30.48% for
+the existing generator; the following-initial scores were 8.19% versus
+11.41%. The generated preceding word was exact in 35.36% of that subset.
+This arm still receives the true first letters of both words; it is not
+continuous unaided text generation.
+
+Windows contain only ASCII-letter words, do not cross excluded words or
+documents, and may cross sentence punctuation. Common words can appear in
+both splits, and mapping calibration used broader corpus frequencies. Inputs
+are the same approved, hash-pinned private sources; the private report
+contains aggregate results only. The active model and live universe remain
+unchanged.
+
+```sh
+python3 universe-lab/contextual_word_experiment.py \
+  --bible-dir .data/bible-web-staged --oanc /path/to/OANC-1.0.1-UTF8.zip \
+  --mapping /path/to/many-to-one-letter-results.json --report /path/to/report.json
+```
+
+#### Keeping preceding-word alternatives
+
+`universe-lab/word_beam_experiment.py` keeps up to 5 or 20 competing
+generation paths for the preceding word. Completed words, unfinished prefixes,
+and paths continuing past four characters compete for those slots. The test
+compares choosing the most probable completed candidate with re-ranking
+candidates using the **supplied** first letter of the current word. The
+chosen preceding word then guides current-word generation and prediction of
+the following initial.
+
+On the 749,650 held-out windows where the original greedy generator stopped,
+the 20-path re-ranked beam improved exact preceding-word accuracy from
+35.36% to 42.82%, current-word accuracy from 29.69% to 34.28%, and the
+following-initial score from 8.19% to 9.57%. For four-letter current words,
+the matched-subset current-word score went from 13.01% to 15.86%; the
+five-path beam scored 16.39%. In this test the preceding word is known to be
+at most four letters, and only completed beam candidates are selected. Both
+words' true first letters are provided: re-ranking does not predict the
+current word's first letter.
+
+The test uses the same private hash-pinned inputs, three-word windows, and
+training/test split as the preceding comparison. It excludes non-ASCII-letter
+words, can cross sentence punctuation, and may repeat words across splits.
+The pattern mapping saw corpus-wide initial frequencies. The active model and
+live universe remain unchanged.
+
+```sh
+python3 universe-lab/word_beam_experiment.py \
+  --bible-dir .data/bible-web-staged --oanc /path/to/OANC-1.0.1-UTF8.zip \
+  --mapping /path/to/many-to-one-letter-results.json --report /path/to/report.json
+```
+
+#### Predicting the next initial without supplying it
+
+`universe-lab/unsupplied_next_word_experiment.py` gives the model only the
+preceding word's actual first letter. It compares greedy generation with a
+mixture of completed 5- or 20-path beams: each candidate contributes to a
+distribution over the next word's initial. The predicted initial, not the
+actual one, is then used to choose a preceding-word context and generate
+the next word. An additional comparison supplies the actual preceding word.
+
+On all 1,604,277 held-out pairs, the 20-path mixture predicted the next
+initial correctly 15.38% of the time versus 14.51% for always guessing the
+training-set most common initial. On the 1,402,110 pairs where the greedy
+preceding-word generator stopped, the mixture scored 15.89%, the greedy arm
+14.76%, and the most-common baseline 15.14%. On that same subset, complete
+next-word accuracy was 8.15% versus 6.87%; targets longer than four letters
+are included and cannot be generated exactly.
+
+For four-letter target words on the matched stopped subset, initial accuracy
+was 18.72% versus 15.99%, and complete-word accuracy was 4.17% versus 3.82%.
+The test assumes the preceding word is at most four letters and supplies its
+true first letter. It does **not** supply the next word's initial. Words and
+near-duplicate documents may cross the split, and mapping calibration used
+broader corpus frequencies. Inputs remain private; the active model and live
+universe remain unchanged.
+
+```sh
+python3 universe-lab/unsupplied_next_word_experiment.py \
+  --bible-dir .data/bible-web-staged --oanc /path/to/OANC-1.0.1-UTF8.zip \
+  --mapping /path/to/many-to-one-letter-results.json --report /path/to/report.json
+```
+
+#### Searching whole next-word alternatives
+
+`universe-lab/joint_word_beam_experiment.py` keeps up to 20 preceding-word
+candidates and searches five or 20 paths for the next word. Each path
+combines the preceding candidates' probabilities as its letters are added;
+finished words and paths continuing past four letters compete for positions.
+The next word's initial is predicted rather than supplied.
+
+On the 244,430 four-letter target cases where the earlier greedy preceding
+generator stopped, the 20-path search chose the exact word 4.78% of the
+time versus 4.17% for the prior mixture with greedy continuation. The correct
+word appeared among its first five paths 11.48% of the time; this is
+candidate coverage, not single-choice accuracy. On all 1,402,110 matched
+cases, exact-word accuracy was 8.21% versus 8.15%, while initial accuracy
+was 15.47% versus 15.89%.
+
+The actual first letter of the preceding word is supplied, and that word is
+assumed at most four letters. The search does not use the true next initial.
+Inputs and derived results stay private. The same ASCII-only filtering,
+document/book split, possible repeated words, sentence-punctuation crossings,
+and mapping-calibration limitations apply. Neither active weights nor the
+live universe are modified.
+
+```sh
+python3 universe-lab/joint_word_beam_experiment.py \
+  --bible-dir .data/bible-web-staged --oanc /path/to/OANC-1.0.1-UTF8.zip \
+  --mapping /path/to/many-to-one-letter-results.json --report /path/to/report.json
+```
+
+#### Chaining three words
+
+`universe-lab/three_word_experiment.py` starts with only the first word's
+actual initial. It compares greedy generation with a 20-path search that
+commits to each generated short word before predicting the next. Neither
+the second nor third actual initial is supplied. A separate diagnostic
+receives the actual second word; none of these arms changes the chat model.
+
+On 708,090 held-out three-word fragments, the beam predicted the third
+initial correctly 9.49% of the time and all three words exactly 0.27% of
+the time. The greedy scores were 5.70% and 0.12%. The beam reached a third
+initial on all fragments, versus 70.01% for greedy; unavailable predictions
+count as wrong. The beam selects a completed first-word candidate, whereas
+greedy can leave that word unfinished. On the same 495,756 fragments where
+greedy reached a third initial, exact three-word accuracy was 0.26% versus
+0.17%. The diagnostic given the actual second word predicted the third
+initial 19.96% of the time; it uses greedy continuation rather than the
+beam's decoding.
+
+The test assumes the first two actual words have at most four letters. The
+third can be longer, but a longer word cannot be completed by this generator.
+For the 401,382 fragments with a short third word, exact three-word accuracy
+was 0.47% for beam versus 0.21% for greedy. Fragments are not necessarily
+sentences. Test fragments do not cross punctuation, excluded words, or
+documents; training word pairs can cross punctuation. Familiar words and
+near-duplicate documents may cross the split, and mapping calibration used
+broader corpus frequencies. These results do not compare conversational
+quality with the active model or justify changing its weights. The two-word
+context index remains an idea for review, not part of this test.
+
+```sh
+python3 universe-lab/three_word_experiment.py \
+  --bible-dir .data/bible-web-staged --oanc /path/to/OANC-1.0.1-UTF8.zip \
+  --mapping /path/to/many-to-one-letter-results.json --report /path/to/report.json
+```
+
+#### Two-word context and more examples
+
+`universe-lab/two_word_context_experiment.py` compares the prior one-word
+context with an experimental index of the 512 most frequent two-word
+contexts. It blends indexed initial and prefix counts with the one-word
+distribution; unseen contexts fall back to one word. Both arms use the
+same generated first two words and identical held-out fragments. A separate
+diagnostic supplies both actual preceding words to both arms.
+
+The training sets are nested 25%, 50%, and 100% samples of the approved
+training documents, chosen by content hash. On the same 708,090 held-out
+fragments, the results were:
+
+| Training sample | Known words: third initial, one / two contexts | Generated chain: third initial, one / two contexts | Generated chain: exact three words, one / two contexts |
+|---|---|---|---|
+| 25% | 19.72% / 20.67% | 9.15% / 8.39% | 0.257% / 0.328% |
+| 50% | 19.84% / 20.81% | 9.41% / 8.12% | 0.252% / 0.284% |
+| 100% | 19.96% / 20.96% | 9.49% / 7.84% | 0.269% / 0.306% |
+
+With actual preceding words at 100%, complete third-word accuracy was
+9.13% / 10.30%. With generated preceding words, it was 2.11% / 1.32%.
+Unavailable guesses and targets longer than four letters count as wrong.
+The known-word diagnostic uses greedy decoding; the generated chain uses
+the 20-path beam. This comparison shows mixed effects, not a consistent
+gain from more examples. It varies the number of examples, not optimizer
+steps or repeat passes. At 100%, 44.12% of held-out fragments had an indexed
+actual pair. Existing one-word training can cross punctuation, whereas the
+two-word index and test fragments do not. The limitations of the preceding
+three-word run still apply, including its supplied initial, short first two
+words, split, and mapping calibration. No active model was changed.
+
+```sh
+python3 universe-lab/two_word_context_experiment.py \
+  --bible-dir .data/bible-web-staged --oanc /path/to/OANC-1.0.1-UTF8.zip \
+  --mapping /path/to/many-to-one-letter-results.json --report /path/to/report.json
+```
+
+#### Active model training and three-word check
+
+The active chat model is separate from the word-index experiment. A guarded
+60-update-CPU-second continuation used the reviewed user corpus and approved
+conversation rehearsal, starting from active round 39. The candidate replayed
+exactly but was rejected for saturation and losing previously correct
+teaching and feedback answers; round 39 remained active. Overall teaching
+rose 204/280 to 236/280, development 26/64 to 29/64, and feedback 6/24 to
+10/24, despite one previously correct item being lost in each of teaching
+and feedback.
+
+On the same 708,090 held-out Bible/OANC fragments as above, the original
+model did not reach a third word. The rejected candidate reached a third
+word on 544,360 fragments (76.88%), predicted its initial correctly on
+21,193 (2.99% of all fragments), and predicted no complete third words or
+three-word sequences exactly. The evaluator supplies only the first initial,
+uses the `text: ` input boundary and the live three-repeat filter, stops at
+the first newline, and caps continuation at 64 characters. This is a
+different model and decoder from the index comparison, not a chat-quality
+test. The first two actual words are at most four letters; unavailable or
+unfinished predictions count as wrong. The corpus trainer did not train on
+these Bible/OANC fragments.
+
+The isolated comparison can be reproduced against a replay-validated
+candidate and its parent checkpoint:
+
+```sh
+python3 universe-lab/active_three_word_evaluation.py \
+  --bible-dir .data/bible-web-staged --oanc /path/to/OANC-1.0.1-UTF8.zip \
+  --before-checkpoint CHECKPOINT_SHA256 --candidate /path/to/round/trained.json \
+  --report /path/to/report.json
+```
+
+#### Active and rejected candidate together
+
+`universe-lab/active_candidate_pair_experiment.py` compares the active
+round-39 model, the rejected corpus candidate, and a fixed 50/50 mixture
+of their output probabilities. The mixture is temporary: neither set of
+weights is changed or activated.
+
+On 1,604,277 held-out pairs, given only the first word's actual initial,
+the active model predicted the second initial correctly 1.01% of the time,
+the rejected candidate 4.37%, and the mixture 3.18%. They got both words
+exactly right 0, 25, and 5 times respectively. Actual first words are at
+most four letters; second words of all lengths are included. Unavailable
+and unfinished outputs count as wrong. Pairs can cross punctuation, and
+near-duplicate documents and words can cross the split.
+
+On reused approved feedback checks, the mixture scored 11/24 versus 6/24
+for active and 10/24 for the candidate. It lost none of the active model's
+previously correct teaching or feedback answers in this check; overall
+teaching scores were 226/280, 204/280, and 236/280 respectively. These
+development and feedback cases are not independent generalization evidence.
+This tests only one fixed blend, not a trained integration or a fresh model.
+The candidate branch's saturation failure remains unresolved, so the mixture
+has not passed activation safeguards.
+
+```sh
+python3 universe-lab/active_candidate_pair_experiment.py \
+  --bible-dir .data/bible-web-staged --oanc /path/to/OANC-1.0.1-UTF8.zip \
+  --candidate /path/to/round/trained.json --candidate-sha256 CANDIDATE_SHA256 \
+  --training-report-sha256 REPORT_SHA256 --report /path/to/report.json
+```
+
+#### Fresh weights versus the combination
+
+`universe-lab/fresh_pair_comparison.py` starts with newly initialized weights
+but retains the active model's architecture, symbol inventory and lexicon.
+It uses the same reviewed user corpus and approved conversation rehearsal
+as the rejected candidate, with the same initial training sample order. A
+5,800-update run matches the candidate's last round; a second run from the
+same fresh initialization uses 17,400 updates. Both final states replayed
+exactly, and neither was activated.
+
+On the same 1,604,277 held-out pairs, the 5,800-update model never reached a
+second word. The 17,400-update model reached a second word on all cases and
+predicted its initial correctly 0.74% of the time; neither fresh run got an
+exact two-word pair. The earlier active/candidate combination scored 3.18%
+and five exact pairs. On reused teaching and feedback checks the short
+fresh run scored 0/280 and 0/24, while the longer fresh run scored 104/280
+and 2/24; the combination scored 226/280 and 11/24.
+
+More updates clearly improved this fresh run's teaching results, but this
+single initialization and two budgets do not settle whether a fresh model
+could eventually do better. The combination's branches have a much longer
+training history, and its rejected branch has an unresolved saturation
+failure. The longer fresh run's final saturation was 0.175; intermediate
+saturation and full activation safeguards were not tested. No model was
+promoted. The same short-first-word, supplied-initial, punctuation and split
+limitations described above apply.
+
+```sh
+python3 universe-lab/fresh_pair_comparison.py \
+  --bible-dir .data/bible-web-staged --oanc /path/to/OANC-1.0.1-UTF8.zip \
+  --candidate /path/to/round/trained.json --candidate-sha256 CANDIDATE_SHA256 \
+  --training-report-sha256 REPORT_SHA256 --comparison /path/to/mixture-report.json \
+  --comparison-sha256 COMPARISON_SHA256 --updates 17400 --run-dir /path/to/new-private-run
+```
+
+#### Continuing the experimental model
+
+`universe-lab/continue_fresh_pair.py` resumes the saved 17,400-update
+experimental checkpoint, reconstructs the original training random stream,
+and applies another 17,400 updates using the same reviewed corpus and
+approved conversation rehearsal. The continuation replayed exactly and
+remains separate from the active model.
+
+On the same 1,604,277 held-out pairs, second-initial accuracy rose from
+0.74% to 3.58%, and exact two-word matches from 0 to 47. The continued
+model reached a second initial on 51.53% of cases, versus 100% previously;
+unavailable predictions count as incorrect. Its second-word-only exact
+accuracy was 0.047%; the earlier mixture scored 0.341% for that measure,
+although it got five complete pairs versus 47 for the continuation.
+
+Teaching improved 104/280 to 162/280, development 16/64 to 20/64, and
+feedback 2/24 to 3/24. One previously correct teaching answer was lost;
+no previously correct feedback answer was lost. These are reused checks,
+not independent proof of generalization. The experiment used no new
+training examples, and final saturation was 0.255; full activation
+safeguards were not run. The same supplied first initial, short first-word
+assumption and corpus-split limitations apply.
+
+A further 17,400-update continuation reached 52,200 total updates and
+replayed exactly, but the same two-word test regressed: second-initial
+accuracy fell from 3.58% to 0.81%, availability from 51.53% to 17.12%,
+and exact pairs from 47 to 33. Second-word-only correct fell from 754 to
+99. Teaching rose from 162/280 to 180/280, development from 20/64 to
+25/64, and feedback from 3/24 to 4/24, but 17 previously correct teaching
+answers and one feedback answer were lost. Final saturation rose from
+0.255 to 0.307. Both experimental checkpoints remain separate from active
+chat, and full activation safeguards were not run.
+
+A monitored investigation branched from the preserved 34,800-update
+checkpoint using the same training stream. At 725, 1,450, and 2,900
+additional updates, second-initial availability was 6.59%, 12.56%, and
+0%, respectively, versus 51.53% at the starting checkpoint. The 2,900
+checkpoint ended the first line after one word for all 52 tested starting
+letters. The 725 checkpoint already lost two previously correct teaching
+answers, although its overall teaching score improved. Saturation at 725
+updates was lower than at the start; this does not establish a cause for
+the regression. These checks use only one greedy prediction per starting
+letter, reused across the held-out pairs, and are not an independent test
+of fluent generation. No experimental checkpoint was activated.
+
+```sh
+python3 universe-lab/continue_fresh_pair.py \
+  --bible-dir .data/bible-web-staged --oanc /path/to/OANC-1.0.1-UTF8.zip \
+  --previous-run /path/to/previous-private-run --previous-report-sha256 REPORT_SHA256 \
+  --candidate /path/to/round/trained.json --comparison /path/to/mixture-report.json \
+  --run-dir /path/to/new-private-run
+```
+
+#### Fresh character-level context trial
+
+`universe-lab/character_context_trial.py` starts from fresh weights using
+the existing architecture and reviewed training inputs. Both training and
+generation select individual characters, not whole-word output tokens.
+The trial compares conversation prompt-to-answer cases with text
+continuation cases. It does not supply the target first letter. It scores
+each of the first four letter positions and exact first and second words,
+continuing longer words until their boundary. Missing expected words count
+wrong; cases with only one target word are excluded from all second-word
+denominators. The report distinguishes absent and unfinished predictions.
+
+One 2,900-update exploratory run replayed exactly. On 64 reused conversation
+development cases, first-letter matches rose from 0 to 14 and exact first
+words remained 0; all 64 generated first words began with `B`, so those
+letter matches do not show contextual understanding. All eight expected
+second words were missing. On 64
+Bible and 64 OANC text-continuation cases, exact first and second words
+were also zero. After training the first word was missing in 50 Bible and
+58 OANC cases. These are small, differently distributed sets; they do not
+establish that one context is inherently better. Conversation development
+cases are reused, and the text cases are paired samples from the same
+documents. No full activation safeguards were run and the model remains
+isolated.
+
+The same fresh initialization was also trained for 2,900 updates using
+only approved conversation-answer characters, and compared with the
+75% conversation / 25% corpus run on the identical cases. Conversation
+first-letter matches rose from 14/64 to 19/64 and exact first words from
+0/64 to 2/64; second-letter matches fell from 10/56 to 1/56. Both exact
+matches were `I`, and 56 of the 64 first outputs were `B`. Both runs
+missed all eight expected second words. The conversation-only run produced
+more words in the text cases, but still matched no complete first or
+second words there. This is one short, reused evaluation, not proof that
+the model understands the prompts or that the training mix is generally
+better.
+
+Two further conversation-only rounds resumed that checkpoint for 2,900
+updates each and replayed exactly. On the same 64 conversation cases, exact
+first words increased from 2 to 7 to 13, and exact second words from 0 to
+0 to 5 of the eight cases with second targets. At 8,700 updates, five
+cases had both first and second words correct and seven had the complete
+expected answer correct; no previously correct first word or complete
+answer was lost between measured stages. These reused checks are small and
+do not establish generalization; text-continuation first and second exact
+word scores stayed at zero. Full activation safeguards were not run.
+
+A further 2,900-update round reached 11,600 updates. Exact first-word and
+complete-answer totals stayed at 13/64 and 7/64, but six previously correct
+cases were lost and six gained for each measure. Exact second words rose
+from 5/8 to 6/8, all with the first word also correct. The two text groups
+still had zero exact first and second words. The round replayed exactly and
+remains isolated; these reused checks and eight second-word targets do not
+establish generalization or activation safety.
+
+Another 2,900 updates reached 14,500. On those same conversation cases,
+first-word accuracy rose from 13/64 to 15/64 and complete answers from
+7/64 to 12/64; one previously correct case was lost for each measure.
+Second words remained 6/8, all with the first word also correct. In the
+text groups one OANC first word was correct, versus none previously;
+all other exact first- and second-word counts remained zero. The round
+replayed exactly and stayed isolated; full activation checks were not run.
+
+The next 2,900-update round mixed the previously approved 256-exchange
+meal with approved conversation rehearsal at equal sampling probability.
+The meal contained 169 prompts not in the model's earlier teaching and
+87 overlapping prompts. On reused conversation cases, first words rose
+15/64 to 21/64, complete answers 12/64 to 19/64, and second words stayed
+6/8. No previously correct complete answers were lost on that check.
+Rehearsal complete answers rose 101/280 to 118/280; the meal's development
+cases rose 10/32 to 13/32, with no previously correct answers lost in
+either set. This round replayed exactly but does not isolate the effect of
+the new meal from further training. These checks are reused, and no full
+activation safeguards were run.
+
+A final 2,900-update round continued that meal mix to 20,300 total updates.
+Conversation first words rose 21/64 to 24/64 and complete answers 19/64 to
+24/64; one previously correct case was lost in each measure. Second words
+remained 6/8, all with the first word correct. All eight two-word targets
+begin with `I do`, so this does not demonstrate broad two-word prediction.
+Rehearsal complete answers increased 118/280 to 135/280 without losing any
+previously correct cases. Both text-continuation groups remained at zero
+exact first and second words. The round replayed exactly and stayed isolated.
+
+```sh
+python3 universe-lab/character_context_trial.py \
+  --bible-dir .data/bible-web-staged --oanc /path/to/OANC-1.0.1-UTF8.zip \
+  --updates 2900 --run-dir /path/to/new-private-run
+
+# Optionally compare conversation-only training against a pinned earlier run.
+python3 universe-lab/character_context_trial.py \
+  --bible-dir .data/bible-web-staged --oanc /path/to/OANC-1.0.1-UTF8.zip \
+  --updates 2900 --conversation-only --comparison-report /path/to/report.json \
+  --comparison-sha256 REPORT_SHA256 --run-dir /path/to/another-private-run
+
+# Resume an isolated character checkpoint with the same training protocol.
+python3 universe-lab/character_context_trial.py \
+  --bible-dir .data/bible-web-staged --oanc /path/to/OANC-1.0.1-UTF8.zip \
+  --updates 2900 --conversation-only --previous-run /path/to/previous-private-run \
+  --previous-report-sha256 REPORT_SHA256 --run-dir /path/to/next-private-run
+
+# Mix the approved 256-exchange meal with conversation rehearsal.
+# Keep --meal-256 on subsequent continuations of this mixed-meal lineage.
+python3 universe-lab/character_context_trial.py \
+  --bible-dir .data/bible-web-staged --oanc /path/to/OANC-1.0.1-UTF8.zip \
+  --updates 2900 --conversation-only --meal-256 --previous-run /path/to/previous-private-run \
+  --previous-report-sha256 REPORT_SHA256 --run-dir /path/to/next-private-run
+```
+
 For an offline quick multi-context comparison:
 ```sh
 python3 neural_context_mix.py --acknowledge-review

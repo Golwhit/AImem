@@ -4,6 +4,655 @@ Newest application checkpoint first. Entries map delivered versions to the
 session that produced them; historical conversation memory remains separate.
 See [versioning policy](VERSIONING.md) for bump and release rules.
 
+## 0.41.1 - 2026-11-16
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: patch
+
+### Changes
+
+- Documented a final isolated 2,900-update continuation using the approved
+  256-exchange meal and prior conversation rehearsal, reaching 20,300 total
+  updates. The 1,422 meal and 1,478 rehearsal draws replayed exactly.
+- On the same 64 conversation cases, first words increased 21 to 24 and
+  complete answers 19 to 24; one previously correct case was lost in each
+  measure. Second words remained 6/8, all with the first word correct. All
+  eight two-word targets start `I do`, limiting the interpretation.
+  Rehearsal complete answers increased 118/280 to 135/280 with no lost
+  previously correct cases; meal development increased 13/32 to 15/32,
+  also without losses. Both text groups remained at zero exact first and
+  second words.
+- These are reused checks, not independent generalization evidence. Full
+  activation and mid-round safeguards were not run; the checkpoint was not
+  activated and earlier checkpoints remain preserved.
+- Validation: 16 focused Python tests, version tests, production build and
+  documentation whitespace checks passed. Active and progress still select
+  round 39; their hashes, the live universe and the parent checkpoint were
+  unchanged. The memory graph was regenerated.
+
+## 0.41.0 - 2026-11-16
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: minor
+
+### Changes
+
+- Added isolated character-model training on the previously approved,
+  exact-hash 256-exchange meal with equal-probability approved conversation
+  rehearsal, exact replay, input/protocol checks, and retained sampling
+  position for later meal continuations. The selected meal contains 169
+  prompts not present in the earlier teaching and 87 overlaps; no selected
+  meal training prompts overlap the previous conversation development set.
+- The 14,500-update experimental checkpoint received 2,900 updates
+  (1,406 meal and 1,494 rehearsal positions). On reused conversation cases,
+  first-word accuracy rose 15/64 to 21/64 and complete answers 12/64 to
+  19/64; second words stayed 6/8. No previously correct complete answers
+  were lost. Rehearsal complete answers increased 101/280 to 118/280 and
+  meal development answers 10/32 to 13/32; neither lost previously correct
+  answers. The weights and draw counts replayed exactly.
+- These are reused checks with a small second-word sample. No same-budget
+  no-new-meal control isolates the effect of the meal, and full activation
+  and mid-round safeguards were not run. The checkpoint remains isolated.
+- Validation: 16 focused Python tests, including split meal-stream replay,
+  Python compilation, version tests, and production build passed. Active
+  and progress still select round 39; their hashes and the live universe
+  hash were unchanged. The memory graph was regenerated.
+
+## 0.40.2 - 2026-11-16
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: patch
+
+### Changes
+
+- Documented another isolated 2,900-update conversation-only continuation,
+  from 11,600 to 14,500 total updates. The round replayed exactly.
+- On the same 64 conversation cases, exact first words rose 13 to 15 and
+  complete answers 7 to 12. One previously correct case was lost in each
+  measure. Exact second words stayed 6/8; all six also had the first word
+  correct. One OANC first word matched; the remaining text-group exact
+  first- and second-word counts were zero.
+- These are reused checks, with only eight second-word targets, not
+  independent generalization evidence. Full activation and mid-round
+  safeguards were not run; the checkpoint was not activated.
+- Validation: 13 focused tests, the version test, production build, and
+  documentation whitespace checks passed. Active and progress still select
+  round 39; their hashes and the live universe hash were unchanged. The
+  memory graph was regenerated.
+
+## 0.40.1 - 2026-11-16
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: patch
+
+### Changes
+
+- Documented a further 2,900-update conversation-only continuation of the
+  8,700-update experimental checkpoint. The resulting 11,600-update model
+  replayed exactly and remained separate from active chat.
+- On the same 64 conversation cases, exact first words stayed 13/64 and
+  complete answers stayed 7/64, but each measure lost six previously correct
+  cases and gained six others. Exact second words increased from 5/8 to
+  6/8; all six cases also had the first word correct. Both text-continuation
+  groups remained at zero exact first and second words.
+- These checks are reused, with only eight second-word targets; they are
+  not independent evidence of generalization. Full activation and
+  mid-round safeguards were not run.
+- Validation: 13 focused tests, the version test, production build, and
+  documentation whitespace checks passed. Active and progress still select
+  round 39; their hashes and the live universe hash were unchanged. The
+  memory graph was regenerated.
+
+## 0.40.0 - 2026-11-16
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: minor
+
+### Changes
+
+- Added hash-checked continuation of isolated character checkpoints with
+  reconstruction of the appropriate conversation-only or mixed random
+  sampling stream. The saved checkpoint, data, cases, scoring dependencies
+  and previous scores must match before a continuation starts.
+- Continued the 2,900-update conversation-only checkpoint for two more
+  2,900-update rounds. Each round sampled only approved conversation
+  characters and replayed exactly. On the same 64 conversation cases,
+  exact first words increased 2 to 7 to 13; exact second words increased
+  0 to 0 to 5 of eight cases with second targets. The 8,700-update
+  checkpoint got both words correct in five cases and the full expected
+  answer correct in seven. No previously correct first word or full answer
+  was lost between measured stages.
+- Both text groups remained at zero exact first and second words. The
+  conversation evaluation is reused, with only eight second-word targets,
+  and is not independent generalization evidence. Full activation and
+  mid-round safeguards were not run. The active model and previous
+  checkpoints remained unchanged.
+- Validation: 13 focused tests, including split versus uninterrupted
+  training, Python compilation, version tests, and production build
+  passed. Active and progress still select round 39; their hashes, the live
+  universe, and the original character checkpoint were unchanged. The
+  memory graph was regenerated.
+
+## 0.39.0 - 2026-11-16
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: minor
+
+### Changes
+
+- Added conversation-only character training and optional hash-pinned
+  comparison against a prior character trial. Comparison verifies the
+  same fresh initial weights, reviewed inputs, update count, evaluation
+  cases, initial scores, and unchanged scoring dependencies.
+- Compared 2,900 conversation-only updates with 2,900 updates using the
+  earlier 75% conversation / 25% corpus mix. Training draws and final
+  weights replayed exactly. Conversation first letters improved 14/64 to
+  19/64 and exact first words 0/64 to 2/64, but second letters fell from
+  10/56 to 1/56. Both exact words were `I`; 56/64 first outputs were `B`.
+  Both runs missed all eight expected second words.
+- In the two text groups, first-word missing counts fell from 50/64 to
+  3/64 for Bible and from 58/64 to 4/64 for OANC, but neither run got
+  any complete first or second words correct in those groups. One seed,
+  reused development cases, nonidentical sampled training positions, and
+  the small text sample limit conclusions. Full activation safeguards were
+  not run; both experiments remain isolated from active chat.
+- Validation: 12 focused tests, Python compilation, version tests, and
+  production build passed. Active and progress still select round 39;
+  their hashes, the live universe, and the mixed-run checkpoint were
+  unchanged. The memory graph was regenerated.
+
+## 0.38.0 - 2026-11-16
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: minor
+
+### Changes
+
+- Added an isolated fresh-weight, character-output training and evaluation
+  trial. It compares conversation prompts against known answers and
+  preceding text against remaining words, without supplying the first
+  target letter. It reports exact first/second words, first four letter
+  positions, missing and unfinished predictions, and one-target cases
+  excluded from second-word denominators. Expected but missing words count
+  wrong. Longer words continue to their boundary or the 64-character cap.
+- On the same reviewed conversation and corpus inputs, 2,900 updates
+  replayed exactly. Of 64 reused conversation development cases, first
+  letters improved 0/64 to 14/64, but exact first words remained 0/64 and
+  all 64 generated first words began with `B`. All eight expected second
+  words were missing after training. On each of
+  64 Bible and 64 OANC continuation cases, exact first and second words
+  were zero; 50 and 58 first words were missing after training.
+- This is one seed and a short run. Source cases use the first 32 eligible
+  held-out documents per source, with one- and two-target cases from each
+  selected segment; near duplicates may cross the split. Context groups
+  have different target distributions and are not an apples-to-apples
+  comparison. Reused development cases are not independent generalization
+  evidence, and full activation safeguards were not run. No model was
+  activated or prior experimental checkpoint replaced.
+- Validation: 11 focused tests and Python compilation passed; Pylance
+  syntax checks timed out. The version test and production build passed.
+  Active and progress still select round 39; their hashes and the live
+  universe hash were unchanged. The memory graph was regenerated.
+
+## 0.37.2 - 2026-11-16
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: patch
+
+### Changes
+
+- Documented three replay-verified branches from the isolated 34,800-update
+  experimental checkpoint, using the same reviewed data and continuing
+  random stream, at 725, 1,450, and 2,900 additional updates.
+- On the reused 1,604,277-pair test, second-initial availability changed
+  from 51.53% at the start to 6.59%, 12.56%, and 0%, respectively;
+  accuracy changed from 3.58% to 0.38%, 0.67%, and 0%. Exact pair counts
+  were 47, 1, 44, and 0. One greedy prediction per starting letter is
+  reused for many pairs; these are not independent sentence-generation
+  tests. At 2,900 updates all 52 tested initials ended the first line
+  after one word.
+- Teaching scores were 162, 167, 167, and 171 out of 280. Relative to the
+  starting checkpoint, the 725-update branch lost two previously correct
+  teaching answers, while the other branches lost none. Final saturation
+  was 0.2547, 0.2485, 0.2447, and 0.3023, respectively; the first collapse
+  occurred without an increase. Full activation safeguards were not run.
+  Active chat and the preserved experimental parent were not changed.
+- Validation: eight focused continuation/comparison tests, version tests,
+  production build, and documentation whitespace checks passed. Active and
+  progress still select round 39; their hashes, the live universe, and the
+  experimental parent checkpoint were unchanged. The graph was regenerated.
+
+## 0.37.1 - 2026-11-16
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: patch
+
+### Changes
+
+- Documented another isolated 17,400-update continuation of the saved
+  34,800-update experimental checkpoint, using the same reviewed inputs.
+  The resulting 52,200-update weights replayed exactly; updates took
+  166.42 CPU seconds, excluding replay and evaluation.
+- On the same 1,604,277 held-out pairs, second-initial accuracy fell from
+  3.58% to 0.81%, availability from 51.53% to 17.12%, correct second
+  words from 754 to 99, and exact pairs from 47 to 33. Teaching increased
+  162/280 to 180/280, development 20/64 to 25/64, paired development
+  8/32 to 9/32, and feedback 3/24 to 4/24. Nevertheless, 17 previously
+  correct teaching answers and one feedback answer were lost. Final
+  saturation increased from 0.2547 to 0.3067.
+- The checks are reused, the held-out pair restrictions and split
+  limitations remain, and full activation safeguards were not run. Both
+  experimental checkpoints remain isolated; the active model was unchanged.
+- Validation: eight focused continuation/comparison tests, version tests,
+  production build, and documentation whitespace checks passed. Active and
+  progress still select round 39; active selection, progress, and live
+  universe hashes were unchanged. The memory graph was regenerated.
+
+## 0.37.0 - 2026-11-16
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: minor
+
+### Changes
+
+- Added isolated experimental-model continuation using the saved
+  17,400-update fresh checkpoint, the same reviewed inputs and reconstructed
+  random stream. Another 17,400 updates took 179.62 update-CPU seconds,
+  excluding replay and evaluation. The starting checkpoint matched and the
+  continued weights replayed exactly; total updates are 34,800.
+- On the same 1,604,277 held-out pairs, second-initial accuracy rose from
+  0.74% to 3.58%, and exact two-word matches from 0 to 47. Second-initial
+  availability fell from 100% to 51.53%. Second-word-only accuracy was
+  0.047%, versus 0.341% for the previously measured mixture. Only the
+  actual first initial is supplied; actual first words are at most four
+  letters, and all second-word lengths are included. Pairs can cross
+  punctuation and near-duplicate content can cross the split.
+- On reused checks, teaching improved 104/280 to 162/280, development
+  16/64 to 20/64, paired development 1/32 to 8/32, and feedback 2/24 to
+  3/24. One previously correct teaching answer was lost; no previously
+  correct feedback answer was lost. Final saturation was 0.2547; full
+  activation safeguards were not run. The experimental checkpoint was not
+  activated, and active round 39 remained unchanged.
+- Validation: 73 focused Python tests, three pattern tests, Python
+  compilation, version tests, and production build passed. Active and
+  permanent progress still agree at round 39; the live universe hash is
+  unchanged. The memory graph was regenerated.
+
+## 0.36.0 - 2026-11-16
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: minor
+
+### Changes
+
+- Added an isolated fresh-weight comparison using the active architecture,
+  lexicon and symbol inventory, the reviewed corpus and approved conversation
+  rehearsal. Starting from the same fresh seed, 5,800- and 17,400-update
+  runs used the same initial sample order; both final weights replayed
+  exactly. The 5,800 updates match the rejected continuation's last round;
+  update CPU was 59.07 and 181.96 seconds, excluding replay and evaluation.
+- On 1,604,277 held-out two-word pairs, the short fresh run never reached
+  the second word; the longer reached it on all cases and predicted its
+  initial 0.74% of the time. Both got zero exact pairs. The previously
+  measured active/candidate mixture scored 3.18% on the initial and five
+  exact pairs. Only the first initial is supplied; actual first words are
+  at most four letters. Pairs can cross punctuation and repeated or
+  near-duplicate content can cross the split.
+- On reused checks, short / long fresh scored 0/280 / 104/280 teaching,
+  0/64 / 16/64 development and 0/24 / 2/24 feedback; the earlier mixture
+  scored 226/280, 27/64 and 11/24. The longer fresh run ended at 0.1747
+  saturation, but intermediate saturation and full promotion safeguards
+  were not checked. One seed and two budgets are not a general verdict;
+  the mixture has a longer training history and an unresolved rejected
+  branch. Neither fresh run was activated.
+- Validation: 71 focused Python tests, three pattern tests, Python
+  compilation, version tests, and production build passed. Active and
+  permanent progress still agree at round 39; the live universe hash is
+  unchanged. The memory graph was regenerated.
+
+## 0.35.0 - 2026-11-16
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: minor
+
+### Changes
+
+- Added an isolated two-word comparison of active round 39, its rejected
+  corpus candidate, and their fixed equal-weight output-probability
+  mixture. The individual checkpoints and live selection were unchanged.
+- On 1,604,277 held-out pairs, active / candidate / mixture correctly
+  predicted the second initial 1.01% / 4.37% / 3.18% of the time; exact
+  two-word counts were 0 / 25 / 5. Only the first initial is supplied,
+  actual first words are at most four letters, and all second-word lengths
+  are included. Pairs can cross punctuation; repeated words and
+  near-duplicate documents can cross the split.
+- On reused assessments the mixture scored 226/280 teaching, 27/64
+  development, 11/32 paired development and 11/24 feedback, with no
+  previously correct teaching or feedback answers lost relative to
+  active. Active scored 204/280, 26/64, 10/32 and 6/24; the rejected
+  candidate scored 236/280, 29/64, 12/32 and 10/24. This is a fixed blend,
+  not a trained integration or a fresh-model comparison. The rejected
+  branch's saturation failure remains unresolved.
+- Validation: 69 focused Python tests, three pattern tests, Python
+  compilation, version tests, and production build passed. Active and
+  permanent progress still agree at round 39; the live universe hash is
+  unchanged. The memory graph was regenerated.
+
+## 0.34.0 - 2026-11-16
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: minor
+
+### Changes
+
+- At the user's request, ran a guarded 60-update-CPU-second continuation
+  from active round 39 on the exact reviewed user corpus and approved
+  conversation rehearsal. Run `7a67711a46ef4a609a04d92d1b7ee2a1` made
+  5,800 updates, replayed exactly and was rejected for saturation plus
+  loss of one previously correct teaching item and one feedback item.
+  Active round 39 and its checkpoint remained unchanged.
+- Overall teaching improved 204/280 to 236/280, development 26/64 to
+  29/64, paired development 10/32 to 12/32, feedback 6/24 to 10/24, and
+  teacher-forced corpus positions 214/536 to 278/536. Saturation was
+  0.6019 and 0.6064 at the two milestones, above the 0.6 corpus limit.
+- Added an isolated held-out three-word evaluator. On 708,090 fragments,
+  the original active model did not reach a third word. The rejected
+  candidate reached one on 544,360 (76.88%), predicted its initial on
+  21,193 (2.99% of all cases), and exactly predicted zero third words or
+  three-word sequences. The first initial is supplied; actual first and
+  second words are at most four letters. The greedy model/decoder differs
+  from the earlier index experiment; this is not a conversation-quality test.
+  Bible/OANC fragments were evaluation only; the user corpus was the
+  reviewed corpus-training input.
+- Validation: 65 focused Python tests, three pattern tests, Python
+  compilation, version tests, and the production build passed. The memory
+  graph was regenerated. Active and permanent progress still agree at
+  round 39, and the live universe hash is unchanged.
+
+## 0.33.0 - 2026-11-16
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: minor
+
+### Changes
+
+- Added an isolated two-word initial/prefix index, with blended one-word
+  fallback, and a matched comparison at nested 25%, 50%, and 100% training
+  document samples. Both generated arms share the same first two words;
+  another diagnostic supplies actual first and second words.
+- On 708,090 held-out fragments at full size, known-context third-initial
+  accuracy was 19.96% / 20.96% for one / two preceding words, and complete
+  third-word accuracy was 9.13% / 10.30%. In the generated chain the same
+  initial scores were 9.49% / 7.84%, word scores 2.11% / 1.32%, and exact
+  three-word scores 0.269% / 0.306%. More documents did not consistently
+  improve two-word performance. No optimizer or active model was trained.
+- The 512 indexed two-word contexts covered 44.12% of actual test pairs;
+  others fall back to one-word context. Only the first initial is supplied
+  in the chain, the first two actual words are short, and longer third
+  words cannot be completed. One-word training may cross punctuation;
+  indexed triples and test fragments do not. Split reuse and mapping
+  calibration limitations from the earlier experiment still apply.
+- Validation: 63 focused Python tests, three pattern tests, compilation,
+  version tests, and production build passed. Full-data one-word scores
+  reproduced the previous run. Pylance signature checking timed out; the
+  existing call sites and focused tests were checked separately. Memory
+  graph regenerated; live universe, active selection, and checkpoint hashes
+  were unchanged.
+
+## 0.32.0 - 2026-11-16
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: minor
+
+### Changes
+
+- Added an isolated three-word continuation comparison, reusing the joint
+  search with a generated preceding word; preserved the two-word context
+  index as a future review idea, not an implemented feature.
+- On 708,090 held-out fragments, beam versus greedy third-initial accuracy
+  was 9.49% versus 5.70%, and complete three-word accuracy 0.27% versus
+  0.12%. On the 495,756 cases where greedy reached the third initial,
+  complete sequence accuracy was 0.26% versus 0.17%. A separate diagnostic
+  given the actual second word scored 19.96% on the third initial.
+- Both actual preceding words are at most four letters, only the first
+  initial is supplied to the chains, and longer third words cannot be
+  completed. Fragments do not cross punctuation or documents, but training
+  pairs can cross punctuation. Repeated words and near duplicates can cross
+  the split; mapping calibration included broader corpus frequencies.
+  The run used approved hash-pinned private inputs and did not compare
+  conversational quality against the active model.
+- Validation: 57 focused Python tests, three pattern tests, version tests,
+  Python compilation, and the production build passed. The previous joint
+  experiment's aggregate counts and scores were exactly reproduced after
+  the refactor. Pylance's syntax request timed out; Python compilation and
+  execution succeeded. The memory graph was regenerated, and the universe
+  state, active selection, and checkpoint hashes matched their pre-run values.
+
+## 0.31.0 - 2026-11-15
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: minor
+
+### Changes
+
+- Added an isolated joint next-word search that marginalizes up to 20
+  preceding-word candidates across five or 20 next-word paths. Exposed
+  shared initial and contextual probability weights while preserving the
+  existing greedy comparison. No next initial is supplied.
+- On the 244,430 four-letter targets where the earlier preceding-word
+  generator stopped, the best 20-path word scored 4.78% versus 4.17%
+  for the prior mixture; its top-five candidate coverage was 11.48%.
+  Across all 1,402,110 matched pairs, exact-word accuracy was 8.21% versus
+  8.15%, but initial accuracy was 15.47% versus 15.89%.
+- Both arms receive the preceding word's true initial and assume it is at
+  most four letters. Non-ASCII-letter words are excluded, sentence
+  punctuation may be crossed, words can recur across the split, and mapping
+  calibration included broader corpus frequencies. Approved hash-pinned
+  private inputs were used; active weights and the universe were unchanged.
+- Fifty-three focused Python tests, three pattern tests, the version tests,
+  Python compilation, and the production build passed. The memory graph
+  was regenerated.
+
+## 0.30.0 - 2026-11-15
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: minor
+
+### Changes
+
+- Added an isolated next-initial and word-generation comparison that
+  supplies only the preceding word's true initial. The 5/20-path arms
+  combine finished preceding-word candidates to predict the next initial,
+  then use that prediction to select context and generate the next word.
+  The existing greedy arm and a known-previous-word oracle provide controls.
+- On the 1,402,110 held-out pairs where greedy generation stopped, the
+  20-path mixture predicted initials at 15.89% versus 14.76% greedy and
+  15.14% most-common; complete-word accuracy was 8.15% versus 6.87%.
+  For four-letter targets, complete-word accuracy was 4.17% versus 3.82%.
+  Longer targets count as incorrect in full-pair word scores.
+- Previous words are assumed to be at most four letters, and their true
+  initials are supplied; the next initial is not. ASCII-only filtering,
+  sentence-punctuation crossings, repeated words across splits, and mapping
+  calibration on broader source frequencies limit interpretation. Approved
+  hash-pinned inputs were used; active weights and the universe were unchanged.
+- Forty-nine focused Python tests, three pattern tests, the version tests,
+  Python compilation, and the production build passed. The memory graph
+  was regenerated.
+
+## 0.29.0 - 2026-11-15
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: minor
+
+### Changes
+
+- Added an isolated 5- and 20-path preceding-word beam comparison, including
+  paths that end or continue beyond four characters. Finished candidates
+  can be re-ranked using the supplied current-word initial. It uses the
+  previously approved, hash-pinned private inputs and held-out windows.
+- On the 749,650 windows where greedy generation stopped, the 20-path
+  re-ranked beam improved exact preceding-word accuracy from 35.36% to
+  42.82%, current-word accuracy from 29.69% to 34.28%, and following-initial
+  accuracy from 8.19% to 9.57%. For four-letter current words, the matched
+  score rose from 13.01% to 15.86%; the five-path beam scored 16.39%.
+- Evaluation assumes the preceding word is at most four letters. Both true
+  first letters are supplied, and the current initial is used in re-ranking,
+  not predicted. Common words can recur across the split; non-ASCII-letter
+  words are excluded, sentence punctuation may be crossed, and mapping
+  calibration included broader corpus frequencies. Active weights and the
+  live universe were unchanged.
+- Forty-five focused Python tests, three pattern tests, the version tests,
+  Python compilation, and the production build passed. The memory graph
+  was regenerated.
+
+## 0.28.0 - 2026-11-15
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: minor
+
+### Changes
+
+- Added an isolated short-word generator comparison using the 64 most
+  frequent training-only preceding words and a ten-observation unconditional
+  prior. It compares actual versus generated preceding words against the
+  existing prefix generator on identical held-out three-word windows.
+- On 873,368 windows with the current word's true initial supplied, the
+  actual preceding word improved complete-word accuracy from 30.85% to
+  43.21%; on four-letter targets, from 12.45% to 22.50%. Next-initial
+  accuracy on all windows was 11.61% versus 12.11%.
+- The preceding word generated from its true initial stopped on 85.83%
+  of windows and was exact on 35.36% of that subset. On the same subset,
+  generated-context versus unconditional current-word accuracy was
+  29.69% versus 30.48%, and next-initial accuracy 8.19% versus 11.41%.
+  Both first letters are supplied; this is not unaided generation.
+- The test uses approved hash-pinned private inputs, excludes non-ASCII
+  words, and may cross sentence punctuation. Repeated words may cross the
+  document/book split, and mapping calibration used broader corpus
+  frequencies. No active weights or live universe were changed.
+- Forty-two focused Python tests, three pattern tests, the version tests,
+  Python compilation, and the production build passed. The memory graph
+  was regenerated.
+
+## 0.27.0 - 2026-11-15
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: minor
+
+### Changes
+
+- Added an isolated next-initial comparison after completed one- to
+  four-letter words. The known-word arm receives the actual prior word;
+  the generated arm receives its true initial and uses the existing
+  prefix generator and stop decision. Both are refitted solely on the
+  approved, hash-pinned training inputs.
+- On 1,604,277 held-out pairs, the known-word arm scored 20.42% versus a
+  14.51% global baseline. The generator stopped within four letters on
+  87.40% of pairs and scored 14.76% of those; unavailable predictions
+  counted as incorrect yield 12.90% overall. On the stopped subset, the
+  known-word arm scored 20.14% and baseline 15.14%.
+- For 460,982 pairs following actual four-letter words, the known-word
+  arm scored 22.28%; the generator stopped in 77.99% and scored 12.85%
+  of those. ASCII-only token filtering, repeated words crossing splits,
+  sentence-punctuation crossings, and mapping calibration on broader source
+  frequencies limit interpretation. No active weights or live universe
+  were changed.
+- Thirty-eight focused Python tests, three pattern tests, the version tests,
+  Python compilation, and the production build passed. The memory graph
+  was regenerated.
+
+## 0.26.0 - 2026-11-15
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: minor
+
+### Changes
+
+- Added an isolated pattern-family prefix ranker and stop decision for
+  prefixes one through four characters long. Missing prefixes fall back to
+  same-position last-letter counts, then position-wide counts. It uses the
+  previously approved, hash-pinned private inputs and retains its queryable
+  derived prefix report outside Git.
+- On held-out occurrences, the top next letter or stop was correct 54.86%
+  after two letters and 70.95% after three; same-position last-letter
+  baselines scored 33.30% and 35.94%. From only the actual first letter,
+  greedy generation produced and correctly ended 64,325/473,497 four-letter
+  occurrences (13.59%). Correct prefixes were supplied for next-step scores,
+  but not after the first letter in generation.
+- The test excludes non-ASCII-letter words, including contractions;
+  repeated words can appear across the split, and the pattern mapping saw
+  corpus-wide initial frequencies. The isolated experiment did not change
+  active weights or the live universe.
+- Thirty-six focused Python tests, three pattern tests, the version tests,
+  Python compilation, and the production build passed. The private `str`
+  lookup returned `a`, `e`, and `u` as its top three choices. The memory
+  graph was regenerated.
+
+## 0.25.0 - 2026-11-15
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: minor
+
+### Changes
+
+- Added an isolated, queryable second-letter ranker using fixed pattern
+  families and the previously approved, hash-pinned Bible/OANC inputs.
+  Pattern variants share a letter family; missing first-letter families
+  fall back to the training-wide ranking. The private report lists all 52
+  case-sensitive possibilities without publishing corpus text.
+- On 2,781,847 held-out word occurrences, the top guess scored 42.56%
+  and top three 73.62%; training-wide baselines scored 15.42% and 42.31%.
+  This is occurrence-weighted and teacher-forced; repeated words may cross
+  splits, and the pattern mapping saw corpus-wide initial frequencies.
+  One-letter words, word endings, full-word generation and quark bonding
+  are not tested. No active weights or live universe were changed.
+- Thirty-three focused Python tests, three pattern tests, the version check,
+  the private report lookup, and the production build passed. The memory
+  graph was regenerated. Pylance's syntax-check request timed out.
+
+## 0.24.0 - 2026-11-15
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: minor
+
+### Changes
+
+- Added an isolated short-meal comparison against the frozen active
+  conversation model. The sidecar uses 41 pairs from ten sentences in the
+  previously approved exact-hash user corpus; neither neural weights nor the
+  live universe are changed. Its fixed pattern labels are reversible to
+  ordinary initials and unknown contexts preserve the model's prior.
+- On 44 newly written diagnostic word starts, the model scored 3/44,
+  sidecar 6/44, and a most-common-meal-initial baseline 3/44. Probabilities
+  are grouped by first output character, including nonletters. These small,
+  teacher-forced results do not prove generalization, chat quality, or a
+  quark-specific benefit. Mapping calibration used broader corpus frequencies.
+- Twenty-nine focused Python tests, three pattern tests, the version check,
+  Python compilation, and the production build passed. Pylance syntax-check
+  requests timed out.
+
+## 0.23.0 - 2026-11-15
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: minor
+
+### Changes
+
+- Added a private, standalone word-start experiment using preceding-word
+  counts and a fixed many-pattern-per-letter encoding. It does not modify
+  the live universe, chat weights, or memory. OANC documents are separated
+  by content hash and Bible learning books by book; old locked Bible books
+  are not used. Pattern selection and decoding are deterministic.
+- The user approved private use of both sources, but this declaration is not
+  legal clearance. The OANC archive and derived mapping stay outside Git.
+  Mapping construction previously saw initial frequencies in the test text,
+  so the evaluation is held out from predictor fitting, not mapping creation.
+  Near-duplicate documents may cross the split.
+- On 2,906,608 test word starts the contextual count baseline scored 21.10%
+  versus 13.73% for always guessing `t`. Encoding then decoding gave the
+  identical answers by construction, not a pattern-learning improvement.
+  Twenty-six focused universe and experiment tests, three pattern tests,
+  version tests, and the production build passed.
+
 ## 0.22.0 - 2026-11-15
 
 Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`

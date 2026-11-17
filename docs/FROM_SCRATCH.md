@@ -69,6 +69,330 @@ one pixel wide, 0.25 is half a pixel. Colors show the bit types and direction fo
 mixed-bit bonds; same-bit direction is available in the tooltip and activity
 log. No arrowheads or bond motion are simulated.
 
+**Word-start comparison:** A separate, standard-library frequency experiment
+uses the previous word to predict the next case-sensitive initial. On its
+document/book-separated test split it achieved 21.10% versus 13.73% for
+always choosing the training-set most common initial, `t`. The many-to-one
+pattern map encodes and decodes those predictions; it does not generate them
+or improve accuracy. The map was previously fitted using corpus-wide initial
+frequencies, including this test text, so the split is not independent for
+the mapping itself. Near duplicates may also cross the document split.
+No live universe, chat weights, or memory are modified by this experiment.
+
+The user approved private OANC and Bible use on 2026-11-15. This is a user
+decision, not legal clearance; OANC package terms and underlying rights need
+review before release. Earlier locked Bible evaluation books remain excluded.
+The OANC download and derived pattern mapping remain private, outside Git.
+See the README's private word-start comparison for the reproducible command.
+
+**Short frozen-model meal:** Ten sentences (41 word-start pairs) from the
+previously approved, exact-hash user corpus supplied counts for a temporary
+sidecar. It reweighted the unchanged active model using the previous word's
+initial represented by a fixed pattern; unknown contexts used the unchanged
+model. On 44 separately authored, teacher-forced word starts, the model got
+3 right, the sidecar 6, and the most common meal initial 3. This tiny test is
+only a mechanics check: pattern labels are interchangeable with ordinary
+letters here, no quark formation or neural training occurred, and it does not
+measure conversational quality. The mapping was calibrated on broader
+Bible/OANC frequencies. See the README for the command and limitations.
+
+**Second-letter baseline:** An isolated, frequency-based pattern-family
+ranker now predicts the second letter from the case-sensitive first. On
+2,781,847 held-out word occurrences it chose the correct second letter
+42.56% of the time; the answer appeared in its top three 73.62% of the time.
+Ignoring the first letter scored 15.42% and 42.31%, respectively. Common
+words can appear in both splits, and mapping calibration included the test
+sources. The pattern labels are equivalent to ordinary letters, not learned
+bonds. One-letter words and word-end decisions are not modeled, so this is
+not yet a complete word generator or a four-character-word test. The private
+report can be queried by initial using the command in the README.
+
+**Prefix and word-end test:** An isolated follow-up ranks letters and a stop
+choice after one to four letters. Given the correct held-out prefix, its top
+choice was right 54.86% after two letters and 70.95% after three, including
+word endings. The same-position last-letter baselines scored 33.30% and
+35.94%. Starting only from the actual first letter and requiring the correct
+stop, greedy generation exactly reproduced 64,325 of 473,497 four-letter
+occurrences (13.59%). That generator follows just one path per first letter,
+and familiar words may occur across the split. Accented words and words with
+apostrophes are excluded; the result is not a new-vocabulary test. The
+derived prefix report is private. See the README for reproduction and lookup.
+
+**Next word after a short word:** The follow-up predicts the next word's
+initial after an actual completed one- to four-letter word, then compares it
+with a preceding word generated from its true initial. On 1,604,277 held-out
+pairs the known-word predictor scored 20.42%, versus 14.51% for a
+most-frequent-initial baseline. The generator stopped within four characters
+on 87.40% of pairs; its next initial was correct on 14.76% of that subset
+(12.90% of all pairs). This is only a next-initial test; repeated words can
+cross the document/book split. See the README for the four-letter-only
+comparison and private reproduction command.
+
+**Contextual word generation:** A follow-up used a preceding word to guide
+the current word, whose first letter was supplied. On 873,368 held-out
+short-word windows, supplying the actual preceding word improved complete
+word accuracy from 30.85% to 43.21%; for four-letter targets it improved
+from 12.45% to 22.50%. When the preceding word was generated instead, it
+stopped on 85.83% of windows and was exact on 35.36% of those. On the stopped
+subset, current-word accuracy was 29.69% versus 30.48% without context, and
+the next-initial scores were 8.19% versus 11.41%. Both first letters were
+supplied. Common words may appear across splits; see the README for the
+private reproduction command and limits.
+
+**Alternative preceding words:** On the 749,650 held-out windows where the
+greedy previous-word generator stopped, keeping 20 paths and choosing among
+finished candidates using the supplied current-word initial improved exact
+previous-word accuracy from 35.36% to 42.82%, current-word accuracy from
+29.69% to 34.28%, and following-initial accuracy from 8.19% to 9.57%.
+For four-letter current words the matched-subset accuracy improved from
+13.01% to 15.86%. The evaluation assumes the previous word is no longer
+than four letters and supplies both first letters; it does not predict the
+current initial. See the README for the private reproduction command.
+
+**Next initial without supplying it:** The model now predicts the next
+word's initial using the generated preceding-word possibilities, then uses
+that predicted initial to generate the word. On 1,402,110 held-out pairs
+where greedy generation stopped, the 20-path mixture scored 15.89% for the
+initial versus 14.76% for greedy and 15.14% for the most-common baseline.
+Complete-word accuracy was 8.15% versus 6.87%, including longer targets
+that cannot be completed within the four-letter limit. For four-letter
+targets, complete-word accuracy was 4.17% versus 3.82%. The actual preceding
+initial is still supplied and its word is assumed no longer than four
+letters. See the README for the private reproduction command and limits.
+
+**Joint next-word alternatives:** The follow-up carries preceding-word
+possibilities through a five- or 20-path next-word search, without supplying
+the next initial. On 244,430 matched four-letter target cases, its best
+20-path result was exact 4.78% versus 4.17% for the prior greedy continuation.
+The correct word appeared in its first five paths 11.48% of the time. Across
+all 1,402,110 matched cases, exact-word accuracy was 8.21% versus 8.15%, while
+initial accuracy fell from 15.89% to 15.47%. Both arms still receive the
+actual preceding initial and assume that word has at most four letters.
+
+**Three-word chain:** Starting with the actual first initial, the isolated
+20-path chain generated one word at a time, using only the preceding generated
+word for context. On 708,090 held-out fragments its third initial was right
+9.49% and the whole three-word sequence 0.27%, versus 5.70% and 0.12% for
+greedy. It reached a third initial in all cases versus 70.01% for greedy.
+When the actual second word was supplied to a separate greedy diagnostic,
+third-initial accuracy was 19.96%. On fragments where the beam's first two
+words were correct, its third initial was right 11.43% (7,378/64,567).
+These subsets and decoding strategies differ; the diagnostic does not test
+the proposed two-word index. It remains a review idea, with fallback for
+unseen contexts and accuracy, work, memory and time to be measured.
+
+All three generated words are limited to four letters, and the first two
+actual words are restricted to that length. The test breaks fragments at
+punctuation and document boundaries, although training pairs can cross
+punctuation. Common words and near-duplicates can cross the split, and
+mapping calibration included broader corpus frequencies. This low exact
+sequence score does not justify replacing the active model; a separate
+matched comparison against that model would be needed. See the README for
+the reproduction command.
+
+**Two preceding words and more examples:** A follow-up compared the same
+one-word chain with a 512-context two-word index, blending its initial and
+prefix evidence with one-word fallback. Both used identical generated first
+two words. At 25%, 50%, and 100% of approved training documents, exact
+three-word accuracy was 0.257%, 0.252%, and 0.269% for one-word context,
+versus 0.328%, 0.284%, and 0.306% for two-word context. At 100%, the
+two-word chain's third-initial accuracy fell from 9.49% to 7.84% and complete
+third-word accuracy fell from 2.11% to 1.32%. When the actual preceding
+words were supplied to both arms, two-word context instead improved
+third-initial accuracy from 19.96% to 20.96% and complete third-word
+accuracy from 9.13% to 10.30%. These diagnostic and generated comparisons
+use different decoding and answer different questions.
+
+The larger samples supply more distinct documents, not more optimizer
+updates. They did not consistently improve the two-word results in this
+run. The two-word index covered the actual preceding pair on 44.12% of
+held-out fragments at full size; other pairs used fallback. Longer third
+words cannot be completed, and unavailable guesses count as wrong. The
+previous split, mapping, and short-word limitations remain; one-word
+training may cross punctuation while indexed triples and test fragments
+cannot. The active model was not compared or changed.
+
+**Active-model continuation and three-word check:** At the user's request,
+one guarded continuation of active round 39 used the reviewed user corpus
+and approved conversation rehearsal. After 5,800 updates in 60.17
+update-CPU seconds, replay matched exactly. Overall teaching improved
+204/280 to 236/280, development 26/64 to 29/64, and feedback 6/24 to
+10/24. Nevertheless, one previously correct teaching item and one feedback
+item regressed, and saturation exceeded the existing 0.6 limit. The
+candidate was rejected; the active model remained at round 39.
+
+A separate generation check used the same 708,090 held-out Bible/OANC
+fragments as the index experiment, supplying only the first initial. The
+original active checkpoint reached no third word; the rejected candidate
+reached one on 544,360 cases (76.88%) and got its initial right on 21,193
+(2.99% of all cases). Neither produced a complete third word or full
+three-word sequence exactly. The candidate uses the model's `text: ` input
+boundary, greedy decoding, the live repeat filter and a 64-character cap,
+stopping at the first newline. This differs from the index architecture and
+decoding. The first two actual words are at most four letters, and
+unavailable or unfinished guesses count as wrong. The evaluation is not
+a test of conversational quality or proof about future training.
+
+**Active and rejected candidate together:** An isolated comparison averaged
+their output probabilities equally, without changing either checkpoint.
+On 1,604,277 held-out two-word pairs, with only the first initial supplied,
+active / rejected candidate / mixture scored 1.01% / 4.37% / 3.18% on the
+second initial. Exact two-word counts were 0 / 25 / 5. The first actual word
+is at most four letters; all second-word lengths are included, and
+unavailable or unfinished outputs count as wrong. Pairs can cross punctuation
+and repeated or near-duplicate content can cross the split.
+
+On reused checks, the mixture got 226/280 teaching, 27/64 development and
+11/24 feedback correct, versus 204/280, 26/64 and 6/24 for active. It lost
+none of the active model's previously correct teaching or feedback answers
+on these checks. This is encouraging for retention, but exact two-word
+generation remains poor. The mixture still contains the branch that failed
+the corpus saturation limit; it has not passed the activation gates. The
+comparison does not evaluate a fresh model or establish general conversation
+quality.
+
+**Fresh-weight comparison:** Using the same architecture and symbol
+inventory but newly initialized weights, an isolated model trained on the
+approved corpus and conversation rehearsal. Runs from identical initial
+weights used 5,800 and 17,400 updates in the same initial sample order;
+both final weights replayed exactly. The shorter run never reached a second
+word and scored 0/280 teaching and 0/24 feedback. The longer reached a
+second word on all 1,604,277 held-out pairs, predicted its initial on 0.74%,
+and got no complete two-word pair exact. It scored 104/280 teaching, 16/64
+development and 2/24 feedback. The prior active/candidate mixture scored
+3.18% on the second initial, 5 exact pairs, 226/280 teaching, 27/64
+development and 11/24 feedback.
+
+The extra updates helped the fresh model fit these reused teaching checks,
+but the single seed and two budgets do not establish its eventual potential.
+The mixture has considerably more inherited training, and its rejected
+branch still has an unresolved saturation failure. The longer fresh model's
+final saturation was 0.175; intermediate saturation and full activation
+gates were not checked. Neither fresh run changed the live model.
+
+**Continuing the fresh experiment:** The saved 17,400-update checkpoint
+received 17,400 more updates on the same approved corpus and conversation
+rehearsal. The prior random-stream position was reconstructed, the starting
+checkpoint matched exactly, and the continued weights replayed exactly.
+The experimental checkpoint remained separate from active chat.
+
+On the same 1,604,277 held-out pairs, second-initial accuracy rose from
+0.74% to 3.58% and exact two-word matches from 0 to 47. Availability fell
+from 100% to 51.53%; unavailable cases remain in the denominator. The
+continued model got the second word alone correct 0.047%, versus 0.341%
+for the earlier mixture, despite its higher complete-pair count. On reused
+checks teaching rose from 104/280 to 162/280, development from 16/64 to
+20/64, and feedback from 2/24 to 3/24. One previously correct teaching
+answer was lost, while all previously correct feedback answers remained
+correct. Final saturation was 0.255; full activation gates were not run.
+This is one experimental continuation, not evidence that the model is
+ready for activation or that the results generalize.
+
+**One more experimental round:** Continuing the same checkpoint for another
+17,400 updates replayed exactly, but reduced second-initial accuracy from
+3.58% to 0.81% and availability from 51.53% to 17.12%. Exact pairs fell
+from 47 to 33 and correct second words from 754 to 99. Overall teaching,
+development, and feedback scores increased, yet 17 previously correct
+teaching answers and one feedback answer were lost. Final saturation rose
+to 0.307. The 34,800- and 52,200-update checkpoints are both preserved;
+neither was activated, and full activation checks were not run.
+
+**Monitoring shorter intervals:** Three separately replayed branches from
+the 34,800-update checkpoint reconstructed the same continuing training
+stream for 725, 1,450, and 2,900 updates. Second-initial availability on
+the reused pair test was 51.53% at the start, then 6.59%, 12.56%, and 0%.
+At 2,900 updates, all 52 tested starting letters ended their first line
+after one word. Saturation was lower at 725 updates than at the start, so
+the first measured collapse cannot be attributed simply to increased
+saturation. These are weighted outcomes from one greedy prediction per
+starting letter, not independent sentence-generation tests. The saved
+starting checkpoint and all monitored branches remain isolated.
+
+**Fresh character-level context trial:** A newly initialized, isolated
+model reused the current architecture and reviewed training data, but
+selected individual characters during both training and generation. It
+was tested without supplying the target's first letter on conversation
+prompt-to-answer and text-continuation cases. First and second words and
+their first four alphabetic positions were scored case-sensitively;
+one-target cases were excluded from second-word scoring, while expected
+but missing words counted wrong.
+
+After 2,900 updates, the 64 reused conversation development cases had
+14/64 correct first letters (up from 0/64) but 0/64 exact first words;
+all 64 generated first words began with `B`, so the letter matches do
+not demonstrate context sensitivity. All eight expected second words
+were missing. The two 64-case text groups
+also had no exact first or second words, and 50 Bible and 58 OANC cases
+had no first word generated. These small groups use different contexts
+and targets and cannot establish which approach is generally better.
+The fresh run replayed exactly, but full activation safeguards were not
+run; it did not alter active chat or earlier experimental checkpoints.
+
+**Conversation-only comparison:** A second 2,900-update character run
+started from exactly the same fresh weights and sampled only approved
+conversation-answer positions. The original run sampled 75% conversation
+and 25% corpus positions; both were scored on the same saved cases. First
+letters in conversation rose from 14/64 to 19/64 and exact first words
+from 0/64 to 2/64, but second-letter matches fell from 10/56 to 1/56.
+Both exact words were `I`, and 56 of 64 outputs began with the one-letter
+word `B`. All eight expected second words were missing in both runs.
+Text-continuation cases produced more words but no exact first or second
+words. These small reused checks do not prove general understanding or a
+generally superior training mix. The conversation-only weights replayed
+exactly and remain separate from active chat.
+
+**Two continued conversation-only rounds:** The 2,900-update character
+checkpoint received two more 2,900-update rounds on the same approved
+conversation data. Each resumed the original sampling stream and replayed
+exactly. On the same 64 conversation cases, exact first words changed from
+2 to 7 to 13, while exact second words changed from 0 to 0 to 5 among the
+eight cases with a second target. At 8,700 updates, all five correct
+second words also had the first word correct, and seven complete answers
+matched. No previously correct first word or complete answer was lost
+between the measured stages. These checks are reused, not independent
+proof of generalization; both text groups still had zero exact first and
+second words. Full activation safeguards were not run, and all checkpoints
+remain isolated from active chat.
+
+**Next conversation-only round:** Another 2,900 updates reached 11,600,
+replaying exactly. On the reused conversation cases the first-word total
+remained 13/64 and complete answers remained 7/64, but six previously
+correct cases were lost and six gained for each measure. Second-word
+accuracy rose from 5/8 to 6/8; all six also had the first word correct.
+Both text-continuation groups remained at zero exact first and second
+words. The checkpoint remains isolated; full activation safeguards were
+not run.
+
+**14,500-update conversation checkpoint:** Another 2,900 conversation-only
+updates replayed exactly. On the reused conversation test, exact first
+words rose from 13/64 to 15/64 and complete answers from 7/64 to 12/64.
+One previously correct case was lost for each measure. Exact second words
+remained 6/8, all paired with a correct first word. One of 64 OANC text
+cases had a correct first word; other text first- and second-word exact
+counts were zero. Full activation checks were not run, and the checkpoint
+remains separate from active chat.
+
+**Approved 256-exchange meal:** Starting at 14,500 updates, a 2,900-update
+round sampled the previously approved meal and prior approved conversation
+rehearsal with equal probability. The meal contained 169 prompts not in the
+earlier teaching and 87 overlapping prompts. On reused conversation cases,
+first words increased 15/64 to 21/64, complete answers 12/64 to 19/64, and
+second words stayed 6/8. No previously correct complete answers were lost.
+Rehearsal answers increased 101/280 to 118/280 and meal development answers
+10/32 to 13/32, with no previously correct answers lost in those sets.
+Replay was exact. Without a same-budget no-new-meal control, the effect of
+the meal itself is not established; neither these reused checks nor the
+small test establish generalization or activation safety.
+
+**Final meal continuation:** Another 2,900 updates brought the isolated
+model to 20,300 total. On reused conversation cases, first words rose from
+21/64 to 24/64 and complete answers from 19/64 to 24/64, losing one
+previously correct case in each measure. Second words remained 6/8, all
+with the first word correct; all eight two-word targets begin `I do`.
+Rehearsal complete answers rose from 118/280 to 135/280 without losing
+previously correct cases. Both text groups had zero exact first and second
+words. Replay was exact; full activation safeguards were not run.
+
 Candidates do not yet simulate physical repulsion, assign letters, connect
 letters, or train word prediction. The earlier isolated fixed-seed prototype
 remains in the source as a comparison, not as a second live graph.
