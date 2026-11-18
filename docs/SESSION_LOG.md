@@ -4,6 +4,24 @@ Newest application checkpoint first. Entries map delivered versions to the
 session that produced them; historical conversation memory remains separate.
 See [versioning policy](VERSIONING.md) for bump and release rules.
 
+## 0.47.2 - 2026-11-18
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: patch
+
+### Changes
+
+- Memory editor now strips the `You: ` role prefix that the graph adds to node
+  content, so saving no longer writes the prefix into `chat_memory.json`.
+- Validation: browser save on the real transcript changed only `You 8` (period
+  added, `edit_history` recorded, approval reset). A pre-save backup is at
+  `.data/backups/chat_memory.pre-browser-save-20261118-072059.json`.
+
+### Limitations
+
+- The save returned a transient 500 in the browser console, but the write and
+  graph regeneration completed. Not reproduced since.
+
 ## 0.47.1 - 2026-11-18
 
 Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`

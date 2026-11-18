@@ -1456,7 +1456,8 @@ function syncMemoryEditor(node) {
   if (!editable) { editorMemoryId = null; return; }
   if (editorMemoryId === node.id) return;
   editorMemoryId = node.id;
-  document.getElementById("memory-edit-text").value = node.content;
+  const rolePrefix = `${node.role}: `;
+  document.getElementById("memory-edit-text").value = node.content.startsWith(rolePrefix) ? node.content.slice(rolePrefix.length) : node.content;
   document.getElementById("memory-edit-topics").value = nodeTopics(node).join(", ");
   document.getElementById("memory-edit-status").textContent = "";
 }
