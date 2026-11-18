@@ -3,6 +3,7 @@ import { execFile, spawn } from 'child_process';
 import { randomUUID } from 'crypto';
 import fs from 'fs/promises';
 import path from 'path';
+import os from 'os';
 import { fileURLToPath } from 'url';
 import { promisify } from 'util';
 import webpush from 'web-push';
@@ -32,6 +33,11 @@ const updateScriptPath = path.join(rootDir, 'update_chat_memory.py');
 const generatorScriptPath = path.join(rootDir, 'original_generator.py');
 const neuralChatScriptPath = path.join(rootDir, 'neural_chat.py');
 const execFileAsync = promisify(execFile);
+const memoryLockPath = path.join(os.homedir(), '.copilot', 'aimem-memory.lock');
+
+async function regenerateGraph() {
+  await execFileAsync('flock', ['-x', '-w', '30', memoryLockPath, 'python3', 'generate_html_graph.py'], { cwd: rootDir });
+}
 const learnerPython = process.env.MEMORY_PYTHON || 'python3';
 let learnerQueue = Promise.resolve();
 let generatorQueue = Promise.resolve();
@@ -574,6 +580,28 @@ app.post('/api/learner-feedback', async (req, res) => {
 });
 
 // ─── Graph HTML endpoint ─────────────────────────────────────────────────────
+app.post('/api/memory/edit', async (req, res) => {
+  const { memory_id, text, topics = [] } = req.body || {};
+  if (typeof memory_id !== 'string' || !memory_id.trim()) {
+    res.status(400).json({ error: 'memory_id is required' });
+    return;
+  }
+  try {
+    const result = await runLearner('edit', { memory_id, text, topics });
+    await regenerateGraph();
+    res.json({ ok: true, ...result });
+  } catch (error) { res.status(400).json({ error: error.message }); }
+});
+
+app.post('/api/memory/inject', async (req, res) => {
+  const { text, topics = [] } = req.body || {};
+  try {
+    const result = await runLearner('inject', { text, topics });
+    await regenerateGraph();
+    res.json({ ok: true, ...result });
+  } catch (error) { res.status(400).json({ error: error.message }); }
+});
+
 app.post('/api/response-feedback', async (req, res) => {
   const { response_id, rating, correction = '', approve_for_scoring = false, approve_correction = false } = req.body || {};
   if (typeof response_id !== 'string' || !['useful', 'needs_correction'].includes(rating) || typeof correction !== 'string' || correction.length > 2000) {

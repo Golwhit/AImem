@@ -418,6 +418,10 @@ This starts the API server on `http://localhost:3001` and the Vite client on `ht
 
 ## Local memory graph
 
+### Reviewing, editing, and injecting memories
+
+Click a user (`You`) memory in the graph to edit its text and topics. Saving keeps the previous text in `edit_history` and clears its review approval, so an edited memory must be re-approved before it can train. Use "Add a memory" in the selected-memory panel to inject a user-authored memory; it is labeled `origin: "user-injected"`, enters the review queue unapproved, and does not come from the chat hook. Assistant replies cannot be edited here. Edit and inject calls go through the local learner and regenerate `memory_graph.html`.
+
 ### Base Model Lab: learn the mechanics first
 
 The new [Universe Lab](universe-lab/) starts with an empty saved state.

@@ -323,6 +323,24 @@ HTML = r"""<!doctype html>
         </div>
         <h2 id="selected-name" class="selected-name">Pick a memory</h2>
         <div id="selected-content" class="selected-content">Select a message in the graph to inspect and activate it.</div>
+        <div id="memory-edit-block" hidden>
+          <label class="section-label" for="memory-edit-text">Edit your memory</label>
+          <textarea id="memory-edit-text" rows="4" maxlength="4000"></textarea>
+          <input id="memory-edit-topics" type="text" placeholder="topics, comma separated">
+          <div class="selected-memory-actions">
+            <button type="button" id="memory-save-button">Save edit</button>
+            <span id="memory-edit-status" class="selected-content"></span>
+          </div>
+        </div>
+        <details id="memory-inject-block">
+          <summary class="section-label">Add a memory</summary>
+          <textarea id="memory-inject-text" rows="3" maxlength="4000" placeholder="Text to inject as a user-authored memory"></textarea>
+          <input id="memory-inject-topics" type="text" placeholder="topics, comma separated">
+          <div class="selected-memory-actions">
+            <button type="button" id="memory-inject-button">Add to review queue</button>
+            <span id="memory-inject-status" class="selected-content"></span>
+          </div>
+        </details>
         <button type="button" id="paired-memory-button" hidden></button>
         <div id="cluster-importance-evidence" class="selected-content" hidden></div>
         <div class="signal-row" id="selected-signals"></div>
@@ -1163,14 +1181,19 @@ function relatedIds(nodeId) {
   });
   return ids;
 }
+let queryTermCache = {query: null, terms: []};
+function queryTerms() {
+  if (queryTermCache.query !== state.query) queryTermCache = {query: state.query, terms: tokenize(state.query)};
+  return queryTermCache.terms;
+}
 function queryMatches(node) {
-  const terms = tokenize(state.query);
+  const terms = queryTerms();
   if (!terms.length) return false;
   const haystack = nodeSearchText(node);
   return terms.some(term => haystack.includes(term));
 }
 function queryScore(node) {
-  const terms = tokenize(state.query);
+  const terms = queryTerms();
   if (!terms.length) return learnedScore(node);
   const haystack = nodeSearchText(node);
   const overlap = terms.reduce((sum, term) => sum + (haystack.includes(term) ? 1 : 0), 0);
@@ -1222,7 +1245,16 @@ function syncSelectedMemoryPanel() {
     importanceToggleButton.setAttribute("aria-pressed", node?.userImportant ? "true" : "false");
   }
 }
+let renderQueued = false;
 function render() {
+  if (renderQueued) return;
+  renderQueued = true;
+  requestAnimationFrame(() => {
+    renderQueued = false;
+    renderGraph();
+  });
+}
+function renderGraph() {
   syncSidebarVisibility();
   updateLayout();
   const radii = memoryRadii(state.nodes, state.links);
@@ -1283,8 +1315,8 @@ function render() {
     let a = positions[link.source], b = positions[link.target];
     const active = (state.active[link.source] || 0) > 0.05 && (state.active[link.target] || 0) > 0.05;
     const dimmed = focus.size > 0 && !(focus.has(link.source) && focus.has(link.target));
-    const sourceDomain = state.nodes.find(node => node.id === link.source)?.domain || "memory";
-    const targetDomain = state.nodes.find(node => node.id === link.target)?.domain || "memory";
+    const sourceDomain = nodeById.get(link.source)?.domain || "memory";
+    const targetDomain = nodeById.get(link.target)?.domain || "memory";
     if (link.kind === "parent") {
       if (sourceDomain === "evaluation" || targetDomain === "evaluation") return;
       const sourceLayout = domainLayouts.get(sourceDomain);
@@ -1415,8 +1447,60 @@ function updateStats() {
   document.getElementById("cycle-count").textContent = state.cycles;
   document.getElementById("topic-count").textContent = state.nodes.filter(node => node.kind === "topic").length;
 }
+let editorMemoryId = null;
+
+function syncMemoryEditor(node) {
+  const block = document.getElementById("memory-edit-block");
+  const editable = Boolean(node && node.role === "You");
+  block.hidden = !editable;
+  if (!editable) { editorMemoryId = null; return; }
+  if (editorMemoryId === node.id) return;
+  editorMemoryId = node.id;
+  document.getElementById("memory-edit-text").value = node.content;
+  document.getElementById("memory-edit-topics").value = nodeTopics(node).join(", ");
+  document.getElementById("memory-edit-status").textContent = "";
+}
+
+function parseTopics(value) {
+  return value.split(",").map(topic => topic.trim()).filter(Boolean);
+}
+
+async function postMemoryCommand(url, body) {
+  const response = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  const payload = await response.json();
+  if (!response.ok) throw new Error(payload.error || "Request failed");
+  return payload;
+}
+
+document.getElementById("memory-save-button").addEventListener("click", async () => {
+  const status = document.getElementById("memory-edit-status");
+  status.textContent = "Saving…";
+  try {
+    await postMemoryCommand("/api/memory/edit", {
+      memory_id: editorMemoryId,
+      text: document.getElementById("memory-edit-text").value,
+      topics: parseTopics(document.getElementById("memory-edit-topics").value)
+    });
+    location.reload();
+  } catch (error) { status.textContent = error.message; }
+});
+
+document.getElementById("memory-inject-button").addEventListener("click", async () => {
+  const status = document.getElementById("memory-inject-status");
+  status.textContent = "Adding…";
+  try {
+    const payload = await postMemoryCommand("/api/memory/inject", {
+      text: document.getElementById("memory-inject-text").value,
+      topics: parseTopics(document.getElementById("memory-inject-topics").value)
+    });
+    status.textContent = `Added as ${payload.id}; it is unapproved until reviewed.`;
+    location.reload();
+  } catch (error) { status.textContent = error.message; }
+});
+
 function updateDetails() {
   const node = state.nodes.find(item => item.id === state.selected);
+  syncMemoryEditor(node);
   const clusterEvidence = document.getElementById("cluster-importance-evidence");
   const pairButton = document.getElementById("paired-memory-button");
   const partner = nodeById.get(node?.paired_with);

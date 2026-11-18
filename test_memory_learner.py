@@ -191,7 +191,39 @@ class LearnerTests(unittest.TestCase):
         (self.root / "chat_memory.json").write_text(json.dumps(self.transcript))
         self.assertFalse(MemoryLearner(self.root).is_reviewed("food"))
 
-    def test_legacy_checkpoint_is_preserved_not_reused(self):
+    def test_editing_a_memory_records_history_and_drops_approval(self):
+        from memory_learner import edit_memory, MemoryLearner as Learner
+        Learner(self.root).review(["food"], ["apple recipes"], True)
+        self.assertTrue(Learner(self.root).is_reviewed("food"))
+        edit_memory(self.root, "food", "apples and pears", ["food", "fruit"])
+        transcript = json.loads((self.root / "chat_memory.json").read_text())
+        edited = next(item for item in transcript["messages"] if item["id"] == "food")
+        self.assertEqual(edited["text"], "apples and pears")
+        self.assertEqual(edited["edit_history"][0]["previous_text"], "apples fruit recipes dinner")
+        self.assertFalse(Learner(self.root).is_reviewed("food"))
+
+    def test_edit_rejects_assistant_memories_and_empty_text(self):
+        from memory_learner import edit_memory
+        transcript = json.loads((self.root / "chat_memory.json").read_text())
+        transcript["messages"].append({"id": "AI 1", "role": "Assistant", "text": "reply", "topics": []})
+        (self.root / "chat_memory.json").write_text(json.dumps(transcript))
+        with self.assertRaises(ValueError):
+            edit_memory(self.root, "AI 1", "changed", [])
+        with self.assertRaises(ValueError):
+            edit_memory(self.root, "food", "   ", [])
+
+    def test_injected_memory_is_user_authored_unique_and_unapproved(self):
+        from memory_learner import inject_memory, MemoryLearner as Learner
+        first = inject_memory(self.root, "I prefer tea in the morning", ["tea"])
+        second = inject_memory(self.root, "Another note", [])
+        self.assertEqual((first["id"], second["id"]), ("Injected 1", "Injected 2"))
+        learner = Learner(self.root)
+        injected = learner.records["Injected 1"]
+        self.assertEqual((injected["role"], injected["origin"]), ("You", "user-injected"))
+        self.assertFalse(learner.is_reviewed("Injected 1"))
+        self.assertEqual(learner.status()["injected_memories"], 2)
+
+
         legacy = self.root / ".data" / "learner.json"
         legacy.parent.mkdir()
         original = '{"version":1,"weights":[99,99,99,99]}'

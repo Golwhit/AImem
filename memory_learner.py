@@ -8,6 +8,7 @@ import re
 import sys
 import tempfile
 from collections import Counter
+from datetime import datetime, timezone
 from pathlib import Path
 
 from original_learning import FEATURE_NAMES, INITIAL_WEIGHTS, LABEL_TARGETS, features, fit, loss, probability, tokens
@@ -205,6 +206,9 @@ class MemoryLearner:
         return {"model": MODEL_NAME, "generation": self.state["generation"],
                 "ranking_parameters": 5, "features": FEATURES, "feedback_examples": len(self.state["feedback"]),
                 "user_documents": sum(message["role"] == "You" for message in self.messages),
+                "edited_memories": sum(bool(message.get("edit_history")) for message in self.messages),
+                "injected_memories": sum(message.get("origin") == "user-injected" for message in self.messages),
+                "reapproval_needed": sum(bool(message.get("edit_history")) and not self.is_reviewed(message["id"]) for message in self.messages),
                 "vocabulary_size": len(self.vocabulary), "approved_memories": sum(self.is_reviewed(message["id"]) for message in self.messages),
                 "latent_dimensions": 0, "third_party_ml_libraries": False,
                 "weights": dict(zip(FEATURES, self.state["weights"])), "intercept": self.state["intercept"],
@@ -217,12 +221,76 @@ class MemoryLearner:
                 "training": self.state["training"], "pretrained_weights": False, "network_required": False}
 
 
+def clean_topics(topics: object) -> list[str]:
+    if not isinstance(topics, list) or not all(isinstance(topic, str) for topic in topics):
+        raise ValueError("topics must be a list of strings")
+    return [topic.strip() for topic in topics if topic.strip()]
+
+
+def clean_text(text: object) -> str:
+    if not isinstance(text, str) or not text.strip():
+        raise ValueError("text is required")
+    if len(text) > 4000:
+        raise ValueError("text must be 4000 characters or fewer")
+    return text.strip()
+
+
+def edit_memory(root: Path, memory_id: str, text: object, topics: object) -> dict:
+    """Rewrite a user-authored memory; the changed text drops its review approval via memory_hash."""
+    path = root / "chat_memory.json"
+    transcript = json.loads(path.read_text(encoding="utf-8"))
+    message = next((item for item in transcript["messages"] if item["id"] == memory_id), None)
+    if message is None:
+        raise KeyError(f"unknown memory {memory_id}")
+    if message["role"] != "You":
+        raise ValueError("only user memories can be edited")
+    new_text, new_topics = clean_text(text), clean_topics(topics)
+    message.setdefault("edit_history", []).append({
+        "at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "previous_text": message["text"],
+        "previous_topics": message.get("topics", []),
+    })
+    message["text"] = new_text
+    message["topics"] = new_topics
+    atomic_json(path, transcript)
+    return {"id": memory_id, "edits": len(message["edit_history"]), "approved": False}
+
+
+def inject_memory(root: Path, text: object, topics: object) -> dict:
+    """Add a user-authored memory outside the chat stop hook; it enters the review queue unapproved."""
+    path = root / "chat_memory.json"
+    transcript = json.loads(path.read_text(encoding="utf-8"))
+    messages = transcript["messages"]
+    existing = {message["id"] for message in messages}
+    number = sum(message.get("origin") == "user-injected" for message in messages) + 1
+    while f"Injected {number}" in existing:
+        number += 1
+    message = {
+        "id": f"Injected {number}",
+        "role": "You",
+        "text": clean_text(text),
+        "topics": clean_topics(topics),
+        "importance": 0.9,
+        "consolidated": False,
+        "origin": "user-injected",
+    }
+    messages.append(message)
+    atomic_json(path, transcript)
+    return {"id": message["id"], "approved": False}
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=ROOT)
-    parser.add_argument("command", choices=["search", "feedback", "status", "review", "response-feedback"])
+    parser.add_argument("command", choices=["search", "feedback", "status", "review", "response-feedback", "edit", "inject"])
     args = parser.parse_args()
     payload = json.load(sys.stdin)
+    if args.command == "edit":
+        print(json.dumps(edit_memory(args.root, payload.get("memory_id", ""), payload.get("text"), payload.get("topics")), allow_nan=False))
+        return
+    if args.command == "inject":
+        print(json.dumps(inject_memory(args.root, payload.get("text"), payload.get("topics")), allow_nan=False))
+        return
     learner = MemoryLearner(args.root)
     if args.command == "search":
         result = learner.search(payload.get("query", ""), payload.get("limit", 6), payload.get("user_only", False), payload.get("exclude_ids"))

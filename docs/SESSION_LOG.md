@@ -4,6 +4,29 @@ Newest application checkpoint first. Entries map delivered versions to the
 session that produced them; historical conversation memory remains separate.
 See [versioning policy](VERSIONING.md) for bump and release rules.
 
+## 0.47.0 - 2026-11-18
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: minor
+
+### Changes
+
+- Memory review and editing. Clicking a user memory in the graph opens an
+  editable text and topics box. Saving records the previous text and topics in
+  `edit_history` and clears approval, because approval is keyed to the memory
+  hash. Only user-authored (`You`) memories are editable.
+- Manual injection. The "Add a memory" form adds a `You` memory with
+  `origin: "user-injected"` and an id such as `Injected 1`. It enters the review
+  queue unapproved and does not go through the chat stop hook.
+- The learner status now reports `edited_memories`, `injected_memories`, and
+  `reapproval_needed`.
+- Validation: 18 learner tests (one pre-existing HTTP failure remains) and 36
+  graph tests pass. The server passes a syntax check. Live browser editing and
+  injection were not exercised, to avoid writing test data to the transcript.
+- Limitations: search still uses the existing graph search, not a new partial
+  match for memories. Asking the AI about a memory does not yet open that memory.
+  Injected memories have no links until the graph re-clusters them.
+
 ## 0.46.2 - 2026-11-18
 
 Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
