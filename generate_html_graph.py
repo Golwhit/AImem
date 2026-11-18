@@ -140,6 +140,8 @@ HTML = r"""<!doctype html>
     .stat-value { font-size: 19px; line-height: 1; font-weight: 700; font-variant-numeric: tabular-nums; }
     .workspace { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: stretch; }
     .graph-panel { position: relative; min-width: 0; padding: 15px; overflow: hidden; }
+    #graph { cursor: grab; touch-action: none; }
+    #graph.panning { cursor: grabbing; }
     .graph-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 4px 7px 0; }
     .graph-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
     .zoom-button { padding: 4px 10px; font-size: 16px; line-height: 1; }
@@ -172,8 +174,11 @@ HTML = r"""<!doctype html>
     .node.consolidated circle.core { stroke: var(--green); }
     .node.created circle.core { fill: #0f5e78 !important; stroke: #ecfeff !important; stroke-width: .8 !important; filter: drop-shadow(0 0 6px rgba(34,211,238,.28)); }
     .node.topic circle.core { fill: #26324f; stroke: #b0c4ff; stroke-width: .35; opacity: .98; }
-    .node.star circle.core { fill: #fef9c3; stroke: #fde68a; stroke-width: .5; }
-    .node.star.generated-note circle.core { fill: #c4b5fd; stroke: #ddd6fe; }
+    .node.star circle.core { fill: #fffbeb; stroke: #fde047; stroke-width: .8; opacity: 1 !important; filter: drop-shadow(0 0 2px #fef08a) drop-shadow(0 0 6px #facc15) drop-shadow(0 0 12px rgba(250, 204, 21, .8)); }
+    .node.star .node-shine { display: none; }
+    .node.star circle.star-nucleus { fill: #ffffff; stroke: none; pointer-events: none; filter: drop-shadow(0 0 3px #fff7ad); }
+    .node.generated-note path.core { fill: #2dd4bf; stroke: #ccfbf1; stroke-width: .7; stroke-dasharray: 1.4 .9; filter: drop-shadow(0 0 3px rgba(45, 212, 191, .8)); }
+    .node.generated-note .node-shine { display: none; }
     .edge.generated { stroke: #c4b5fd; stroke-width: 1.2; opacity: .9; }
     .node.topic.selected circle.core { fill: #0f5e78; stroke: #67e8f9; stroke-width: .7; }
     .node.dimmed { opacity: .5; }
@@ -389,15 +394,60 @@ const graphStateApi = "http://localhost:3001/api/graph-state";
 const svg = document.getElementById("graph");
 let viewExtent = 380;
 let zoomLevel = 1;
+let viewCenter = null;
 function applyViewBox() {
   const size = 2 * viewExtent / zoomLevel;
-  const offset = viewExtent - size / 2;
-  svg.setAttribute("viewBox", `${offset} ${offset} ${size} ${size}`);
+  const cx = viewCenter ? viewCenter.x : viewExtent, cy = viewCenter ? viewCenter.y : viewExtent;
+  svg.setAttribute("viewBox", `${cx - size / 2} ${cy - size / 2} ${size} ${size}`);
 }
 function changeZoom(factor) {
   zoomLevel = Math.min(4, Math.max(0.5, zoomLevel * factor));
   applyViewBox();
 }
+function worldPerPixel() {
+  return (2 * viewExtent / zoomLevel) / Math.max(1, Math.min(svg.clientWidth, svg.clientHeight));
+}
+function panBy(dx, dy) {
+  const current = viewCenter || {x: viewExtent, y: viewExtent};
+  viewCenter = {
+    x: Math.min(3 * viewExtent, Math.max(-viewExtent, current.x + dx)),
+    y: Math.min(2 * viewExtent, Math.max(-viewExtent, current.y + dy)),
+  };
+  applyViewBox();
+}
+let dragStart = null;
+let dragMoved = false;
+svg.addEventListener("pointerdown", event => {
+  dragStart = {x: event.clientX, y: event.clientY};
+  dragMoved = false;
+});
+svg.addEventListener("pointermove", event => {
+  if (!dragStart) return;
+  const moveX = event.clientX - dragStart.x, moveY = event.clientY - dragStart.y;
+  if (!dragMoved && Math.hypot(moveX, moveY) < 4) return;
+  dragMoved = true;
+  svg.classList.add("panning");
+  const scale = worldPerPixel();
+  panBy(-(event.clientX - dragStart.x) * scale, -(event.clientY - dragStart.y) * scale);
+  dragStart = {x: event.clientX, y: event.clientY};
+});
+function endDrag() {
+  dragStart = null;
+  svg.classList.remove("panning");
+}
+svg.addEventListener("pointerup", endDrag);
+svg.addEventListener("pointerleave", endDrag);
+svg.addEventListener("click", event => {
+  if (!dragMoved) return;
+  event.stopPropagation();
+  event.preventDefault();
+  dragMoved = false;
+}, true);
+svg.addEventListener("wheel", event => {
+  event.preventDefault();
+  const scale = worldPerPixel();
+  panBy((event.shiftKey ? event.deltaY : event.deltaX) * scale, (event.shiftKey ? 0 : event.deltaY) * scale);
+}, {passive: false});
 const ns = "http://www.w3.org/2000/svg";
 const positions = {};
 const queryInput = document.getElementById("memory-query");
@@ -413,12 +463,12 @@ async function refreshLearnerStatus() {
     const changed = state.learnerOffline || JSON.stringify(status) !== JSON.stringify(state.learner);
     state.learner = status;
     state.learnerOffline = false;
-    if (changed) render();
+    if (changed) renderLearnerStatus();
     if (previousGeneration != null && previousGeneration !== status.generation && state.query) void refreshSearchResults();
   } catch {
     if (!state.learnerOffline) {
       state.learnerOffline = true;
-      render();
+      renderLearnerStatus();
     }
   }
 }
@@ -922,28 +972,26 @@ function placeCandidatePreviews(candidates, layouts, offsets, centerRadius) {
     }
   });
 }
+function shapePath(size) {
+  return `M0 ${-size} L${size * 0.7} 0 L0 ${size} L${-size * 0.7} 0 Z`;
+}
 function placeStarNodes() {
-  // Injected memories orbit their host domain on a ring outside it; generated notes sit beside their source.
-  const hosts = new Map();
-  state.nodes.filter(node => node.origin === "user-injected").forEach(node => {
-    const host = domainLayouts.has(node.domain) ? node.domain : "memory";
-    if (!hosts.has(host)) hosts.set(host, []);
-    hosts.get(host).push(node);
+  // Injected stars sit in a field past the outermost galaxy, clear of evaluation; generated partners sit just beside their source star.
+  let maxX = 0, minY = Infinity;
+  domainLayouts.forEach(layout => {
+    maxX = Math.max(maxX, layout.center.x + layout.radius);
+    minY = Math.min(minY, layout.center.y - layout.radius);
   });
-  hosts.forEach((nodes, host) => {
-    const layout = domainLayouts.get(host);
-    nodes.forEach((node, index) => {
-      const angle = (index + 0.5) * 2 * Math.PI / nodes.length;
-      const distance = layout.radius + FLOAT_DISTANCE;
-      positions[node.id] = {x: layout.center.x + distance * Math.cos(angle), y: layout.center.y + distance * Math.sin(angle), depth: 0.5};
-    });
+  if (!Number.isFinite(minY)) minY = 0;
+  const columns = 6, spacing = 56;
+  const originX = maxX + 520, originY = minY + 40;
+  state.nodes.filter(node => node.origin === "user-injected").forEach((node, index) => {
+    positions[node.id] = {x: originX + (index % columns) * spacing, y: originY + Math.floor(index / columns) * spacing, depth: 0.5};
   });
   state.nodes.filter(node => node.origin === "ai-generated").forEach(node => {
     const source = positions[node.source_id];
     if (!source) return;
-    const dx = source.x - (domainLayouts.get("memory")?.center.x || 0), dy = source.y - (domainLayouts.get("memory")?.center.y || 0);
-    const angle = Math.atan2(dy, dx) + 0.22;
-    positions[node.id] = {x: source.x + 9 * Math.cos(angle), y: source.y + 9 * Math.sin(angle), depth: 0.5};
+    positions[node.id] = {x: source.x, y: source.y + 24, depth: 0.5};
   });
 }
 
@@ -1414,7 +1462,9 @@ function renderGraph() {
     });
     group.append(el("circle", {class: `pulse-ring${(state.active[node.id] || 0) > 0.05 || isCreated ? " animate" : ""}`, r: 2.75}));
     const radius = node.paired_role === "short" ? 1.8 : radii.get(node.id) * (0.72 + 0.6 * p.depth);
-    const circle = el("circle", {class: "core", r: radius});
+    const circle = node.origin === "ai-generated"
+      ? el("path", {class: "core", d: shapePath(radius * 1.9)})
+      : el("circle", {class: "core", r: node.origin === "user-injected" ? radius * 1.6 : radius});
     circle.style.opacity = (0.9 + 0.1 * p.depth).toFixed(2);
     const shine = el("circle", {class: "node-shine", r: radius});
     const highlighted = isMatch || node.userImportant || state.selected === node.id || (state.active[node.id] || 0) > 0.05;
@@ -1425,6 +1475,7 @@ function renderGraph() {
     }
     if (!isBaby(node.layoutKey || "memory") && !isCandidatePreview(node.layoutKey || "memory")) circle.append(el("title", {}, memoryDetails(node)));
     group.append(circle);
+    if (node.origin === "user-injected") group.append(el("circle", {class: "star-nucleus", r: radius * 0.55}));
     group.append(shine);
     group.addEventListener("click", () => activate(node.id));
     group.addEventListener("keydown", event => {

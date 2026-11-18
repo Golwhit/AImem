@@ -4,6 +4,35 @@ Newest application checkpoint first. Entries map delivered versions to the
 session that produced them; historical conversation memory remains separate.
 See [versioning policy](VERSIONING.md) for bump and release rules.
 
+## 0.48.1 - 2026-11-18
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: patch
+
+### Changes
+
+- Learner status pill now renders directly on refresh, so it no longer stays
+  "CONNECTING" in a hidden tab (`refreshLearnerStatus`).
+- Injected stars are placed in their own field to the right of the galaxies,
+  not on a ring around Under Evaluation. Generated partners sit just below
+  their source.
+- Graph supports drag-to-pan and wheel panning (Shift+wheel horizontal).
+  Clicks after a drag are suppressed.
+- Injected stars render as glowing circles with a bright white nucleus.
+  Generated memories render as a teal dashed diamond.
+
+### Validation
+
+- Regenerated `memory_graph.html`; embedded script passes `node --check`.
+- Live page at `localhost:3001/graph`: learner pill reads "AWAITING REVIEW",
+  pan and wheel change the view, and the injected star renders with its nucleus.
+
+### Limitations
+
+- Star brightness was only checked at moderate zoom; the zoom control stopped
+  responding at the highest level tested.
+- Compound memory splitting (Option A) is a discussion topic, not implemented.
+
 ## 0.48.0 - 2026-11-18
 
 Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
