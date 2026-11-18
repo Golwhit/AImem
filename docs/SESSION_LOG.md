@@ -4,6 +4,39 @@ Newest application checkpoint first. Entries map delivered versions to the
 session that produced them; historical conversation memory remains separate.
 See [versioning policy](VERSIONING.md) for bump and release rules.
 
+## 0.48.0 - 2026-11-18
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: minor
+
+### Changes
+
+- Injected memories now get topics from the user's topics merged with
+  vocabulary matches from `DOMAIN_TERMS` (`extract_topics`). Extracted and
+  user topics are stored the same way and count toward cohesion.
+- Each injection creates a deterministic `Generated N` memory (role `AI`,
+  origin `ai-generated`) with topics, nearest memories, a domain hint, and a
+  suggestion. It is linked to its source with a two-way `generated` bond.
+- Injected and generated memories are drawn as standalone stars outside the
+  evaluation split. They join a galaxy only if absorbed later; at creation they
+  are unassigned.
+
+### Validation
+
+- `python3 -m unittest -q test_memory_learner test_memory_clusters`: 56 tests,
+  1 failure, the pre-existing `test_http_routes_use_local_learner_and_save_excerpts`.
+- Temp-copy graph regeneration succeeded and the embedded script passes
+  `node --check`.
+
+### Limitations
+
+- Browser star rendering was not verified: the static server had no API, so the
+  graph showed zero nodes. The `generated` link surviving the snapshot merge is
+  unverified.
+- Generated notes are deterministic, not LLM output.
+- Injected memories still take the `domain` from `update_clusters`; galaxy
+  absorption is not implemented.
+
 ## 0.47.3 - 2026-11-18
 
 Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`

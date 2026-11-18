@@ -11,6 +11,7 @@ from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 
+from memory_clusters import extract_topics
 from original_learning import FEATURE_NAMES, INITIAL_WEIGHTS, LABEL_TARGETS, features, fit, loss, probability, tokens
 
 
@@ -256,12 +257,18 @@ def edit_memory(root: Path, memory_id: str, text: object, topics: object) -> dic
     return {"id": memory_id, "edits": len(message["edit_history"]), "approved": False}
 
 
+def merge_topics(user_topics: list[str], extracted: list[str]) -> list[str]:
+    """User topics first, then extracted ones not already present; both sources are stored the same way."""
+    return list(dict.fromkeys(user_topics + extracted))
+
+
 def inject_memory(root: Path, text: object, topics: object) -> dict:
     """Add a user-authored memory outside the chat stop hook; it enters the review queue unapproved."""
     path = root / "chat_memory.json"
     transcript = json.loads(path.read_text(encoding="utf-8"))
     messages = transcript["messages"]
     existing = {message["id"] for message in messages}
+    message_text = clean_text(text)
     number = sum(message.get("origin") == "user-injected" for message in messages) + 1
     while f"Injected {number}" in existing:
         number += 1
@@ -269,14 +276,50 @@ def inject_memory(root: Path, text: object, topics: object) -> dict:
         "id": f"Injected {number}",
         "role": "You",
         "text": clean_text(text),
-        "topics": clean_topics(topics),
+        "topics": merge_topics(clean_topics(topics), extract_topics(message_text)),
         "importance": 0.9,
         "consolidated": False,
         "origin": "user-injected",
     }
     messages.append(message)
+    generated = generated_memory(message, messages)
+    messages.append(generated)
+    message["generated_id"] = generated["id"]
+    generated["source_id"] = message["id"]
+    transcript.setdefault("links", []).append({
+        "source": message["id"], "target": generated["id"], "kind": "generated", "strength": 0.9,
+    })
     atomic_json(path, transcript)
-    return {"id": message["id"], "approved": False}
+    return {"id": message["id"], "generated_id": generated["id"], "approved": False}
+
+
+def generated_memory(source: dict, messages: list[dict]) -> dict:
+    """Learner's own note on an injected memory: its topics, nearest existing memories, and a suggestion. Not an LLM output."""
+    source_tokens = set(re.findall(r"[a-z0-9]+", source["text"].lower())) | set(source["topics"])
+    related = []
+    for other in messages:
+        if other.get("origin") in {"user-injected", "ai-generated"} or other["id"] == source["id"]:
+            continue
+        overlap = source_tokens & (set(re.findall(r"[a-z0-9]+", other["text"].lower())) | set(other.get("topics", [])))
+        if overlap:
+            related.append((-len(overlap), other["id"]))
+    nearest = [memory_id for _, memory_id in sorted(related)[:3]]
+    domains = extract_topics(source["text"]) or ["no domain match"]
+    thought = f"Topics: {', '.join(source['topics']) or 'none'}. Nearest memories: {', '.join(nearest) or 'none'}."
+    suggestion = (
+        f"Review {nearest[0]} alongside this memory to confirm the link." if nearest
+        else "No existing memory overlaps yet; consider adding topics that tie this to the universe."
+    )
+    return {
+        "id": f"Generated {source['id'].split()[-1]}",
+        "role": "AI",
+        "text": f"{thought} Domain hint: {', '.join(domains)}. Suggestion: {suggestion}",
+        "topics": source["topics"],
+        "importance": 0.6,
+        "consolidated": False,
+        "origin": "ai-generated",
+        "source_id": source["id"],
+    }
 
 
 def main() -> None:

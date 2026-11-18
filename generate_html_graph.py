@@ -172,6 +172,9 @@ HTML = r"""<!doctype html>
     .node.consolidated circle.core { stroke: var(--green); }
     .node.created circle.core { fill: #0f5e78 !important; stroke: #ecfeff !important; stroke-width: .8 !important; filter: drop-shadow(0 0 6px rgba(34,211,238,.28)); }
     .node.topic circle.core { fill: #26324f; stroke: #b0c4ff; stroke-width: .35; opacity: .98; }
+    .node.star circle.core { fill: #fef9c3; stroke: #fde68a; stroke-width: .5; }
+    .node.star.generated-note circle.core { fill: #c4b5fd; stroke: #ddd6fe; }
+    .edge.generated { stroke: #c4b5fd; stroke-width: 1.2; opacity: .9; }
     .node.topic.selected circle.core { fill: #0f5e78; stroke: #67e8f9; stroke-width: .7; }
     .node.dimmed { opacity: .5; }
     .node.match circle.core { stroke: var(--violet); filter: drop-shadow(0 0 7px rgba(167,139,250,.4)); }
@@ -794,8 +797,10 @@ const preferredSeeder = new Map();
   });
 })();
 
+const isStarNode = node => node.origin === "user-injected" || node.origin === "ai-generated";
 const domainGroups = Object.entries(
   state.nodes.reduce((acc, node) => {
+    if (isStarNode(node)) return acc;
     const domain = node.layoutKey || "memory";
     (acc[domain] ||= []).push(node);
     return acc;
@@ -917,6 +922,31 @@ function placeCandidatePreviews(candidates, layouts, offsets, centerRadius) {
     }
   });
 }
+function placeStarNodes() {
+  // Injected memories orbit their host domain on a ring outside it; generated notes sit beside their source.
+  const hosts = new Map();
+  state.nodes.filter(node => node.origin === "user-injected").forEach(node => {
+    const host = domainLayouts.has(node.domain) ? node.domain : "memory";
+    if (!hosts.has(host)) hosts.set(host, []);
+    hosts.get(host).push(node);
+  });
+  hosts.forEach((nodes, host) => {
+    const layout = domainLayouts.get(host);
+    nodes.forEach((node, index) => {
+      const angle = (index + 0.5) * 2 * Math.PI / nodes.length;
+      const distance = layout.radius + FLOAT_DISTANCE;
+      positions[node.id] = {x: layout.center.x + distance * Math.cos(angle), y: layout.center.y + distance * Math.sin(angle), depth: 0.5};
+    });
+  });
+  state.nodes.filter(node => node.origin === "ai-generated").forEach(node => {
+    const source = positions[node.source_id];
+    if (!source) return;
+    const dx = source.x - (domainLayouts.get("memory")?.center.x || 0), dy = source.y - (domainLayouts.get("memory")?.center.y || 0);
+    const angle = Math.atan2(dy, dx) + 0.22;
+    positions[node.id] = {x: source.x + 9 * Math.cos(angle), y: source.y + 9 * Math.sin(angle), depth: 0.5};
+  });
+}
+
 function updateLayout() {
   domainGroups.forEach(([domain, nodes]) => domainLayouts.set(domain, domainLayoutFor(domain, nodes)));
   const babySeeders = new Map();
@@ -989,6 +1019,7 @@ function updateLayout() {
       positions[node.id] = {x: layout.center.x + distance * Math.cos(angle), y: layout.center.y + distance * Math.sin(angle), depth: sphereDepth};
     });
   });
+  placeStarNodes();
   evaluationSplit.escaped.forEach(id => {
     const node = nodeById.get(id);
     const layout = domainLayouts.get(node.layoutKey) || domainLayouts.get("memory");
@@ -1352,6 +1383,7 @@ function renderGraph() {
       : link.kind === "parent" ? `${domainLayouts.get(sourceDomain).label} grew from ${domainLayouts.get(targetDomain).label} (separate membership; visual relationship only)`
       : link.kind === "transition" ? "Subject transition (not core membership)"
       : link.kind === "topic" ? "Shared topic"
+      : link.kind === "generated" ? "Injected memory and its generated note (two-way bond)"
       : link.kind === "contextual" ? "Provisional related exchange (wording and context)"
       : link.kind === "related" ? "Related memory (galaxy relation)" : "Adjacent turn";
     layer.lastChild.append(el("title", {}, `${relation}: ${link.strength.toFixed(2)}`));
@@ -1373,7 +1405,7 @@ function renderGraph() {
     const dimmed = focus.size > 0 && !focus.has(node.id);
     const isCreated = createdIds.has(node.id);
     const group = el("g", {
-      class: `node${node.paired_role ? ` paired-${node.paired_role}` : ""}${state.selected === node.id ? " selected" : ""}${node.consolidated ? " consolidated" : ""}${node.userImportant ? " user-important" : ""}${node.kind === "topic" ? " topic" : ""}${node.domain ? ` ${styleDomainFor(node.domain)}` : ""}${isCreated ? " created" : ""}${isMatch ? " match" : ""}${dimmed ? " dimmed" : ""}`,
+      class: `node${node.paired_role ? ` paired-${node.paired_role}` : ""}${state.selected === node.id ? " selected" : ""}${node.consolidated ? " consolidated" : ""}${node.userImportant ? " user-important" : ""}${node.kind === "topic" ? " topic" : ""}${node.origin === "user-injected" ? " star" : ""}${node.origin === "ai-generated" ? " star generated-note" : ""}${node.domain ? ` ${styleDomainFor(node.domain)}` : ""}${isCreated ? " created" : ""}${isMatch ? " match" : ""}${dimmed ? " dimmed" : ""}`,
       transform: `translate(${p.x} ${p.y})`,
       tabindex: "0",
       role: "button",
@@ -1902,6 +1934,8 @@ def main() -> None:
             if source:
                 node["role"] = source.get("role")
                 node["text"] = source.get("text")
+                node["origin"] = source.get("origin")
+                node["source_id"] = source.get("source_id")
                 node["topics"] = source.get("topics", [])
                 node["domain"] = source["domain"]
                 node["parent_domain"] = source["parent_domain"]

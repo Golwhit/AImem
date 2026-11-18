@@ -223,6 +223,26 @@ class LearnerTests(unittest.TestCase):
         self.assertFalse(learner.is_reviewed("Injected 1"))
         self.assertEqual(learner.status()["injected_memories"], 2)
 
+    def test_injected_memory_gets_linked_generated_memory(self):
+        from memory_learner import inject_memory
+        result = inject_memory(self.root, "Galaxy candidates break out of scripture", ["galaxy"])
+        transcript = json.loads((self.root / "chat_memory.json").read_text(encoding="utf-8"))
+        by_id = {m["id"]: m for m in transcript["messages"]}
+        generated = by_id[result["generated_id"]]
+        self.assertEqual((generated["origin"], generated["source_id"]), ("ai-generated", result["id"]))
+        self.assertEqual(by_id[result["id"]]["generated_id"], generated["id"])
+        self.assertIn("Suggestion:", generated["text"])
+        self.assertTrue(any(l["kind"] == "generated" and {l["source"], l["target"]} == {result["id"], generated["id"]}
+                            for l in transcript["links"]))
+
+    def test_injected_topics_merge_user_and_extracted_without_duplicates(self):
+        from memory_learner import inject_memory
+        inject_memory(self.root, "Galaxy candidates break out of scripture", ["Scripture", "galaxy"])
+        stored = json.loads((self.root / "chat_memory.json").read_text(encoding="utf-8"))["messages"][-1]
+        self.assertEqual(stored["topics"][:2], ["Scripture", "galaxy"])
+        self.assertEqual(len(stored["topics"]), len(set(stored["topics"])))
+        self.assertIn("scripture", stored["topics"])
+
 
         legacy = self.root / ".data" / "learner.json"
         legacy.parent.mkdir()

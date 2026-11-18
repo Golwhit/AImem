@@ -24,8 +24,14 @@ DISCOVERY_NOISE = STOP_WORDS | {
 
 def discovery_text(message: dict) -> str:
     parent_words = DOMAIN_TERMS.get(message["parent_domain"], set())
-    terms = re.findall(r"[a-z0-9]+", message["text"].lower())
+    terms = re.findall(r"[a-z0-9]+", (message["text"] + " " + " ".join(message.get("topics", []))).lower())
     return " ".join(term for term in terms if len(term) > 2 and not term.isdigit() and term not in DISCOVERY_NOISE and term not in parent_words)
+
+
+def extract_topics(text: str) -> list[str]:
+    """Learner-extracted topics: domain vocabulary terms found in the text, in a stable order."""
+    tokens = set(re.findall(r"[a-z0-9]+", text.lower()))
+    return sorted(domain for domain, terms in DOMAIN_TERMS.items() if tokens & terms)
 
 
 RELATED_CLUSTER_PAIRS = (("Git / Aimem", "Commit / Push"),)
