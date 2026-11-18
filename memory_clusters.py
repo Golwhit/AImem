@@ -160,14 +160,14 @@ def update_clusters(transcript: dict, graph_links: list[dict] | None = None) -> 
 
     weights = {}
     for link in transcript.get("links", []):
-        if link.get("kind") == "parent" or link["source"] == link["target"]:
+        if link.get("kind") in {"parent", "contextual"} or link["source"] == link["target"]:
             continue
         pair = frozenset((link["source"], link["target"]))
         weights[pair] = max(weights.get(pair, 0), link["strength"])
     if graph_links is not None:
         graph_weights = {}
         for link in graph_links:
-            if link.get("kind") == "parent" or link["source"] == link["target"]:
+            if link.get("kind") in {"parent", "contextual"} or link["source"] == link["target"]:
                 continue
             pair = frozenset((link["source"], link["target"]))
             graph_weights[pair] = max(graph_weights.get(pair, 0), link["strength"])

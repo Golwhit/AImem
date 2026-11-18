@@ -15,6 +15,72 @@ STOP_WORDS = {
     "which", "while", "who", "will", "with", "would", "you", "your",
 }
 
+SHORT_WORD = re.compile(r"[a-z0-9]+(?:['’-][a-z0-9]+)*")
+CONTEXT_NEGATION = {"no", "not", "never", "neither", "nor", "without", "cannot", "can't", "dont", "don't"}
+
+
+def short_words(text: str) -> list[str]:
+    return SHORT_WORD.findall(text.lower().replace("’", "'"))
+
+
+def context_terms(text: str) -> set[str]:
+    return {word for word in short_words(text) if len(word) > 2 and word not in STOP_WORDS}
+
+
+def evaluation_exchange_pairs(messages: list[dict]) -> list[tuple[dict, dict]]:
+    """Find unambiguous user/assistant exchanges in the evaluation domain."""
+    cycles = Counter(message.get("created_cycle") for message in messages
+                     if message.get("created_cycle") is not None)
+    pairs = []
+    for user, assistant in zip(messages, messages[1:]):
+        cycle = user.get("created_cycle")
+        if (user.get("role") != "You" or assistant.get("role") != "Assistant"
+                or type(cycle) is not int or cycle <= 0 or assistant.get("created_cycle") != cycle
+                or cycles[cycle] != 2 or user.get("session_id") != assistant.get("session_id")
+                or user.get("source") != assistant.get("source")
+                or user.get("domain") != "evaluation" or assistant.get("domain") != "evaluation"):
+            continue
+        pairs.append((user, assistant))
+    return pairs
+
+
+def short_context_pairs(messages: list[dict]) -> list[dict]:
+    """Find short turns with longer exchange context without modifying originals."""
+    pairs = []
+    for user, assistant in evaluation_exchange_pairs(messages):
+        for short, detail in ((user, assistant), (assistant, user)):
+            short_tokens = short_words(short["text"])
+            detail_text = detail["text"]
+            if (1 <= len(short_tokens) <= 2 and len(short_words(detail_text)) >= 8
+                    and len(context_terms(detail_text)) >= 3
+                    and "no stored assistant reply matched" not in detail_text.lower()):
+                pairs.append({"id": short["id"], "detail_id": detail["id"], "role": short["role"],
+                              "short_tokens": short_tokens, "text": detail_text})
+    return pairs
+
+
+def contextual_associations(pairs: list[dict], existing_links: list[dict]) -> list[dict]:
+    """Propose new provisional edges only when no original cross-link exists."""
+    by_id = {pair["id"]: pair for pair in pairs}
+    existing = {frozenset((link["source"], link["target"])) for link in existing_links}
+    result = []
+    for link in infer_similarity_links(pairs, max_neighbors=max(1, len(pairs)), min_similarity=0.30):
+        first, second = by_id[link["source"]], by_id[link["target"]]
+        if (first["role"] != second["role"] or first["short_tokens"] != second["short_tokens"]
+                or (first["role"] == "You" and first["short_tokens"] == ["next"])
+                or len(context_terms(first["text"]) & context_terms(second["text"])) < 3
+                or (set(short_words(first["text"])) & CONTEXT_NEGATION)
+                != (set(short_words(second["text"])) & CONTEXT_NEGATION)):
+            continue
+        cross = [frozenset((a, b)) for a in (first["id"], first["detail_id"])
+                 for b in (second["id"], second["detail_id"])]
+        if any(pair in existing for pair in cross):
+            continue
+        result.append({"source": first["detail_id"], "target": second["detail_id"],
+                       "kind": "contextual", "strength": link["strength"]})
+        existing.add(frozenset((first["detail_id"], second["detail_id"])))
+    return result
+
 
 def infer_similarity_links(
     messages: list[dict],

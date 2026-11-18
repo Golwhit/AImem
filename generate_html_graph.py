@@ -7,7 +7,7 @@ from itertools import combinations
 from pathlib import Path
 
 from memory_system import MemoryGraph
-from memory_links import infer_similarity_links
+from memory_links import contextual_associations, evaluation_exchange_pairs, infer_similarity_links, short_context_pairs
 from memory_clusters import apply_graph_domains, update_clusters
 
 
@@ -156,6 +156,7 @@ HTML = r"""<!doctype html>
     .edge.transition.created { opacity: .9; }
     .edge.parent { stroke: #6ee7b7; stroke-dasharray: none; opacity: .8; }
     .edge.related { stroke: #facc15; stroke-dasharray: 4 3; opacity: .6; }
+    .edge.contextual { stroke: #fbbf24; stroke-dasharray: 2 3; opacity: .6; }
     .edge.within-galaxy:not(.created):not(.recalled) { opacity: .66; }
     .edge.within-galaxy.sequence:not(.cross-domain):not(.created):not(.recalled) { stroke: var(--galaxy-edge-color, #8b9bc4); }
     .learner-values { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; margin: 12px 0; font-size: 12px; }
@@ -186,6 +187,8 @@ HTML = r"""<!doctype html>
     .node.topic.evaluation circle.core { fill: #5b3d8c; stroke: #ddd6fe; }
     .node.entertainment circle.core { fill: #1f3d62; stroke: #60a5fa; }
     .node.topic.entertainment circle.core { fill: #26507f; stroke: #bfdbfe; }
+    .node.paired-context circle.core { stroke: #fbbf24; stroke-width: 1.5; }
+    .node.paired-short circle.core { fill: #fbbf24; stroke: #fff; stroke-width: 0.6; }
     .node.bridge circle.core { stroke-dasharray: 2 3; }
     .node.user-important circle.core { stroke: var(--amber); stroke-width: 1.6; filter: drop-shadow(0 0 5px rgba(251,191,36,.75)); }
     .cluster-bg { fill: rgba(14, 22, 39, .46); stroke: rgba(165,180,220,.16); stroke-width: 1.2; rx: 18; ry: 18; }
@@ -320,6 +323,7 @@ HTML = r"""<!doctype html>
         </div>
         <h2 id="selected-name" class="selected-name">Pick a memory</h2>
         <div id="selected-content" class="selected-content">Select a message in the graph to inspect and activate it.</div>
+        <button type="button" id="paired-memory-button" hidden></button>
         <div id="cluster-importance-evidence" class="selected-content" hidden></div>
         <div class="signal-row" id="selected-signals"></div>
         <div class="meter-row"><span>Importance</span><span id="importance-value">—</span></div>
@@ -545,14 +549,19 @@ state.nodes.forEach(node => {
   node.domain = domainForNode(node);
 });
 const SPLIT_RADIUS = 180;
-const SUN_RADIUS = 100;
+const SEEDER_RADIUS = 100;
 const BLAST_DISTANCE = 200;
-const SUN_SPREAD = 0.5;
+const SEEDER_SPREAD = 0.5;
 const BABY_RADIUS = 34;
 const BABY_INTERACTIONS = 5;
-const SUN_BALANCE = 0.4;
-const CROSS_SUN_MIN = 0.3;
-const EVAL_SUNS = ["evaluation", "evaluation-2"];
+const SEEDER_BALANCE = 0.4;
+const CROSS_SEEDER_MIN = 0.3;
+const ESCAPE_MIN = 0.36;
+const EVAL_SEEDERS = ["evaluation", "evaluation-2"];
+const PAIR_PULL = 1.5;
+const FLOAT_DISTANCE = 60;
+const DRIFT_RATE = 0.05;
+const floatPos = new Map();
 const GALAXY_EDGE_COLORS = {memory: "#67e8f9", scripture: "#f9a8d4", food: "#86efac", finance: "#fcd34d", evaluation: "#c4b5fd", entertainment: "#93c5fd", other: "#fcd34d"};
 function isBaby(domain) {
   const cluster = initialGraph.clusters?.[domain];
@@ -563,7 +572,7 @@ function layoutStats(nodes) {
   const salience = messages.reduce((sum, node) => sum + Math.min(1, learnedScore(node)), 0) / Math.max(1, messages.length);
   return {messages, salience, raw: 48 + 6 * Math.sqrt(messages.length) + 20 * salience};
 }
-function relaxSun(nodeIds, radius, weights) {
+function relaxSeeder(nodeIds, radius, weights) {
   const limit = Math.max(1, radius - 28);
   const count = nodeIds.length;
   const k = limit / Math.sqrt(Math.max(1, count));
@@ -609,27 +618,28 @@ function relaxSun(nodeIds, radius, weights) {
   }
   return new Map(nodeIds.map((id, i) => [id, pos[i]]));
 }
-function refineSunMembership(sunOf, weights, ordered) {
-  const total = ordered.length;
-  const minSize = Math.floor(total * SUN_BALANCE);
-  const maxSize = Math.ceil(total * (1 - SUN_BALANCE));
+function refineSeederMembership(seederOf, weights, ordered, groupSizes) {
+  const total = ordered.reduce((sum, id) => sum + groupSizes.get(id), 0);
+  const minSize = Math.floor(total * SEEDER_BALANCE);
+  const maxSize = Math.ceil(total * (1 - SEEDER_BALANCE));
   const sizes = [0, 0];
-  ordered.forEach(id => sizes[sunOf.get(id)]++);
+  ordered.forEach(id => sizes[seederOf.get(id)] += groupSizes.get(id));
   for (let round = 0; round < 20; round++) {
     let moved = 0;
     ordered.forEach(id => {
-      const current = sunOf.get(id), other = 1 - current;
-      if (sizes[current] - 1 < minSize || sizes[other] + 1 > maxSize) return;
+      const current = seederOf.get(id), other = 1 - current;
+      const size = groupSizes.get(id);
+      if (sizes[current] - size < minSize || sizes[other] + size > maxSize) return;
       let pullCurrent = 0, pullOther = 0;
       weights.get(id).forEach((w, neighbor) => {
-        if (sunOf.get(neighbor) === current) pullCurrent += w;
+        if (seederOf.get(neighbor) === current) pullCurrent += w;
         else pullOther += w;
       });
       const gain = pullOther - pullCurrent;
       const tieToSmaller = Math.abs(gain) < 1e-9 && sizes[other] < sizes[current];
       if (gain > 1e-9 || tieToSmaller) {
-        sunOf.set(id, other);
-        sizes[current]--; sizes[other]++;
+        seederOf.set(id, other);
+        sizes[current] -= size; sizes[other] += size;
         moved++;
       }
     });
@@ -640,17 +650,56 @@ function planEvaluationSplit() {
   const keyFor = new Map();
   const relative = new Map();
   const evaluation = state.nodes.filter(node => node.domain === "evaluation");
-  if (layoutStats(evaluation).raw < SPLIT_RADIUS) return {keyFor, relative};
+  const split = layoutStats(evaluation).raw >= SPLIT_RADIUS;
   const members = new Set(evaluation.map(node => node.id));
+  const nodesById = new Map(evaluation.map(node => [node.id, node]));
+  const groups = new Map(), groupOf = new Map();
+  evaluation.forEach(node => {
+    if (groupOf.has(node.id)) return;
+    const partner = nodesById.get(node.exchange_with);
+    const ids = partner && partner.exchange_with === node.id && !groupOf.has(partner.id)
+      ? [node.id, partner.id] : [node.id];
+    groups.set(node.id, ids);
+    ids.forEach(id => groupOf.set(id, node.id));
+  });
+  const floating = new Set();
+  groups.forEach((ids, id) => {
+    if (ids.length !== 2) return;
+    const inside = new Set(ids);
+    const attached = state.links.some(link => link.kind !== "parent" && Number(link.strength) >= ESCAPE_MIN &&
+      inside.has(link.source) !== inside.has(link.target));
+    if (!attached) floating.add(id);
+  });
   const weights = new Map();
-  members.forEach(id => weights.set(id, new Map()));
+  groups.forEach((_, id) => weights.set(id, new Map()));
   state.links.forEach(link => {
     if (link.kind === "parent" || link.source === link.target || !members.has(link.source) || !members.has(link.target)) return;
-    const w = Number(link.strength) || 0.3;
-    weights.get(link.source).set(link.target, (weights.get(link.source).get(link.target) || 0) + w);
-    weights.get(link.target).set(link.source, (weights.get(link.target).get(link.source) || 0) + w);
+    const source = groupOf.get(link.source), target = groupOf.get(link.target);
+    const w = Number(link.strength);
+    if (source === target || !Number.isFinite(w) || w <= 0 || floating.has(source) || floating.has(target)) return;
+    const boost = groups.get(source).length === 2 && groups.get(target).length === 2 ? PAIR_PULL : 1;
+    weights.get(source).set(target, (weights.get(source).get(target) || 0) + w * boost);
+    weights.get(target).set(source, (weights.get(target).get(source) || 0) + w * boost);
   });
-  const ordered = evaluation.map(node => node.id);
+  const ordered = [...groups.keys()].filter(id => !floating.has(id));
+  const groupSizes = new Map([...groups].map(([id, ids]) => [id, ids.length]));
+  function placeGroups(ids, key) {
+    const included = new Set(ids);
+    const nodes = evaluation.filter(node => included.has(groupOf.get(node.id)));
+    const radius = domainLayoutFor(key, nodes).radius;
+    relaxSeeder(ids, radius, weights).forEach((point, id) => {
+      groups.get(id).forEach((member, index) => {
+        keyFor.set(member, key);
+        const offset = groups.get(id).length === 2 ? (index === 0 ? -7 : 7) : 0;
+        relative.set(member, {x: point.x + offset, y: point.y});
+      });
+    });
+  }
+  const escaped = new Set([...floating].flatMap(id => groups.get(id)));
+  if (!split) {
+    placeGroups(ordered, "evaluation");
+    return {keyFor, relative, escaped};
+  }
   const degree = new Map(ordered.map(id => [id, [...weights.get(id).values()].reduce((sum, w) => sum + w, 0)]));
   let vector = new Map(ordered.map((id, i) => [id, (i % 2 ? 1 : -1) * (1 + (i % 7) / 7)]));
   for (let round = 0; round < 200; round++) {
@@ -671,17 +720,21 @@ function planEvaluationSplit() {
     vector = next;
   }
   const ranked = [...ordered].sort((x, y) => vector.get(y) - vector.get(x) || (x < y ? -1 : 1));
-  const sunOf = new Map(ranked.map((id, i) => [id, i < Math.ceil(ranked.length / 2) ? 0 : 1]));
-  refineSunMembership(sunOf, weights, ordered);
-  [0, 1].forEach(sun => {
-    const ids = ordered.filter(id => sunOf.get(id) === sun);
-    const key = sun === 0 ? "evaluation" : "evaluation-2";
-    ids.forEach(id => keyFor.set(id, key));
-    const nodes = evaluation.filter(node => sunOf.get(node.id) === sun);
-    const radius = domainLayoutFor(key, nodes).radius;
-    relaxSun(ids, radius, weights).forEach((point, id) => relative.set(id, point));
+  const seederOf = new Map();
+  let assigned = 0;
+  const placedTotal = ordered.reduce((sum, id) => sum + groupSizes.get(id), 0);
+  ranked.forEach(id => {
+    const seeder = assigned < placedTotal / 2 ? 0 : 1;
+    seederOf.set(id, seeder);
+    if (seeder === 0) assigned += groupSizes.get(id);
   });
-  return {keyFor, relative};
+  refineSeederMembership(seederOf, weights, ordered, groupSizes);
+  [0, 1].forEach(seeder => {
+    const ids = ordered.filter(id => seederOf.get(id) === seeder);
+    const key = seeder === 0 ? "evaluation" : "evaluation-2";
+    placeGroups(ids, key);
+  });
+  return {keyFor, relative, escaped};
 }
 function candidatePreviewLayouts(nodes, clusters) {
   const result = new Map();
@@ -706,16 +759,18 @@ state.nodes.forEach(node => {
   node.previewParent = candidatePreviews.has(node.id) ? node.domain : null;
   node.layoutKey = candidatePreviews.get(node.id) || evaluationSplit.keyFor.get(node.id) || node.domain || "memory";
 });
-const preferredSun = new Map();
+const nodeById = new Map(state.nodes.map(node => [node.id, node]));
+const preferredSeeder = new Map();
 (() => {
   const pull = new Map();
   const keyById = new Map(state.nodes.map(n => [n.id, n.layoutKey]));
   state.links.forEach(link => {
     if (link.kind === "parent") return;
     const keyA = keyById.get(link.source), keyB = keyById.get(link.target);
-    const w = Number(link.strength) || 0.3;
+    const w = Number(link.strength);
+    if (!Number.isFinite(w) || w <= 0) return;
     [[link.source, keyB, keyA], [link.target, keyA, keyB]].forEach(([id, other, own]) => {
-      if (!EVAL_SUNS.includes(other) || EVAL_SUNS.includes(own)) return;
+      if (!EVAL_SEEDERS.includes(other) || EVAL_SEEDERS.includes(own)) return;
       const m = pull.get(id) || new Map();
       m.set(other, (m.get(other) || 0) + w);
       pull.set(id, m);
@@ -723,7 +778,7 @@ const preferredSun = new Map();
   });
   pull.forEach((m, id) => {
     const [best] = [...m.entries()].sort((x, y) => (y[1] - x[1]) || (x[0] < y[0] ? -1 : 1));
-    preferredSun.set(id, best[0]);
+    preferredSeeder.set(id, best[0]);
   });
 })();
 
@@ -750,6 +805,16 @@ function connectionPresentation(sourceKey, targetKey, kind, strength, created, a
     opacity: withinGalaxy && !created && !active ? 0.66 * Math.min(1, Math.max(0, strength)) : null
   };
 }
+function showEvaluationLink(sourceKey, targetKey, source, target, strength, pairedExternal, preferredSeeder) {
+  const sourceSeeder = EVAL_SEEDERS.includes(sourceKey), targetSeeder = EVAL_SEEDERS.includes(targetKey);
+  if (sourceSeeder && targetSeeder && sourceKey !== targetKey) return false;
+  if (sourceSeeder !== targetSeeder && !pairedExternal) {
+    const outside = sourceSeeder ? target : source;
+    const seeder = sourceSeeder ? sourceKey : targetKey;
+    if (preferredSeeder.has(outside) && preferredSeeder.get(outside) !== seeder) return false;
+  }
+  return true;
+}
 function memoryBrightness(layoutKey, score, highlighted) {
   if (layoutKey !== "memory" || highlighted) return 1;
   return 0.8 + 0.2 * Math.min(1, Math.max(0, score));
@@ -759,7 +824,7 @@ function domainLayoutFor(domain, nodes) {
   const labels = {memory: "AI memory", scripture: "Scripture", food: "Food", finance: "Finance", evaluation: "Under evaluation", "evaluation-2": "Under evaluation II", entertainment: "Entertainment", other: "Other"};
   const {messages, salience, raw} = layoutStats(nodes);
   const overflow = layoutStats(state.nodes.filter(node => node.domain === "evaluation")).raw >= SPLIT_RADIUS;
-  const radius = domain.startsWith("evaluation") && overflow ? SUN_RADIUS : isBaby(domain) || isCandidatePreview(domain) ? BABY_RADIUS : Math.min(SPLIT_RADIUS, raw);
+  const radius = domain.startsWith("evaluation") && overflow ? SEEDER_RADIUS : isBaby(domain) || isCandidatePreview(domain) ? BABY_RADIUS : Math.min(SPLIT_RADIUS, raw);
   return {center: {x: 0, y: 0}, radius, label: cluster?.label || labels[domain] || domain, subtitle: `${messages.length} memories`, messages: messages.length, salience, styleDomain: styleDomainFor(domain) === "evaluation-2" ? "evaluation" : styleDomainFor(domain)};
 }
 const domainLayouts = new Map();
@@ -812,10 +877,10 @@ function linkWeightsFor(domain) {
   });
   return totals;
 }
-function nearestSunFor(domain) {
-  const suns = ["evaluation", "evaluation-2"];
+function nearestSeederFor(domain) {
+  const seeders = ["evaluation", "evaluation-2"];
   const totals = linkWeightsFor(domain);
-  return [...totals.entries()].filter(([key]) => suns.includes(key)).sort((x, y) => y[1] - x[1])[0]?.[0] || null;
+  return [...totals.entries()].filter(([key]) => seeders.includes(key)).sort((x, y) => y[1] - x[1])[0]?.[0] || null;
 }
 function placeCandidatePreviews(candidates, layouts, offsets, centerRadius) {
   candidates.forEach((domain, index) => {
@@ -842,14 +907,14 @@ function placeCandidatePreviews(candidates, layouts, offsets, centerRadius) {
 }
 function updateLayout() {
   domainGroups.forEach(([domain, nodes]) => domainLayouts.set(domain, domainLayoutFor(domain, nodes)));
-  const babySuns = new Map();
+  const babySeeders = new Map();
   domainLayouts.forEach((_, domain) => {
     if (!isBaby(domain)) return;
-    const sun = nearestSunFor(domain);
-    if (sun && domainLayouts.has(sun)) babySuns.set(domain, sun);
+    const seeder = nearestSeederFor(domain);
+    if (seeder && domainLayouts.has(seeder)) babySeeders.set(domain, seeder);
   });
   const candidates = [...domainLayouts.keys()].filter(isCandidatePreview).sort();
-  const satellites = [...domainLayouts.keys()].filter(domain => domain !== "memory" && !babySuns.has(domain) && !isCandidatePreview(domain)).sort();
+  const satellites = [...domainLayouts.keys()].filter(domain => domain !== "memory" && !babySeeders.has(domain) && !isCandidatePreview(domain)).sort();
   const split = domainLayouts.has("evaluation-2");
   const centerRadius = domainLayouts.get("memory")?.radius || 48;
   const satelliteRadius = Math.max(48, ...satellites.map(domain => domainLayouts.get(domain).radius));
@@ -857,29 +922,29 @@ function updateLayout() {
   const offsets = new Map([["memory", {x: 0, y: 0}]]);
   satellites.forEach((domain, index) => {
     const angle = -Math.PI / 2 + index * 2 * Math.PI / satellites.length;
-    const isSun = split && domain.startsWith("evaluation");
-    const spread = domain === "evaluation" ? -SUN_SPREAD : domain === "evaluation-2" ? SUN_SPREAD : 0;
-    const reach = isSun ? orbit + BLAST_DISTANCE : orbit;
-    offsets.set(domain, {x: reach * Math.cos(angle + (isSun ? spread : 0)), y: reach * Math.sin(angle + (isSun ? spread : 0))});
+    const isSeeder = split && domain.startsWith("evaluation");
+    const spread = domain === "evaluation" ? -SEEDER_SPREAD : domain === "evaluation-2" ? SEEDER_SPREAD : 0;
+    const reach = isSeeder ? orbit + BLAST_DISTANCE : orbit;
+    offsets.set(domain, {x: reach * Math.cos(angle + (isSeeder ? spread : 0)), y: reach * Math.sin(angle + (isSeeder ? spread : 0))});
   });
   placeCandidatePreviews(candidates, domainLayouts, offsets, centerRadius);
-  babySuns.forEach((sun, domain) => {
-    const sunOffset = offsets.get(sun);
+  babySeeders.forEach((seeder, domain) => {
+    const seederOffset = offsets.get(seeder);
     const toward = {x: 0, y: 0};
     linkWeightsFor(domain).forEach((weight, key) => {
       const target = offsets.get(key);
-      if (!target || key === sun || babySuns.has(key)) return;
-      const dx = target.x - sunOffset.x, dy = target.y - sunOffset.y;
+      if (!target || key === seeder || babySeeders.has(key)) return;
+      const dx = target.x - seederOffset.x, dy = target.y - seederOffset.y;
       const distance = Math.hypot(dx, dy);
       if (distance === 0) return;
       toward.x += weight * dx / distance;
       toward.y += weight * dy / distance;
     });
-    const outward = Math.hypot(sunOffset.x, sunOffset.y) || 1;
+    const outward = Math.hypot(seederOffset.x, seederOffset.y) || 1;
     const pull = Math.hypot(toward.x, toward.y) || 1;
-    const dir = Math.hypot(toward.x, toward.y) ? {x: toward.x / pull, y: toward.y / pull} : {x: sunOffset.x / outward, y: sunOffset.y / outward};
-    const gap = domainLayouts.get(sun).radius + domainLayouts.get(domain).radius + 12;
-    offsets.set(domain, {x: sunOffset.x + dir.x * gap, y: sunOffset.y + dir.y * gap});
+    const dir = Math.hypot(toward.x, toward.y) ? {x: toward.x / pull, y: toward.y / pull} : {x: seederOffset.x / outward, y: seederOffset.y / outward};
+    const gap = domainLayouts.get(seeder).radius + domainLayouts.get(domain).radius + 12;
+    offsets.set(domain, {x: seederOffset.x + dir.x * gap, y: seederOffset.y + dir.y * gap});
   });
   let reach = 0;
   offsets.forEach((offset, domain) => { reach = Math.max(reach, Math.hypot(offset.x, offset.y) + domainLayouts.get(domain).radius); });
@@ -894,15 +959,15 @@ function updateLayout() {
   domainGroups.forEach(([domain, nodes]) => {
     const layout = domainLayouts.get(domain);
     nodes.forEach((node, index) => {
+      const relaxed = evaluationSplit.relative.get(node.id);
+      if (relaxed) {
+        positions[node.id] = {x: layout.center.x + relaxed.x, y: layout.center.y + relaxed.y, depth: (relaxed.y / Math.max(1, layout.radius) + 1) / 2};
+        return;
+      }
       if (node.border_cluster === domain) {
         const angle = index * Math.PI * (3 - Math.sqrt(5));
         const distance = Math.max(0, layout.radius - 3);
         positions[node.id] = {x: layout.center.x + distance * Math.cos(angle), y: layout.center.y + distance * Math.sin(angle), depth: 0.1};
-        return;
-      }
-      const relaxed = evaluationSplit.relative.get(node.id);
-      if (relaxed) {
-        positions[node.id] = {x: layout.center.x + relaxed.x, y: layout.center.y + relaxed.y, depth: (relaxed.y / Math.max(1, layout.radius) + 1) / 2};
         return;
       }
       const angle = index * Math.PI * (3 - Math.sqrt(5));
@@ -911,6 +976,42 @@ function updateLayout() {
       const sphereDepth = Math.sqrt(Math.max(0, 1 - (distance / reach) ** 2));
       positions[node.id] = {x: layout.center.x + distance * Math.cos(angle), y: layout.center.y + distance * Math.sin(angle), depth: sphereDepth};
     });
+  });
+  evaluationSplit.escaped.forEach(id => {
+    const node = nodeById.get(id);
+    const layout = domainLayouts.get(node.layoutKey) || domainLayouts.get("memory");
+    const pull = {x: 0, y: 0};
+    let strength = 0;
+    state.links.forEach(link => {
+      const w = Number(link.strength);
+      if (link.kind === "parent" || !(w >= CROSS_SEEDER_MIN)) return;
+      const other = link.source === id ? link.target : link.target === id ? link.source : null;
+      if (!other || evaluationSplit.escaped.has(other) || !positions[other]) return;
+      pull.x += w * positions[other].x;
+      pull.y += w * positions[other].y;
+      strength += w;
+    });
+    let x, y;
+    if (strength > 0) {
+      x = pull.x / strength;
+      y = pull.y / strength;
+    } else {
+      const dx = layout.center.x - center.x, dy = layout.center.y - center.y;
+      const norm = Math.hypot(dx, dy) || 1;
+      const reach = layout.radius + FLOAT_DISTANCE;
+      x = layout.center.x + dx / norm * reach;
+      y = layout.center.y + dy / norm * reach;
+    }
+    const side = id < node.exchange_with ? -7 : 7;
+    const goal = {x: x + side, y};
+    const at = floatPos.get(id) || {...goal};
+    const gap = Math.hypot(goal.x - at.x, goal.y - at.y);
+    if (gap > 0.5) {
+      at.x += (goal.x - at.x) * DRIFT_RATE;
+      at.y += (goal.y - at.y) * DRIFT_RATE;
+    }
+    floatPos.set(id, at);
+    positions[id] = {x: at.x, y: at.y, depth: 0.5};
   });
 }
 function defaultFeedback() {
@@ -1008,7 +1109,7 @@ async function refreshRemoteSnapshot() {
     const knownNodes = new Map(state.nodes.map(node => [node.id, node]));
     const changedMembership = (payload.snapshot.nodes || []).some(node => {
       const current = knownNodes.get(node.id);
-      return current && typeof node.domain === "string" && (current.domain !== node.domain || current.parent_domain !== node.parent_domain || current.candidate_cluster !== node.candidate_cluster || current.border_cluster !== node.border_cluster);
+      return current && typeof node.domain === "string" && (current.domain !== node.domain || current.parent_domain !== node.parent_domain || current.candidate_cluster !== node.candidate_cluster || current.border_cluster !== node.border_cluster || current.paired_with !== node.paired_with || current.paired_role !== node.paired_role || current.exchange_with !== node.exchange_with);
     });
     if ((payload.snapshot.nodes || []).some(node => !knownIds.has(node.id)) || changedMembership) {
       location.reload();
@@ -1125,6 +1226,12 @@ function render() {
   syncSidebarVisibility();
   updateLayout();
   const radii = memoryRadii(state.nodes, state.links);
+  state.nodes.forEach(node => {
+    if (node.paired_role !== "short" || !positions[node.paired_with]) return;
+    const partner = positions[node.paired_with];
+    const radius = radii.get(node.paired_with) * (0.72 + 0.6 * partner.depth);
+    positions[node.id] = {x: partner.x + radius * 0.48, y: partner.y - radius * 0.48, depth: partner.depth};
+  });
   svg.replaceChildren();
   const definitions = el("defs");
   const shading = el("radialGradient", {id: "region-shading", cx: "28%", cy: "22%", r: "80%"});
@@ -1172,6 +1279,7 @@ function render() {
   const layoutKeyById = new Map(state.nodes.map(node => [node.id, node.layoutKey || node.domain || "memory"]));
   const focus = makeFocusSet();
   state.links.forEach(link => {
+    if (nodeById.get(link.source)?.paired_with === link.target) return;
     let a = positions[link.source], b = positions[link.target];
     const active = (state.active[link.source] || 0) > 0.05 && (state.active[link.target] || 0) > 0.05;
     const dimmed = focus.size > 0 && !(focus.has(link.source) && focus.has(link.target));
@@ -1189,17 +1297,16 @@ function render() {
       b = {x: targetLayout.center.x - dx / distance * targetLayout.radius, y: targetLayout.center.y - dy / distance * targetLayout.radius};
     }
     const sourceKey = layoutKeyById.get(link.source), targetKey = layoutKeyById.get(link.target);
-    const sourceSun = EVAL_SUNS.includes(sourceKey), targetSun = EVAL_SUNS.includes(targetKey);
-    let sunFade = null;
-    if (sourceSun && targetSun && sourceKey !== targetKey) {
-      if (link.strength < CROSS_SUN_MIN) return;
-      sunFade = Math.min(0.4, Math.max(0.03, (link.strength - 0.2) * 0.6));
+    const sourceSeeder = EVAL_SEEDERS.includes(sourceKey), targetSeeder = EVAL_SEEDERS.includes(targetKey);
+    const pairedExternal = Boolean(nodeById.get(link.source)?.exchange_with || nodeById.get(link.target)?.exchange_with);
+    if (!showEvaluationLink(sourceKey, targetKey, link.source, link.target, link.strength, pairedExternal, preferredSeeder)) return;
+    let seederFade = null;
+    if (sourceSeeder && targetSeeder && sourceKey !== targetKey) {
+      seederFade = link.strength < CROSS_SEEDER_MIN
+        ? Math.max(0, link.strength)
+        : Math.min(0.4, Math.max(0.03, (link.strength - 0.2) * 0.6));
     }
-    if (sourceSun !== targetSun) {
-      const outside = sourceSun ? link.target : link.source;
-      const sunKey = sourceSun ? sourceKey : targetKey;
-      if (preferredSun.has(outside) && preferredSun.get(outside) !== sunKey) return;
-    }
+    if (sourceSeeder !== targetSeeder && pairedExternal && link.strength <= 0) seederFade = 0;
     const crossDomain = sourceDomain !== targetDomain;
     const created = createdIds.has(link.source) || createdIds.has(link.target) || link.created_cycle === state.cycles;
     const presentation = connectionPresentation(sourceKey, targetKey, link.kind, link.strength, created, active);
@@ -1219,32 +1326,36 @@ function render() {
       : link.kind === "parent" ? `${domainLayouts.get(sourceDomain).label} grew from ${domainLayouts.get(targetDomain).label} (separate membership; visual relationship only)`
       : link.kind === "transition" ? "Subject transition (not core membership)"
       : link.kind === "topic" ? "Shared topic"
+      : link.kind === "contextual" ? "Provisional related exchange (wording and context)"
       : link.kind === "related" ? "Related memory (galaxy relation)" : "Adjacent turn";
     layer.lastChild.append(el("title", {}, `${relation}: ${link.strength.toFixed(2)}`));
-    if (sunFade !== null) layer.lastChild.style.opacity = sunFade;
+    if (seederFade !== null) layer.lastChild.style.opacity = seederFade;
   });
 
   const memoryDetails = node => {
     const fb = node.feedback || defaultFeedback();
     const candidate = initialGraph.clusters?.[node.candidate_cluster];
     const evidence = candidate ? `\n${candidate.label}: ${candidate.promoted ? "Promoted" : "Under evaluation"}\n${candidate.reason}` : "";
-    return `${node.content}\nScore: ${learnedScore(node).toFixed(2)}\nHelpful: ${fb.helpful} · Corrections: ${fb.corrections} · Recalls: ${fb.recalls}${node.consolidated ? "\nConsolidated" : ""}${evidence}`;
+    const partner = nodeById.get(node.paired_with);
+    const paired = partner ? `\nPaired exchange (${partner.id}): ${partner.content}` : "";
+    return `${node.content}${paired}\nScore: ${learnedScore(node).toFixed(2)}\nHelpful: ${fb.helpful} · Corrections: ${fb.corrections} · Recalls: ${fb.recalls}${node.consolidated ? "\nConsolidated" : ""}${evidence}`;
   };
 
-  [...state.nodes].sort((first, second) => positions[first.id].depth - positions[second.id].depth).forEach(node => {
+  [...state.nodes].sort((first, second) => (first.paired_role === "short") - (second.paired_role === "short") || positions[first.id].depth - positions[second.id].depth).forEach(node => {
     const p = positions[node.id], value = learnedScore(node);
     const isMatch = queryMatches(node);
     const dimmed = focus.size > 0 && !focus.has(node.id);
     const isCreated = createdIds.has(node.id);
     const group = el("g", {
-      class: `node${state.selected === node.id ? " selected" : ""}${node.consolidated ? " consolidated" : ""}${node.userImportant ? " user-important" : ""}${node.kind === "topic" ? " topic" : ""}${node.domain ? ` ${styleDomainFor(node.domain)}` : ""}${isCreated ? " created" : ""}${isMatch ? " match" : ""}${dimmed ? " dimmed" : ""}`,
+      class: `node${node.paired_role ? ` paired-${node.paired_role}` : ""}${state.selected === node.id ? " selected" : ""}${node.consolidated ? " consolidated" : ""}${node.userImportant ? " user-important" : ""}${node.kind === "topic" ? " topic" : ""}${node.domain ? ` ${styleDomainFor(node.domain)}` : ""}${isCreated ? " created" : ""}${isMatch ? " match" : ""}${dimmed ? " dimmed" : ""}`,
       transform: `translate(${p.x} ${p.y})`,
       tabindex: "0",
       role: "button",
-      "aria-label": `${node.id}, score ${value.toFixed(2)}. Click to activate.`
+      "aria-label": `${node.id}${node.paired_with ? `, paired with ${node.paired_with}` : ""}, score ${value.toFixed(2)}. Click to activate.`,
+      "data-memory-id": node.id
     });
     group.append(el("circle", {class: `pulse-ring${(state.active[node.id] || 0) > 0.05 || isCreated ? " animate" : ""}`, r: 2.75}));
-    const radius = radii.get(node.id) * (0.72 + 0.6 * p.depth);
+    const radius = node.paired_role === "short" ? 1.8 : radii.get(node.id) * (0.72 + 0.6 * p.depth);
     const circle = el("circle", {class: "core", r: radius});
     circle.style.opacity = (0.9 + 0.1 * p.depth).toFixed(2);
     const shine = el("circle", {class: "node-shine", r: radius});
@@ -1307,6 +1418,11 @@ function updateStats() {
 function updateDetails() {
   const node = state.nodes.find(item => item.id === state.selected);
   const clusterEvidence = document.getElementById("cluster-importance-evidence");
+  const pairButton = document.getElementById("paired-memory-button");
+  const partner = nodeById.get(node?.paired_with);
+  pairButton.hidden = !partner;
+  pairButton.textContent = partner ? `View paired memory ${partner.id}: ${partner.content}` : "";
+  pairButton.onclick = partner ? () => activate(partner.id) : null;
   if (!node) {
     document.getElementById("selected-name").textContent = "Pick a memory";
     document.getElementById("selected-content").textContent = "Select a message in the graph to inspect and activate it.";
@@ -1721,6 +1837,16 @@ def main() -> None:
         ):
             link["created_cycle"] = latest_cycle
     apply_graph_domains(data, transcript)
+    nodes_by_id = {node["id"]: node for node in data["nodes"]}
+    for user, assistant in evaluation_exchange_pairs(transcript["messages"]):
+        nodes_by_id[user["id"]]["exchange_with"] = assistant["id"]
+        nodes_by_id[assistant["id"]]["exchange_with"] = user["id"]
+    pairs = short_context_pairs(transcript["messages"])
+    for pair in pairs:
+        short, detail = nodes_by_id[pair["id"]], nodes_by_id[pair["detail_id"]]
+        short.update(paired_with=detail["id"], paired_role="short")
+        detail.update(paired_with=short["id"], paired_role="context")
+    data["links"].extend(contextual_associations(pairs, data["links"]))
     data["seed_id"] = seed_id
     data["clusters"] = clusters
     data["cycles"] = transcript.get("cycles", 0)

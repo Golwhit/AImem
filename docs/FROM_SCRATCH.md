@@ -2,9 +2,29 @@
 
 ## Goal And Boundary
 
-**Current direction:** a persistent conversation learner uses the layer-free
-word/punctuation design with character fallback and the tested 64-slot context.
+**Current direction:** the persistent conversation learner uses character-only
+output with the existing layer-free 130-slot word/gap, spacing and partial-word
+context. The live checkpoint has 32,731 parameters and a 643-character
+vocabulary. Its separately initialized weights are not merged with the old live
+model. The user accepted measured retention losses as a one-time selection
+exception; later training retains normal safeguards. An independent untrained
+copy is saved under `universe-lab/experiments/` as the next experimental
+starting point. The old live selection and progress are preserved for rollback.
 The original four-slot New Base remains the preserved prose baseline.
+The 40,600-update experimental continuation is available in the private
+`portable-model/` transfer folder, but is not the live base: the user kept
+the 37,700-update selection after retention losses. The bundle preserves
+full weights and supports reviewed CPU-only experiments and return staging.
+It does not yet implement CUDA or automated return replay and promotion.
+
+For short messages under evaluation, the graph now computes reversible visual
+pairs from an explicitly identified exchange: a one- or two-word turn sits
+within its detailed partner, while the original turns, feedback, links and
+provenance remain separate. The partner button allows inspection of either.
+The rule can suggest a provisional lexical contextual connection without
+forcing unmatched pairs to connect. It does not confer promotion or training
+approval; long replies and lexical matches can still be misleading. See
+[short-turn contextual pairs](../README.md#short-turn-contextual-pairs).
 L0-L2 are retired; layer
 sections below preserve historical evidence, not the current development
 plan. The original character MLP remains the comparison control and the
@@ -392,6 +412,77 @@ with the first word correct; all eight two-word targets begin `I do`.
 Rehearsal complete answers rose from 118/280 to 135/280 without losing
 previously correct cases. Both text groups had zero exact first and second
 words. Replay was exact; full activation safeguards were not run.
+
+**New-meal-only experiment:** The next 2,900 updates used only a new,
+explicitly hash-approved 256-pair meal, reaching 23,200. Its 64 development
+cases improved from 12 to 44 exact first words, 0 to 8 of 12 exact second
+words, and 12 to 40 complete answers. The 52 single-word targets do not
+count as second-word failures. These cases use the same templates as the
+training examples, so they do not demonstrate independent generalization.
+Forgetting also occurred: old teaching exact answers fell 135/280 to
+115/280 with 28 previously correct answers lost; old meal teaching fell
+142/256 to 118/256, also losing 28. Old development fell 24/64 to 23/64
+with two lost. There was no same-budget rehearsal control, so the cause
+cannot be isolated. Exact replay passed, but full activation and mid-round
+safeguards were not run; active chat was not changed.
+
+**New-meal continuation:** The same meal and sampling stream received 2,900
+more updates, reaching 26,100. New-meal development remained 44/64 exact
+first words, 8/12 exact second words and 40/64 complete answers; none of
+its previously correct complete answers were lost. Second-word third-letter
+matches improved from 0 to 4 of four eligible targets, but fourth-letter
+matches remained zero. Old teaching fell 115/280 to 108/280, losing eight
+previously correct answers; old meal teaching fell 118/256 to 109/256,
+losing 14. Old conversation development rose 23/64 to 25/64 while losing
+two previously correct answers. Without a rehearsal control and an
+independent test, these results do not isolate the cause or establish
+generalization. Replay was exact; no full activation or mid-round safeguards
+were run, and the checkpoint remains isolated.
+
+**Fresh meal with rehearsal:** Starting at 26,100 updates, two 2,900-update
+rounds sampled the approved fresh meal and pooled earlier approved teaching
+with equal probability per character position. Fresh development first-word
+accuracy rose 16/64 to 26/64 to 30/64; second-word accuracy rose 0/12 to
+2/12 to 6/12, excluding the 52 single-word targets. Complete answers rose
+14/64 to 24/64 to 28/64, and both answers in a contrasting pair were correct
+for 2, 6, then 10 of 32 pairs. Half of the test used changed wording:
+those complete answers rose 6/32 to 10/32 and stayed at 10/32, with four
+previously correct cases lost in the second round.
+
+Older teaching answers rose 108/280 to 144/280 to 154/280, with six
+previously correct answers lost in round one and none in round two.
+Previous-meal development stayed 40/64 but lost four correct cases in round
+one, showing that an unchanged total can hide turnover. This is a
+developer-visible diagnostic, not independent proof of generalization,
+and no matched fresh-only control isolates rehearsal's effect. Both rounds
+replayed exactly; full activation and mid-round safeguards were not run.
+
+**Third rehearsal round:** Another 2,900 updates reached 34,800. On the
+fresh diagnostic, first words rose 30/64 to 32/64 and complete answers
+28/64 to 30/64, while second words fell 6/12 to 4/12. Complete contrasting
+pairs rose 10/32 to 12/32. Changed-wording accuracy remained 10/32 while
+two previously correct cases were lost. Older teaching fell 154/280 to
+152/280, losing 24 previously correct cases; the near-steady aggregate
+hides substantial turnover. Fresh owner and transfer cases remained 0/8
+each. Replay was exact, but repeated developer-visible tests are not
+independent generalization evidence and no matched fresh-only control
+establishes the effect of rehearsal. The active model was not changed;
+full activation and mid-round safeguards were not run.
+
+**Fourth rehearsal round and live comparison:** Another 2,900 updates
+reached 37,700. Fresh development remained 32/64 first words, 4/12 second
+words and 30/64 complete answers, with two previously correct complete
+answers lost. Older teaching rose 152/280 to 155/280 but lost 20 previous
+correct answers. Comparing the candidate with the actual live model on its
+approved teaching and feedback gave 155/280 versus 204/280 exact answers:
+51 previously correct live teaching answers were lost, including three
+approved feedback answers. Development paired accuracy was 9/32 versus the
+live model's 10/32. A split-stream replay measured hidden saturation at
+0.222 halfway and 0.201 at the end, below the 0.6 limit, but retention
+and paired non-regression checks failed. The live selection was not changed;
+its selection, progress and checkpoint and the original comparison were
+saved in a verified rollback copy. These reused checks do not prove
+generalization; review is a user declaration, not legal clearance.
 
 Candidates do not yet simulate physical repulsion, assign letters, connect
 letters, or train word prediction. The earlier isolated fixed-seed prototype
@@ -4787,12 +4878,17 @@ which galaxy grew from which. Cross-galaxy memory connections retain their
 dashed styling; Under evaluation receives no parent connector. This is visual
 only and does not change membership, merge galaxies, or train weights.
 
-Under evaluation is split into two suns when it reaches its maximum drawn
-radius (`SPLIT_RADIUS` in `generate_html_graph.py`). The split uses a
-deterministic spectral bisection over the non-parent link weights, so strongly
-connected memories land on one sun and the weakest-tied ones on the other. Each
-sun is then relaxed with a Fruchterman-Reingold-style layout, which keeps tight
-connections close and drags weaker ones toward the second sun. The suns are then
+Under evaluation is split into two seeders when it reaches its maximum drawn
+radius (`SPLIT_RADIUS` in `generate_html_graph.py`). Verified evaluation
+exchanges are contracted into indivisible layout groups before deterministic
+spectral bisection and force relaxation. Their positive external link weights
+pull groups together; balance counts the original memories, not groups.
+Both turns remain close even in a single seeder. Paired memories keep their
+external links to other galaxies visible through the usual cross-seeder and
+preferred-seeder filters, although lines behind galaxy fills may be hard to see.
+Links between the two seeders are hidden (`showEvaluationLink`). This does not merge
+stored memories, add link strength, promote a cluster or approve training.
+The seeders are then
 pushed apart by `BLAST_DISTANCE` so they sit well apart. A promoted galaxy with
 fewer than `BABY_INTERACTIONS` interactions is drawn as a small baby beside the
 sun it links to most, on the side facing the galaxies it links to most. It stays promoted. Only the display changes; memberships
@@ -4820,11 +4916,16 @@ Its member memories have no separate hover. Simple `related` memory links join
 the Git / Aimem and Commit / Push galaxies, and join the Git / Aimem memories
 to AI Memory messages that mention "AImem"; they are rebuilt each render and do
 not change membership. Membership is then refined so each memory sits with
-the sun holding more of its tie weight, keeping each sun between `SUN_BALANCE`
-and 1 − `SUN_BALANCE` of the members (exact ties go to the smaller sun). Cross-sun
-links weaker than `CROSS_SUN_MIN` are hidden, and the rest are drawn with
+the seeder holding more of its tie weight, keeping each seeder between `SEEDER_BALANCE`
+and 1 − `SEEDER_BALANCE` of the members (exact ties go to the smaller seeder). Cross-seeder
+links weaker than `CROSS_SEEDER_MIN` are hidden, and the rest are drawn with
 opacity set from strength, so decayed bonds fade. A memory outside evaluation
-draws its link only to the sun it is most tied to.
+draws its link only to the seeder it is most tied to.
+A verified pair whose strongest outside link is below `ESCAPE_MIN` (0.36) floats
+free of the seeders; unpaired turns never float. Other pairs are pulled toward
+their links at `PAIR_PULL` (1.5x). Each render moves a floating pair one damped
+step (`DRIFT_RATE`) toward its goal, with no timer. Floating pairs are excluded from
+seeder balance and weights. The change is display-only.
 
 The graph can now look for related user contributions inside an existing domain,
 such as AI memory. It removes broad parent words and conversational filler from

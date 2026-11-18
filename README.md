@@ -13,8 +13,35 @@ bottom-right badge inside the galaxy canvas. Regenerate the graph after a versio
 
 ## Working model: New Base, no layers
 
-L0, L1 and L2 are **retired from the working path**. The layer-free
-word/punctuation base with character fallback is the preserved prose baseline:
+The active working base is the 37,700-update character-output conversation
+checkpoint, with the old model's 130-slot word/gap, spacing and partial-word
+context logic. It has 32,731 parameters (643-character vocabulary) and predicts
+one character at a time; weights were not merged
+with the old live model. Selection round 40 records the promotion, not an
+additional training round. The user explicitly accepted the measured
+retention regression as a one-time exception; later training retains its
+normal safeguards. An independent, untrained copy of this selected state is
+saved in `universe-lab/experiments/character-base-f668ee33396a42958bbb08f04e6997d7/`.
+
+A further experimental round reached 40,600 updates, but was not selected:
+it lost 16 previously correct approved teaching answers and four older
+development answers. The user chose to keep the 37,700-update live base.
+The ignored `portable-model/` folder contains the full 40,600-update
+experimental weights, the live-state anchor, reviewed meals, CPU training
+and return-staging instructions. It contains no chat transcript or actual
+secrets. Return staging does not activate a checkpoint; independent replay,
+full safeguards and explicit promotion still need to be implemented for
+the portable return path. CUDA acceleration is not implemented.
+
+The prior live conversation base is retained for rollback, including a
+verified selection and training-progress backup in
+`.data/neural-chat/rollback-before-character-3f926c7359198d98/`. The command
+`python3 neural_training.py --rollback` restores the previous chat selection
+only; permanent progress is not rolled back automatically, so further
+training requires reconciling progress with that selection.
+
+L0, L1 and L2 are **retired from the working path**. The older layer-free
+word/punctuation base with character fallback remains the prose baseline:
 run `10255643d34e41749c6bcc1f68ee8b5c`, arm `new`, seed 17, four passes,
 7,078 parameters. Seed/pass selection follows the protocol, not the best score.
 This checkpoint trained on Acts 6-12; it is **not** the prior whole-Acts/
@@ -31,18 +58,17 @@ layered weights, source data and the previous selection are retained unchanged
 for provenance, not used by active generation.
 
 ```sh
-# Working training comparison: original versus new, without any layer setup.
+# Historical prose training comparison: original versus new, without layers.
 python3 neural_base_comparison.py --acknowledge-review
-# Explicitly select the established working checkpoint.
-python3 neural_chat.py activate-base --run-id 10255643d34e41749c6bcc1f68ee8b5c --seed 17 --passes 4
+# Inspect the current selection.
 python3 neural_chat.py status
-# Same prompt through the active new base or the pinned original control.
+# Prompt the active conversation base or the pinned original control.
 printf '%s' '{"prompt":"The ","max_chars":64}' | python3 neural_chat.py generate
 printf '%s' '{"prompt":"The ","max_chars":64}' | python3 neural_chat.py generate-original
 ```
 
 Both use deterministic greedy decoding for repeatable comparisons; no layers
-or online weight updates run. A new experiment never auto-activates. Missing
+or weight updates run during generation. A new experiment never auto-activates. Missing
 or corrupt pinned files fail explicitly. The Base Model Lab remains an
 educational walkthrough of the **original** character base.
 Layer descriptions and results below are historical. Reproducing retired
@@ -77,8 +103,7 @@ The earlier [neural_training.py](neural_training.py) path continues saved 64-exa
 restarting for each round. Initial parent: the full-64, fresh-scaled seed-17
 checkpoint from `ee7f3c1be14f477a82e2db03ae72ff71`, the first protocol seed,
 not the highest test score. The separately preserved original character
-control is unchanged. The conversation design has 15,508 parameters and
-64 input slots; its weights were originally fresh, so it does not inherit
+control is unchanged. The earlier 64-slot conversation design had 15,508 parameters; its weights were originally fresh, so it does not inherit
 the prose model's Acts knowledge.
 
 ```sh
@@ -1073,6 +1098,76 @@ Rehearsal complete answers increased 118/280 to 135/280 without losing any
 previously correct cases. Both text-continuation groups remained at zero
 exact first and second words. The round replayed exactly and stayed isolated.
 
+The next 2,900 updates used only a newly generated, user-approved 256-pair
+meal, reaching 23,200 updates. On its 64 new development prompts, exact
+first words rose 12 to 44, second words 0 to 8 of 12, and complete answers
+12 to 40. The 52 one-word targets were excluded from second-word scoring.
+These prompts use the training templates with new names and objects, so the
+result is not an independent generalization test. On the old conversation
+development set, complete answers fell 24 to 23, with two previously correct
+answers lost; old teaching answers fell 135/280 to 115/280, with 28 lost.
+The old meal teaching set also lost 28 previously correct answers. There was
+no same-budget rehearsal control, so this run alone cannot establish what
+caused the forgetting. Replay was exact; full activation and mid-round
+safeguards were not run, and the checkpoint remains isolated.
+
+Another 2,900 updates on the same meal continued its sampling stream to
+26,100 total. New-meal development stayed at 44/64 first words, 8/12 second
+words and 40/64 complete answers, with no previously correct complete
+answers lost. For the four second-word targets with at least three letters,
+third-letter matches rose from 0 to 4, although none of their fourth letters
+matched. Old teaching answers fell 115/280 to 108/280, losing eight
+previously correct answers; old meal teaching fell 118/256 to 109/256,
+losing 14. Old conversation development rose 23/64 to 25/64 but lost two
+previously correct answers. These reused, template-related checks and the
+absence of a rehearsal control limit the conclusion. Replay was exact; no
+full activation or mid-round safeguards were run.
+
+Two subsequent 2,900-update rounds mixed a newly reviewed 256-exchange meal
+with pooled earlier approved conversation teaching at equal sampling
+probability per character position, reaching 31,900 updates. The fresh
+64-case diagnostic improved from 16 to 26 to 30 exact first words, 0 to 2
+to 6 of 12 second words, and 14 to 24 to 28 complete answers. The 52
+one-word targets were excluded from second-word scoring. Both members of
+2, then 6, then 10 of 32 contrasting pairs were answered exactly. The
+32 changed-wording cases improved 6 to 10 and stayed at 10, but four
+previously correct cases were lost in the second round.
+
+Earlier teaching improved 108 to 144 to 154 of 280 complete answers,
+losing six previously correct answers in the first round and none in the
+second. Previous-meal development remained 40/64 in both rounds but lost
+four correct cases in the first. The diagnostic is developer-visible, half
+shares training frames, and no same-budget new-meal-only control was run.
+This does not prove generalization or that rehearsal caused the gains.
+Both rounds replayed exactly; full activation and mid-round safeguards
+were not run, and the active model was unchanged.
+
+A third round with the same mix and sampling stream reached 34,800 updates.
+Fresh development first words rose 30/64 to 32/64 and complete answers
+28/64 to 30/64, but second words fell 6/12 to 4/12. Both answers were
+correct for 12/32 contrasting pairs, up from 10/32. The changed-wording
+subset stayed 10/32 while losing two previously correct answers. Older
+teaching fell 154/280 to 152/280 but lost 24 previously correct cases,
+showing substantial turnover beneath the near-steady total. The fresh
+diagnostic still had zero correct answers on both its eight owner and eight
+transfer cases. Replay was exact, but these reused checks and the absence of
+a fresh-only control limit interpretation; the model was not activated.
+
+A fourth round of the same mix reached 37,700 updates. Fresh development
+stayed at 32/64 first words, 4/12 second words and 30/64 complete answers,
+but two previously correct answers were lost. Older teaching rose 152/280
+to 155/280 while losing 20 previously correct answers. Against the actual
+live model on its approved teaching and feedback, the candidate scored
+155/280 versus 204/280 and lost 51 previously correct teaching answers,
+including three approved feedback answers. Development paired accuracy was
+9/32 versus the live model's 10/32. The replayed midpoint and final
+hidden-saturation checks passed the .6 limit, but the live retention and
+paired non-regression checks did not pass. At that comparison the old live
+model remained selected; its later user-authorized replacement is described
+above. A checksum-verified rollback copy of its selection, progress, checkpoint and
+original comparison was saved under
+`.data/neural-chat/rollback-before-character-3f926c7359198d98/`.
+
 ```sh
 python3 universe-lab/character_context_trial.py \
   --bible-dir .data/bible-web-staged --oanc /path/to/OANC-1.0.1-UTF8.zip \
@@ -1096,6 +1191,17 @@ python3 universe-lab/character_context_trial.py \
   --bible-dir .data/bible-web-staged --oanc /path/to/OANC-1.0.1-UTF8.zip \
   --updates 2900 --conversation-only --meal-256 --previous-run /path/to/previous-private-run \
   --previous-report-sha256 REPORT_SHA256 --run-dir /path/to/next-private-run
+
+# Train only a new meal after explicitly reviewing its exact contents and hash.
+python3 universe-lab/new_meal_trial.py \
+  --meal /path/to/reviewed-meal.json --reviewed-sha256 MEAL_SHA256 \
+  --acknowledge-review --previous-run /path/to/previous-private-run \
+  --previous-report-sha256 REPORT_SHA256 \
+  --bible-dir .data/bible-web-staged --oanc /path/to/OANC-1.0.1-UTF8.zip \
+  --updates 2900 --run-dir /path/to/new-private-run
+
+# To continue that new-meal run with the same meal and sampling stream,
+# point --previous-run at it and add --origin-run /path/to/original-character-meal-run.
 ```
 
 For an offline quick multi-context comparison:
@@ -1211,27 +1317,34 @@ Connections to other galaxies and original transcript provenance remain.
 Promotion is permanent. A promoted galaxy never returns to Under evaluation, even
 if its links weaken or a later similarity pass merges it into a larger group.
 It keeps its own members, can be absorbed or split, and can be pulled into close
-orbit by a sun; related memories can join it from the suns. Memories from a
+orbit by a seeder; related memories can join it from the seeders. Memories from a
 merged group that were not in the galaxy are evaluated as separate clusters.
 Parent-child galaxy relationships use solid green shell-to-shell connectors,
 with hover labels identifying the child and parent. Cross-galaxy memory links
 remain dashed. This styling does not change membership or learning weights.
 
 When Under evaluation grows past its maximum drawn radius, the graph splits it
-into two suns labeled Under evaluation and Under evaluation II. The split is
-computed once at page load from the link structure: memories with stronger
-mutual connections stay together, and the weakest-tied memories are pulled to
-the second sun. Each sun is drawn at a fixed radius (`SUN_RADIUS` in
-`generate_html_graph.py`) and then relaxed by a deterministic force layout so
-connections pull related memories close and weaker links drag toward the new
-sun. Membership is then refined so each memory sits with the sun that holds more of
-its tie weight, keeping each sun between `SUN_BALANCE` and 1 − `SUN_BALANCE` of
-the members; exact ties go to the smaller sun. Cross-sun links weaker than
-`CROSS_SUN_MIN` are hidden, and the remaining ones are drawn with opacity that
-follows strength, so decayed bonds fade. A memory outside evaluation draws its
-link only to the sun it is most tied to. This is a display-only split; it does
-not change stored weights.
-The two suns are pushed apart by `BLAST_DISTANCE` and spread by `SUN_SPREAD` in
+into two seeders labeled Under evaluation and Under evaluation II. Verified adjacent
+user/assistant exchanges with a unique positive cycle and matching source and
+session are grouped before the split, so both evaluation memories land in the
+same seeder and close together. Older turns without a reliable exchange boundary
+remain independent. The same grouping keeps pairs close when there is only one
+seeder. The split uses positive link strengths to pull related groups together,
+and refinement balances the number of memories rather than groups, within
+rounded `SEEDER_BALANCE` bounds. Each seeder is relaxed at its fixed `SEEDER_RADIUS`.
+External links of a paired memory to other galaxies are drawn even when the ordinary
+weak cross-seeder or preferred-seeder filters would hide them; links between the two
+seeders are always hidden (`showEvaluationLink`), and zero-strength links remain
+invisible. Other links retain the existing filters. Links behind galaxy fills
+can still be difficult to see. This is display-only: the pair remains two
+stored memories, and its links, feedback, promotion status and training
+approval do not change.
+A verified pair whose strongest outside link is below `ESCAPE_MIN` (0.36) floats
+free of the seeders. Only reciprocal pairs can float; unpaired turns never do. Other
+pairs are pulled toward their links at `PAIR_PULL` (1.5x) weight. Each render moves a floating
+pair one damped step (`DRIFT_RATE`) toward its goal; there is no timer, so it settles across turns.
+Floating pairs do not count toward seeder balance or weights. This is also display-only.
+The two seeders are pushed apart by `BLAST_DISTANCE` and spread by `SEEDER_SPREAD` in
 opposite directions, so they sit well apart rather than side by side. A promoted
 galaxy with fewer than `BABY_INTERACTIONS` user interactions is drawn as a small
 baby (`BABY_RADIUS`, currently 34px) just outside the sun it links to most strongly, on the side
@@ -2291,6 +2404,30 @@ python update_chat_memory.py --reindex-links
 ```
 
 ## Automatic Cluster Growth
+
+### Short-turn contextual pairs
+
+On each graph refresh, a one- or two-word turn under evaluation can appear
+inside its detailed opposite turn from the same uniquely identified exchange.
+Both turns must remain under evaluation and share cycle, session and source;
+the longer turn needs at least eight words and three meaningful terms. The
+known "no stored assistant reply matched" fallback is excluded. Historical
+turns without reliable cycle metadata remain separate.
+
+The longer memory has an amber outline and its short partner is a selectable
+amber dot; selecting either offers a button to inspect the other. The
+pair's internal connector is hidden only in the drawing. Original transcript
+messages, individual feedback and all stored links remain intact, as do
+external connections and domain ownership.
+
+Pairs with the same short wording and role can receive a provisional dashed
+contextual link if their detailed turns share at least three meaningful
+terms, achieve 0.30 TF-IDF similarity and have matching negation terms.
+Generic "next" commands do not make contextual links, and an existing
+cross-link prevents a duplicate. The link is recomputed with the graph and
+does not supply galaxy-promotion or training evidence. A lexical match is not
+proof that meanings agree, and a long reply can still be uninformative.
+Unmatched pairs are not forced to connect.
 
 Subject ownership follows the user's message. The assistant's reply inherits
 that subject, so discussing the food region of the memory graph is not itself a

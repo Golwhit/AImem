@@ -4,6 +4,272 @@ Newest application checkpoint first. Entries map delivered versions to the
 session that produced them; historical conversation memory remains separate.
 See [versioning policy](VERSIONING.md) for bump and release rules.
 
+## 0.46.2 - 2026-11-18
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: patch
+
+### Changes
+
+- Renamed evaluation areas to seeders. Pairs of reciprocal verified exchanges
+  with no link of at least 0.36 to an outside memory now float free of the
+  seeders. Other pairs are pulled together at 1.5x weight. Escaped pairs move
+  one damped step toward their goal on each render (no timer), so they settle
+  over turns rather than animating continuously.
+- Validation: 36 focused graph and cluster tests passed. The live page loaded
+  with no page errors and showed the escaped pairs in place.
+- Limitations: the README and FROM_SCRATCH docs do not yet describe escape,
+  the 0.36 cutoff, pair pull, or drift.
+
+## 0.46.1 - 2026-11-17
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: patch
+
+### Changes
+
+- Group verified evaluation exchanges before dividing and relaxing the suns,
+  keeping both turns close without merging them or altering their stored
+  connections. Preserve paired memories' external links through the sun
+  display filters; zero-strength links do not create layout attraction.
+- Validation: 35 focused graph and cluster tests passed. Live browser checks
+  found 599 verified pairs in the same sun and all 7,379 paired external
+  connections present as drawn elements, with 57 short dots retained and no
+  overlaps among ordinary pairs. Python syntax, version tests, whitespace
+  checks, and the Node 22 production build passed. Links behind galaxy fills
+  may still be hard to see; ambiguous older turns are not guessed. The grouping
+  does not approve data for training.
+
+## 0.46.0 - 2026-11-17
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: minor
+
+### Changes
+
+- Automatically show eligible short under-evaluation turns as selectable
+  amber dots within their detailed exchange partners. The internal link is
+  hidden in the view only; original messages, feedback, provenance, domain
+  membership and links remain intact. Each partner can be inspected.
+- Add provisional lexical context associations for matching short turns with
+  related detail, without duplicating an existing cross-link or forcing
+  unmatched pairs together. These derived associations do not supply
+  promotion evidence or training approval. Matching words and long replies
+  do not prove semantic agreement.
+- Validation: 32 graph clustering tests passed, including pairing,
+  association, promotion isolation, regeneration and preservation cases.
+  Python syntax checks, the version test and production build passed. The
+  live browser showed 57 paired dots and their partner controls. A broader
+  learner run passed 46 of 47 tests; its unrelated HTTP test expects 320
+  repeated characters, but the existing repetition guard emits two.
+  The prior trial found repeated test prompts and misleading contexts;
+  a fallback response and generic "next" associations are excluded.
+
+## 0.45.0 - 2026-11-17
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: minor
+
+### Changes
+
+- Assessed the 40,600-update character candidate against the live
+  37,700-update base. Teaching improved 155/280 to 164/280, but 16 previously
+  correct teaching answers and four older development answers were lost.
+  Feedback retention and replayed midpoint/final saturation passed. The
+  user chose to keep the existing live base.
+- Created the private ignored `portable-model/` folder with the full
+  candidate weights, live-state anchor, source files, reviewed meals,
+  integrity manifest, placeholder environment names, and Windows transfer
+  instructions. No actual secrets or chat transcript are included; model
+  weights may nevertheless reflect training data.
+- Added isolated reviewed-meal CPU training, exact replay, and return staging
+  that checks the live anchor and hash-linked round chain without activation.
+  The existing 50/50 rehearsal protocol is not implemented by this runner.
+  Full independent return replay, live promotion and CUDA acceleration remain
+  unimplemented; Windows and NVIDIA hardware have not been tested.
+- Validation: the bundle manifest and model restoration passed, a one-update
+  CPU round replayed exactly, mismatched review hashes were rejected, and
+  return staging against the actual live base succeeded without activation.
+  Altered bundle files were rejected, the version test and production build
+  passed with Node 22, and the graph was regenerated. These checks do not
+  prove GPU behavior or independent generalization.
+
+## 0.44.0 - 2026-11-17
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: minor
+
+### Changes
+
+- Selected the 37,700-update character-only conversation checkpoint as the
+  live working base after the user explicitly accepted its measured
+  non-regression failures as a one-time exception. Selection round 40 is
+  administrative and adds no training updates. The previous live selection,
+  checkpoint and progress remain saved for rollback.
+- Made character-only output persist through model snapshots, chat generation,
+  feedback training and replay. Existing word/gap, spacing, partial-word
+  context, generation filtering and later training safeguards remain in use.
+  The new base was not created by combining separate model weights.
+- Saved an independent, untrained experimental copy of the exact selected
+  state under `universe-lab/experiments/character-base-f668ee33396a42958bbb08f04e6997d7/`.
+  The original character comparison remains available.
+- The candidate scored 155/280 on approved teaching versus the old live
+  model's 204/280, losing 51 previously correct answers, including three
+  approved feedback answers; paired development fell from 10/32 to 9/32.
+  The reused checks are not independent generalization evidence. User
+  approval is not legal clearance.
+- Validation: 30 focused model, training and selection tests plus 13 lab
+  tests passed; the actual candidate was selected, generated, copied and
+  rolled back in a temporary environment. Restored live-compatible word
+  scores matched all 64 measured fresh cases. The actual live model,
+  training progress and experimental copy match; live generation and
+  the archived rollback selection were verified. A character-only correction
+  was trained and replayed in isolation, preserving its output mode. The
+  version test and production build passed with Node 22, and the graph was
+  regenerated. Vite reported existing deprecation warnings.
+
+## 0.43.3 - 2026-11-17
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: patch
+
+### Changes
+
+- Documented a fourth 2,900-update mixed-meal round reaching 37,700 updates.
+  Fresh development remained 32/64 first words, 4/12 second words and 30/64
+  complete answers, with two previously correct cases lost. Old teaching
+  rose 152/280 to 155/280 but lost 20 previously correct answers.
+- Compared the candidate's character-only output with the actual live
+  hybrid model using the live approved teaching, development and feedback.
+  Candidate teaching was 155/280 versus live 204/280, with 51 previously
+  correct answers lost, including three approved feedback answers;
+  development paired accuracy was 9/32 versus live 10/32. Replayed hidden
+  saturation was 0.222 halfway and 0.201 at the end, below the .6 limit.
+  Retention and paired non-regression checks failed. These reused checks
+  are not independent generalization evidence; review is not legal clearance.
+- Preserved a checksum-verified copy of the active selection, training
+  progress, checkpoint, and original comparison; live selection and
+  progress remained unchanged. No activation or guard override was performed.
+- Validation: 20 focused Python tests and private-runner compilation passed;
+  the round replayed exactly, live comparison verified input hashes, and
+  milestone replay reached the exact candidate state. Rollback file hashes,
+  version tests, version check, build, and whitespace check passed. The
+  build used isolated Node 22 and its optional native binding. The memory
+  graph was regenerated.
+
+## 0.43.2 - 2026-11-17
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: patch
+
+### Changes
+
+- Documented a third isolated 2,900-update round on the same reviewed meal
+  and rehearsal stream, reaching 34,800 updates. It drew 1,430 fresh and
+  1,470 rehearsal positions, reproduced the parent scores and replayed
+  exactly.
+- Fresh development first words rose 30/64 to 32/64 and complete answers
+  28/64 to 30/64; second words fell 6/12 to 4/12. Contrasting pairs with
+  both answers exact rose 10/32 to 12/32. The changed-wording subset stayed
+  10/32 while losing two previously correct cases. Fresh owner and transfer
+  cases were both 0/8.
+- Older teaching fell 154/280 to 152/280 while losing 24 previously
+  correct cases; previous-meal development stayed 40/64 but lost four.
+  Reused, developer-visible cases do not prove generalization and no
+  same-budget fresh-only control isolates rehearsal's effect. Full
+  activation and mid-round safeguards were not run; active chat remained
+  unchanged. User approval is not legal clearance.
+- Validation: 20 focused Python tests and private-runner compilation passed.
+  The prior word, paired and exact-answer scores reproduced; replay and
+  protected-state, source and reviewed-input checks passed. Saved checkpoint
+  hash, version tests, version check, build, and whitespace check passed.
+  The build used isolated Node 22 and its optional native binding. The
+  memory graph was regenerated.
+
+## 0.43.1 - 2026-11-17
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: patch
+
+### Changes
+
+- Documented two isolated 2,900-update rounds using a newly generated,
+  exact-hash user-approved 256-exchange meal and pooled previously approved
+  conversation rehearsal at 50/50 sampling probability per character
+  position. They reached 31,900 updates and replayed exactly. Draws were
+  1,426 fresh / 1,474 rehearsal, then 1,421 fresh / 1,479 rehearsal.
+- Fresh development first words rose 16/64 to 26/64 to 30/64; second words
+  0/12 to 2/12 to 6/12; complete answers 14/64 to 24/64 to 28/64; both
+  answers correct in a contrasting pair 2/32 to 6/32 to 10/32. The
+  changed-wording subset rose 6/32 to 10/32 and stayed at 10/32, with four
+  previously correct answers lost in the second round.
+- Old teaching improved 108/280 to 144/280 to 154/280, with six previously
+  correct cases lost in round one and none in round two. Previous-meal
+  development stayed 40/64 but lost four previously correct cases in round
+  one. The developer-visible diagnostics are not independent generalization
+  evidence; no fresh-only control isolates rehearsal's effect. User review
+  is not legal clearance. Full activation and mid-round safeguards were not
+  run; active chat remained unchanged.
+- Validation: 20 focused Python tests and private-runner compilation passed.
+  Prior scores reproduced; both rounds replayed exactly and protected-state,
+  source and reviewed-input checks passed. Saved checkpoint hashes and
+  score continuity, version tests, version check, build, and whitespace
+  check passed. The build used isolated Node 22 and its optional native
+  binding. The memory graph was regenerated.
+
+## 0.43.0 - 2026-11-17
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: minor
+
+### Changes
+
+- Extended the new-meal runner to resume a validated checkpoint using the
+  same reviewed meal and deterministic sampling stream. The next 2,900
+  updates reached 26,100; prior word and exact-answer scores reproduced
+  and replay was exact.
+- New-meal development remained 44/64 first words, 8/12 second words and
+  40/64 complete answers, with none of its correct answers lost. Second-word
+  third-letter matches rose 0 to 4 of four eligible targets, but fourth
+  letters remained 0/4. Old teaching fell 115/280 to 108/280 with eight
+  previously correct answers lost; old meal teaching fell 118/256 to
+  109/256 with 14 lost. Old development rose 23/64 to 25/64 but lost two
+  previously correct answers.
+- These repeatedly used, template-related checks do not prove generalization;
+  no same-budget rehearsal control isolates the cause of forgetting. Review
+  is a user declaration, not legal clearance. Full activation and mid-round
+  safeguards were not run; the active model was not changed.
+- Validation: 20 focused Python tests and compilation passed, as did
+  Pylance syntax checks, version tests, version check, build, and whitespace
+  check. The build used isolated Node 22 and its optional native binding.
+  The run reproduced previous scores, replayed exactly and verified
+  protected state; the memory graph was regenerated.
+
+## 0.42.0 - 2026-11-17
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: minor
+
+### Changes
+
+- Added an isolated, exact-hash-reviewed new-meal runner with deterministic
+  replay and previous-checkpoint, input, and protected-state checks. A
+  2,900-update new-meal-only run reached 23,200 updates.
+- On the new 64-case development set, first words rose 12 to 44, second
+  words 0 to 8/12, and complete answers 12 to 40. On old development,
+  complete answers fell 24 to 23 with two previously correct answers lost.
+  Old teaching fell 135/280 to 115/280 with 28 lost; old meal teaching
+  fell 142/256 to 118/256 with 28 lost. The new evaluation shares training
+  templates; no same-budget rehearsal control establishes the cause of
+  forgetting. Review is a user declaration, not legal clearance.
+- Validation: 18 focused Python tests and compilation passed; exact replay,
+  prior word-score reproduction and protected-state checks passed. Version
+  tests, version check, build, and whitespace check passed. The build used
+  an isolated Node 22 runtime and missing optional native binding because
+  the default Node 18 environment could not build. The memory graph was
+  regenerated. Full activation and mid-round safeguards were not run; the
+  active model was not changed.
+
 ## 0.41.1 - 2026-11-16
 
 Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`

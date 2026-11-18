@@ -9,10 +9,192 @@ from unittest.mock import patch
 
 import generate_html_graph
 from memory_clusters import apply_graph_domains, subject_for_message, update_clusters
+from memory_links import contextual_associations, evaluation_exchange_pairs, short_context_pairs
 from update_chat_memory import add_cycle
 
 
 class ClusterTests(unittest.TestCase):
+    def test_evaluation_exchange_pairs_require_provenance_and_same_domain(self):
+        messages = [
+            {"id": "u", "role": "You", "text": "first", "domain": "evaluation", "created_cycle": 1,
+             "session_id": "s", "source": "app"},
+            {"id": "a", "role": "Assistant", "text": "second", "domain": "evaluation", "created_cycle": 1,
+             "session_id": "s", "source": "app"},
+        ]
+        self.assertEqual([(a["id"], b["id"]) for a, b in evaluation_exchange_pairs(messages)], [("u", "a")])
+        messages[1]["source"] = "copilot"
+        self.assertEqual(evaluation_exchange_pairs(messages), [])
+        messages[1]["source"] = "app"
+        messages[1]["domain"] = "memory"
+        self.assertEqual(evaluation_exchange_pairs(messages), [])
+        messages[1]["domain"] = "evaluation"
+        del messages[0]["created_cycle"]
+        self.assertEqual(evaluation_exchange_pairs(messages), [])
+
+    def planner_script(self):
+        script = "const SEEDER_BALANCE = 0.4, SPLIT_RADIUS = 180, PAIR_PULL = 1.5, CROSS_SEEDER_MIN = 0.3, ESCAPE_MIN = 0.36;\n"
+        script += "let raw = 200; function layoutStats(nodes) { return {raw}; }\n"
+        script += "function domainLayoutFor(key, nodes) { return {radius: 100}; }\n"
+        for name in ("relaxSeeder", "refineSeederMembership", "planEvaluationSplit"):
+            body = generate_html_graph.HTML.split(f"function {name}(", 1)[1].split("\n}", 1)[0]
+            script += f"function {name}(" + body + "\n}\n"
+        return script
+
+    def test_pair_escapes_only_when_linked_at_or_above_cutoff(self):
+        script = self.planner_script().replace("let raw = 200", "let raw = 100") + """
+const assert = require("node:assert/strict");
+const state = {nodes: [
+  {id: "u1", domain: "evaluation", exchange_with: "a1"}, {id: "a1", domain: "evaluation", exchange_with: "u1"},
+  {id: "u2", domain: "evaluation", exchange_with: "a2"}, {id: "a2", domain: "evaluation", exchange_with: "u2"},
+  {id: "x", domain: "memory"}], links: [
+  {source: "u1", target: "x", strength: 0.2}, {source: "u1", target: "x", strength: 0.35},
+  {source: "u2", target: "x", strength: 0.36}]};
+const {escaped} = planEvaluationSplit();
+assert.deepEqual([...escaped].sort(), ["a1", "u1"]);
+"""
+        subprocess.run(["node", "-e", script], check=True, capture_output=True, text=True)
+
+    def test_seeder_split_keeps_pairs_near_and_uses_actual_external_weights(self):
+        script = self.planner_script()
+        script += """
+const assert = require("node:assert/strict");
+const state = {nodes: [], links: []};
+for (let i = 0; i < 10; i++) {
+  state.nodes.push({id: `u${i}`, domain: "evaluation", exchange_with: `a${i}`});
+  state.nodes.push({id: `a${i}`, domain: "evaluation", exchange_with: `u${i}`});
+}
+for (let i = 0; i < 10; i++) for (let j = i + 1; j < 10; j++) {
+  if ((i < 5) === (j < 5)) state.links.push({source: `u${i}`, target: `a${j}`, strength: 1});
+}
+const result = planEvaluationSplit();
+for (let i = 0; i < 10; i++) {
+  assert.equal(result.keyFor.get(`u${i}`), result.keyFor.get(`a${i}`));
+  const a = result.relative.get(`u${i}`), b = result.relative.get(`a${i}`);
+  assert.ok(Math.hypot(a.x - b.x, a.y - b.y) <= 14.0000001);
+}
+const counts = [...result.keyFor.values()].reduce((acc, key) => (acc[key] = (acc[key] || 0) + 1, acc), {});
+assert.ok(Object.values(counts).every(n => n >= 8 && n <= 12));
+assert.ok([0, 5].every(start => Array.from({length: 5}, (_, i) => result.keyFor.get(`u${start+i}`))
+  .every(key => key === result.keyFor.get(`u${start}`))));
+state.links.push({source: "u0", target: "u7", strength: 0});
+assert.deepEqual([...planEvaluationSplit().keyFor], [...result.keyFor]);
+state.nodes.push({id: "single", domain: "evaluation", exchange_with: "u0"});
+assert.ok(planEvaluationSplit().keyFor.has("single"));
+raw = 100;
+const singleSeeder = planEvaluationSplit();
+assert.equal(singleSeeder.keyFor.get("u0"), "evaluation");
+assert.equal(singleSeeder.keyFor.get("a0"), "evaluation");
+assert.ok(Math.hypot(singleSeeder.relative.get("u0").x - singleSeeder.relative.get("a0").x,
+  singleSeeder.relative.get("u0").y - singleSeeder.relative.get("a0").y) <= 14.0000001);
+"""
+        subprocess.run(["node", "-e", script], check=True, capture_output=True, text=True)
+
+    def test_external_pair_links_bypass_seeder_display_filters(self):
+        body = generate_html_graph.HTML.split("function showEvaluationLink(", 1)[1].split("\n}", 1)[0]
+        script = """
+const assert = require("node:assert/strict");
+const EVAL_SEEDERS = ["evaluation", "evaluation-2"], CROSS_SEEDER_MIN = 0.3;
+""" + "function showEvaluationLink(" + body + "\n}\n" + """
+const preferred = new Map([["outside", "evaluation"]]);
+assert.equal(showEvaluationLink("evaluation", "evaluation-2", "a", "b", 0.9, true, preferred), false);
+assert.equal(showEvaluationLink("evaluation", "evaluation-2", "a", "b", 0.1, false, preferred), false);
+assert.equal(showEvaluationLink("evaluation-2", "memory", "a", "outside", 0.1, true, preferred), true);
+assert.equal(showEvaluationLink("evaluation-2", "memory", "a", "outside", 0.1, false, preferred), false);
+"""
+        subprocess.run(["node", "-e", script], check=True, capture_output=True, text=True)
+
+    def test_short_pairs_require_unique_exchange_and_valid_context(self):
+        messages = [
+            {"id": "u1", "role": "You", "text": "Are these small blue glass marbles in the wooden box today?",
+             "domain": "evaluation", "created_cycle": 1, "session_id": "s", "source": "app"},
+            {"id": "a1", "role": "Assistant", "text": "Yes.", "domain": "evaluation",
+             "created_cycle": 1, "session_id": "s", "source": "app"},
+        ]
+        self.assertEqual([(p["id"], p["detail_id"]) for p in short_context_pairs(messages)], [("a1", "u1")])
+        messages[1]["session_id"] = "other"
+        self.assertEqual(short_context_pairs(messages), [])
+        messages[1]["session_id"] = "s"
+        messages[1]["domain"] = "memory"
+        self.assertEqual(short_context_pairs(messages), [])
+        messages[1]["domain"] = "evaluation"
+        messages.append({"created_cycle": 1})
+        self.assertEqual(short_context_pairs(messages), [])
+        messages.pop()
+        messages[0]["text"] = "No stored assistant reply matched. The current learner retrieves memories."
+        messages[0]["role"], messages[1]["role"] = "Assistant", "You"
+        messages.reverse()
+        self.assertEqual(short_context_pairs(messages), [])
+
+    def test_contextual_links_require_matching_answers_and_context_without_existing_links(self):
+        def pair(cycle, answer, detail):
+            return [
+                {"id": f"u{cycle}", "role": "You", "text": detail, "domain": "evaluation", "created_cycle": cycle},
+                {"id": f"a{cycle}", "role": "Assistant", "text": answer, "domain": "evaluation", "created_cycle": cycle},
+            ]
+        text = "Are these small blue glass marbles in the wooden box today?"
+        pairs = short_context_pairs(pair(1, "Yes.", text) + pair(2, "Yes.", text)
+                                    + pair(3, "No.", text)
+                                    + pair(4, "Yes.", "Are these small blue glass marbles not in the wooden box today?"))
+        links = contextual_associations(pairs, [])
+        self.assertEqual([(link["source"], link["target"]) for link in links], [("u1", "u2")])
+        self.assertEqual(contextual_associations(pairs, [{"source": "a1", "target": "u2"}]), [])
+
+    def test_generic_next_and_contextual_links_do_not_promote_candidates(self):
+        messages = [
+            {"id": "u1", "role": "You", "text": "next", "domain": "evaluation", "created_cycle": 1},
+            {"id": "a1", "role": "Assistant", "text": "This experiment tests several possible word beginnings and continuations.",
+             "domain": "evaluation", "created_cycle": 1},
+            {"id": "u2", "role": "You", "text": "next", "domain": "evaluation", "created_cycle": 2},
+            {"id": "a2", "role": "Assistant", "text": "This experiment tests several possible word beginnings and continuations.",
+             "domain": "evaluation", "created_cycle": 2},
+        ]
+        self.assertEqual(contextual_associations(short_context_pairs(messages), []), [])
+        users = [{"id": f"u{i}", "role": "You", "text": f"orchids greenhouse watering {i}"}
+                 for i in range(5)]
+        similarities = [{"source": f"u{i}", "target": f"u{j}", "similarity": 0.3}
+                        for i in range(5) for j in range(i + 1, 5)]
+        contextual = [{"source": p["source"], "target": p["target"], "kind": "contextual", "strength": 1}
+                      for p in similarities]
+        with patch("memory_clusters.infer_similarity_links", return_value=similarities):
+            without = update_clusters({"messages": [m.copy() for m in users]})
+            with_context = update_clusters({"messages": [m.copy() for m in users]}, contextual)
+        self.assertEqual(without, with_context)
+        self.assertTrue(all(not cluster["promoted"] for cluster in with_context.values()))
+
+    def test_generated_short_pairs_preserve_originals_links_and_feedback(self):
+        messages = [
+            {"id": "u1", "role": "You", "text": "Are these small blue glass marbles in the wooden box today?",
+             "topics": [], "created_cycle": 1, "session_id": "s", "source": "app"},
+            {"id": "a1", "role": "Assistant", "text": "Yes.", "topics": [],
+             "created_cycle": 1, "session_id": "s", "source": "app"},
+        ]
+        original_link = {"source": "u1", "target": "a1", "kind": "sequence", "strength": 0.35}
+        transcript = {"messages": messages, "cycles": 1, "seed_id": "u1", "links": [original_link]}
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "package.json").write_text(json.dumps({"version": "0.2.0"}), encoding="utf-8")
+            (root / "chat_memory.json").write_text(json.dumps(transcript), encoding="utf-8")
+            (root / "memory_graph_state.json").write_text(json.dumps({
+                "nodes": [{"id": "a1", "feedback": {"helpful": 2}}],
+                "links": [{**original_link, "strength": 0.8}],
+            }), encoding="utf-8")
+            with patch.object(generate_html_graph, "__file__", str(root / "generate_html_graph.py")):
+                for _ in range(2):
+                    with contextlib.redirect_stdout(io.StringIO()):
+                        generate_html_graph.main()
+            snapshot = json.loads((root / "memory_graph_state.json").read_text(encoding="utf-8"))
+            nodes = {node["id"]: node for node in snapshot["nodes"]}
+            self.assertEqual((nodes["a1"]["paired_with"], nodes["a1"]["paired_role"]), ("u1", "short"))
+            self.assertEqual((nodes["u1"]["paired_with"], nodes["u1"]["paired_role"]), ("a1", "context"))
+            self.assertEqual(nodes["a1"]["exchange_with"], "u1")
+            self.assertEqual(nodes["u1"]["exchange_with"], "a1")
+            self.assertEqual(nodes["a1"]["feedback"]["helpful"], 2)
+            self.assertEqual(next(link["strength"] for link in snapshot["links"]
+                                  if link["source"] == "u1" and link["target"] == "a1"), 0.8)
+            saved = json.loads((root / "chat_memory.json").read_text(encoding="utf-8"))
+            self.assertEqual(saved["links"], [original_link])
+            self.assertEqual([m["text"] for m in saved["messages"]], [m["text"] for m in messages])
+
     def test_border_neighbors_follow_strongest_candidate_without_other_galaxy_links(self):
         messages = [
             {"id": "a1", "role": "You", "text": "memory alpha target one"},
