@@ -4,6 +4,19 @@ Newest application checkpoint first. Entries map delivered versions to the
 session that produced them; historical conversation memory remains separate.
 See [versioning policy](VERSIONING.md) for bump and release rules.
 
+## 0.47.1 - 2026-11-18
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: patch
+
+### Changes
+
+- Memory edit and inject routes now return the learner's plain error message
+  instead of a JSON string nested inside `error`.
+- Validation: the restarted server returns 400 with `text is required` for an
+  empty inject and an empty edit. Learner edit and inject were exercised against
+  a copy of the transcript.
+
 ## 0.47.0 - 2026-11-18
 
 Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`

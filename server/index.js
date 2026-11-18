@@ -35,6 +35,10 @@ const neuralChatScriptPath = path.join(rootDir, 'neural_chat.py');
 const execFileAsync = promisify(execFile);
 const memoryLockPath = path.join(os.homedir(), '.copilot', 'aimem-memory.lock');
 
+function learnerErrorMessage(error) {
+  try { return JSON.parse(error.message).error || error.message; } catch { return error.message; }
+}
+
 async function regenerateGraph() {
   await execFileAsync('flock', ['-x', '-w', '30', memoryLockPath, 'python3', 'generate_html_graph.py'], { cwd: rootDir });
 }
@@ -590,7 +594,7 @@ app.post('/api/memory/edit', async (req, res) => {
     const result = await runLearner('edit', { memory_id, text, topics });
     await regenerateGraph();
     res.json({ ok: true, ...result });
-  } catch (error) { res.status(400).json({ error: error.message }); }
+  } catch (error) { res.status(400).json({ error: learnerErrorMessage(error) }); }
 });
 
 app.post('/api/memory/inject', async (req, res) => {
@@ -599,7 +603,7 @@ app.post('/api/memory/inject', async (req, res) => {
     const result = await runLearner('inject', { text, topics });
     await regenerateGraph();
     res.json({ ok: true, ...result });
-  } catch (error) { res.status(400).json({ error: error.message }); }
+  } catch (error) { res.status(400).json({ error: learnerErrorMessage(error) }); }
 });
 
 app.post('/api/response-feedback', async (req, res) => {
