@@ -4,6 +4,22 @@ Newest application checkpoint first. Entries map delivered versions to the
 session that produced them; historical conversation memory remains separate.
 See [versioning policy](VERSIONING.md) for bump and release rules.
 
+## 0.47.3 - 2026-11-18
+
+Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`
+Type: patch
+
+### Changes
+
+- Moved the memory edit and add-memory controls from the Selected memory panel
+  into Prompt training, using the panel's existing `query-input`, `section-label`,
+  and `graph-actions` styles.
+
+### Validation
+
+- `python3 -m unittest -q test_memory_clusters` passes.
+- Browser check: the editor appears in Prompt training and loads the bare text of `You 8`.
+
 ## 0.47.2 - 2026-11-18
 
 Session: `28c01cf3-de47-499d-a9f1-4db6b3099c04`

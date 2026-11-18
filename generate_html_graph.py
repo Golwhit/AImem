@@ -307,6 +307,18 @@ HTML = r"""<!doctype html>
           </div>
         </section>
         <div id="search-results" class="search-results" aria-live="polite"></div>
+        <div id="memory-edit-block" hidden>
+          <div class="section-label" style="margin-top:16px">Edit selected memory</div>
+          <textarea id="memory-edit-text" class="query-input" rows="3" maxlength="4000" aria-label="Memory text"></textarea>
+          <input id="memory-edit-topics" class="query-input" type="text" placeholder="topics, comma separated" aria-label="Memory topics">
+          <div class="graph-actions"><button type="button" id="memory-save-button">Save edit</button><span id="memory-edit-status" class="selected-content"></span></div>
+        </div>
+        <div id="memory-inject-block">
+          <div class="section-label" style="margin-top:16px">Add a memory</div>
+          <textarea id="memory-inject-text" class="query-input" rows="2" maxlength="4000" placeholder="Text to inject as a user-authored memory" aria-label="New memory text"></textarea>
+          <input id="memory-inject-topics" class="query-input" type="text" placeholder="topics, comma separated" aria-label="New memory topics">
+          <div class="graph-actions"><button type="button" id="memory-inject-button">Add to review queue</button><span id="memory-inject-status" class="selected-content"></span></div>
+        </div>
       </section>
     <aside class="panel">
       <section id="learner-panel">
@@ -323,24 +335,6 @@ HTML = r"""<!doctype html>
         </div>
         <h2 id="selected-name" class="selected-name">Pick a memory</h2>
         <div id="selected-content" class="selected-content">Select a message in the graph to inspect and activate it.</div>
-        <div id="memory-edit-block" hidden>
-          <label class="section-label" for="memory-edit-text">Edit your memory</label>
-          <textarea id="memory-edit-text" rows="4" maxlength="4000"></textarea>
-          <input id="memory-edit-topics" type="text" placeholder="topics, comma separated">
-          <div class="selected-memory-actions">
-            <button type="button" id="memory-save-button">Save edit</button>
-            <span id="memory-edit-status" class="selected-content"></span>
-          </div>
-        </div>
-        <details id="memory-inject-block">
-          <summary class="section-label">Add a memory</summary>
-          <textarea id="memory-inject-text" rows="3" maxlength="4000" placeholder="Text to inject as a user-authored memory"></textarea>
-          <input id="memory-inject-topics" type="text" placeholder="topics, comma separated">
-          <div class="selected-memory-actions">
-            <button type="button" id="memory-inject-button">Add to review queue</button>
-            <span id="memory-inject-status" class="selected-content"></span>
-          </div>
-        </details>
         <button type="button" id="paired-memory-button" hidden></button>
         <div id="cluster-importance-evidence" class="selected-content" hidden></div>
         <div class="signal-row" id="selected-signals"></div>
