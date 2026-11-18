@@ -126,6 +126,7 @@ class ConversationContext(WordBase):
         ):
             raise ValueError("Conversation weights do not match context shape")
         model.model.weights = state["weights"]
+        model.set_output_mode(state.get("output_mode", "hybrid"))
         return model
 
 

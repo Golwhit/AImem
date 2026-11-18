@@ -50,10 +50,17 @@ class WordBase:
                        + sorted(set(gaps)))
         self.model = NeuralModel(symbols, seed=seed)
         self.gap_encoding = "legacy"
+        self.set_output_mode("hybrid")
+
+    def set_output_mode(self, mode: str) -> None:
+        if mode not in ("hybrid", "character_only"):
+            raise ValueError("Unsupported base output mode")
+        self.output_mode = mode
         self.payloads = {token: symbol[5:]
                          for symbol, token in self.model.tokens.items()
-                         if symbol.startswith(("char:", "emit:"))}
-        self.word_tokens = {token for symbol, token in self.model.tokens.items() if symbol.startswith("emit:")}
+                         if symbol.startswith("char:") or (mode == "hybrid" and symbol.startswith("emit:"))}
+        self.word_tokens = {token for symbol, token in self.model.tokens.items()
+                            if mode == "hybrid" and symbol.startswith("emit:")}
         self.character_tokens = set(self.payloads) - self.word_tokens
 
     def context_gap(self, gap: str) -> str:
@@ -84,7 +91,7 @@ class WordBase:
         for match in WORD.finditer(text):
             tokens.extend(self.model.tokens["char:" + char] for char in text[offset:match.start()])
             surface = "emit:" + match.group()
-            if surface in self.model.tokens:
+            if surface in self.model.tokens and self.model.tokens[surface] in self.word_tokens:
                 tokens.append(self.model.tokens[surface])
             else:
                 tokens.extend(self.model.tokens["char:" + char] for char in match.group())
@@ -162,6 +169,8 @@ class WordBase:
         result = {"lexicon": self.lexicon, "symbols": self.model.characters, "weights": self.model.weights}
         if self.gap_encoding != "legacy":
             result["gap_encoding"] = self.gap_encoding
+        if self.output_mode != "hybrid":
+            result["output_mode"] = self.output_mode
         return result
 
     @classmethod
@@ -171,6 +180,7 @@ class WordBase:
         if model.gap_encoding not in ("legacy", "trailing-spaces-v1"):
             raise ValueError("Unsupported word-gap encoding")
         model.model.weights = state["weights"]
+        model.set_output_mode(state.get("output_mode", "hybrid"))
         return model
 
 

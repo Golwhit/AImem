@@ -70,6 +70,7 @@ class PlasticityContext(ConversationContext):
             result.model.weights = checked.model.weights
         else:
             result.model = checked.model
+        result.set_output_mode(checked.output_mode)
         return result
 
 

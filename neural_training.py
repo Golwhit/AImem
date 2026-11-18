@@ -95,6 +95,37 @@ def activate(root: Path) -> dict:
                     and all(isinstance(results.get(name), dict)
                             and results[name].get("lost_correct_ids") == []
                             for name in ("teaching", "development", "feedback")))
+    elif report.get("kind") == "user_authorized_character_base":
+        source = directory / "rounds" / pointer["run_id"]
+        candidate_raw = (source / "candidate.json").read_bytes()
+        candidate_report_raw = (source / "candidate-report.json").read_bytes()
+        assessment_raw = (source / "assessment.json").read_bytes()
+        candidate = json.loads(candidate_raw)
+        candidate_report = json.loads(candidate_report_raw)
+        assessment = json.loads(assessment_raw)
+        exception = report.get("exception", {})
+        replayed = (report.get("run_id") == pointer["run_id"]
+                    and report.get("round") == pointer["round"]
+                    and report.get("parent_checkpoint_sha256") == pointer.get("parent_checkpoint_sha256")
+                    and model.output_mode == "character_only"
+                    and candidate.get("output_mode") == "character_only"
+                    and digest(candidate_raw) == report.get("candidate_sha256")
+                    and digest(candidate_report_raw) == report.get("candidate_report_sha256")
+                    and candidate_report.get("trained_sha256") == report.get("candidate_sha256")
+                    and candidate_report.get("validation", {}).get("exact_replay") is True
+                    and model.snapshot() == {**candidate["state"], "output_mode": "character_only"}
+                    and digest(assessment_raw) == report.get("assessment_sha256")
+                    and assessment.get("candidate_report_sha256") == report.get("candidate_report_sha256")
+                    and assessment.get("candidate_checkpoint_sha256") == report.get("candidate_sha256")
+                    and assessment.get("live_checkpoint_sha256") == pointer.get("parent_checkpoint_sha256")
+                    and assessment.get("live_selection_sha256") == report.get("previous_selection_sha256")
+                    and assessment.get("validation", {}).get("milestone_replay_exact") is True
+                    and assessment.get("validation", {}).get("protected_unchanged") is True
+                    and exception.get("user_accepted_regression") is True
+                    and bool(exception.get("failed_checks"))
+                    and exception["failed_checks"] == assessment.get("activation_check_failures")
+                    and verified.get("candidate_replay_exact") is True
+                    and verified.get("milestone_replay_exact") is True)
     else:
         replayed = (verified.get("full_weights_and_milestones_replay_exact")
                     and (verified.get("test_replay_exact") or verified.get("correction_replay_exact")))
@@ -106,6 +137,8 @@ def activate(root: Path) -> dict:
     prior = json.loads(previous)
     if prior.get("checkpoint_sha256") == pointer["checkpoint_sha256"]:
         return status(root)
+    if report.get("kind") == "user_authorized_character_base" and digest(previous) != report["previous_selection_sha256"]:
+        raise ValueError("The live selection changed since the user accepted this regression")
     raw = (directory / f"{pointer['checkpoint_sha256']}.json").read_bytes()
     record = {
         "model": CONVERSATION_MODEL, "arm": "conversation", "run_id": pointer["run_id"],
@@ -132,6 +165,13 @@ def activate(root: Path) -> dict:
                 "not injected into neural context. "
                 "Saved weights resume without retraining from scratch. No claim retained Acts knowledge.",
     }
+    if model.output_mode == "character_only":
+        record["output_mode"] = "character_only"
+        record["label"] = "Character-only conversation model (persistent weights; reviewed teaching and feedback)"
+    if report.get("kind") == "user_authorized_character_base":
+        record["source"]["training"] = "Reviewed fresh meal and prior approved conversation rehearsal"
+        record["selection_policy"] = ("User explicitly accepted this candidate's measured retention regression "
+                                      "as a one-time exception. Future training keeps its normal safeguards.")
     (chat / f"retired-selection-{digest(previous)}.json").write_bytes(previous)
     (chat / f"{pointer['checkpoint_sha256']}.json").write_bytes(raw)
     atomic_json(previous_path, record)

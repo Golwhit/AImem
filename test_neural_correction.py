@@ -64,6 +64,27 @@ class ImmediateCorrectionTests(unittest.TestCase):
             "retired-selection-" + load_active(self.root)[0]["rollback_selection_sha256"] + ".json")
         self.assertTrue(archive.exists())
 
+    def test_character_only_correction_replays_and_keeps_output_mode(self):
+        pointer, model = load_progress(self.root)
+        model.set_output_mode("character_only")
+        evidence = {key: value for key, value in pointer.items() if key != "checkpoint_sha256"}
+        raw = canonical({"state": model.snapshot(), "evidence": evidence})
+        checksum = digest(raw)
+        training = self.root / ".data/neural-training"
+        chat = self.root / ".data/neural-chat"
+        (training / f"{checksum}.json").write_bytes(raw)
+        (chat / f"{checksum}.json").write_bytes(raw)
+        atomic_json(training / "progress.json", {**evidence, "checkpoint_sha256": checksum})
+        selection = json.loads((chat / "active.json").read_bytes())
+        atomic_json(chat / "active.json", {**selection, "checkpoint_sha256": checksum})
+        result = train_correction(self.root, self.payload)
+        self.assertTrue(result["trained"])
+        _, trained = load_progress(self.root)
+        self.assertEqual(trained.output_mode, "character_only")
+        self.assertFalse(trained.word_tokens)
+        self.assertEqual(load_active(self.root)[1].snapshot(), trained.snapshot())
+        self.assertEqual(generate(self.root, {"prompt": "What is the code?"})["text"], "Z.")
+
     def test_failed_training_and_invalid_submission_do_not_promote(self):
         before = (self.root / ".data/neural-training/progress.json").read_bytes()
         for update in ({"acknowledge_review": False}, {"response_id": "missing"},

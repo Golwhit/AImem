@@ -10,3 +10,4 @@ npm-debug.log*
 __pycache__/
 universe-lab/*.lock
 universe-lab/experiments/
+portable-model/

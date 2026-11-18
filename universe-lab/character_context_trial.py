@@ -33,8 +33,7 @@ MEAL_SHA256 = "3c8720173eda1b53b2f3cb7cd6916f6e12e2f65ebcb51bf19c2230965932c725"
 
 def character_model(model):
     result = copy(model)
-    result.payloads = {token: model.payloads[token] for token in model.character_tokens}
-    result.word_tokens = set()
+    result.set_output_mode("character_only")
     return result
 
 

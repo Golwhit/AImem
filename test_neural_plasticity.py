@@ -104,6 +104,24 @@ class PlasticityTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             fit(model, self.rows, seed=17, rate=.01, cpu_checkpoints=(0.0,))
 
+    def test_character_output_survives_training_and_restore(self):
+        model = initialize(self.base, "fresh_scaled", 17)
+        model.set_output_mode("character_only")
+        initial = json.loads(json.dumps(model.snapshot()))
+        restored = PlasticityContext.restore(json.loads(json.dumps(initial)))
+        self.assertEqual(restored.output_mode, "character_only")
+        self.assertFalse(restored.word_tokens)
+        examples = answer_examples(restored, self.rows)
+        self.assertEqual(len(examples), len(self.rows[0]["answer"]) + 1)
+        self.assertTrue(all(target in restored.character_tokens and prior[target]
+                            for _, target, prior in examples))
+        points = fit(restored, self.rows, seed=17, rate=.01, cpu_checkpoints=(.001,))
+        self.assertEqual(restored.snapshot(), replay(initial, self.rows, seed=17, rate=.01,
+                                                     checkpoints=points).snapshot())
+        initial["output_mode"] = "invalid"
+        with self.assertRaisesRegex(ValueError, "output mode"):
+            PlasticityContext.restore(initial)
+
     def test_normalized_model_fits_a_conflict_free_target(self):
         model = NormalizedModel(list("ab "), context=4)
         context, target = [0, 0, 2, 2], 3
